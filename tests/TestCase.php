@@ -79,8 +79,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             'basePath' => __DIR__,
             'vendorPath' => $this->getVendorPath(),
             'aliases' => [
-                '@bower' => '@vendor/bower-asset',
-                '@npm' => '@vendor/npm-asset',
+                '@root' => dirname(__DIR__),
+                '@bower' => '@root/node_modules',
+                '@npm' => '@root/node_modules',
             ],
             'components' => [
                 'request' => [
