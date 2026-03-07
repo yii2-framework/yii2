@@ -6843,8 +6843,8 @@ parameters:
 		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:markTestSkipped\(\)\.$#'
 			identifier: staticMethod.dynamicCall
-			count: 5
-			path: tests/framework/caching/ApcCacheTest.php
+			count: 3
+			path: tests/framework/caching/ApcuCacheTest.php
 
 		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
