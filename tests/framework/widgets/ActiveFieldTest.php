@@ -714,41 +714,6 @@ HTML;
         (string) $field;
     }
 
-    public function testExceptionToStringLegacy(): void
-    {
-        // TODO: PHP 8.2+ minimum — review and remove version skip
-        if (PHP_VERSION_ID >= 70400) {
-            $this->markTestSkipped('This test is for PHP < 7.4 only');
-        }
-
-        $field = new TestActiveFieldWithException();
-
-        $errorTriggered = false;
-        $errorMessage = '';
-
-        set_error_handler(
-            function ($severity, $message, $file, $line) use (&$errorTriggered, &$errorMessage) {
-                if ($severity === E_USER_ERROR) {
-                    $errorTriggered = true;
-                    $errorMessage = $message;
-
-                    return true;
-                }
-
-                return false;
-            },
-            E_USER_ERROR,
-        );
-
-        $result = (string) $field;
-
-        restore_error_handler();
-
-        $this->assertTrue($errorTriggered, 'E_USER_ERROR should have been triggered');
-        $this->assertStringContainsString('Test exception in toString.', $errorMessage);
-        $this->assertSame('', $result, 'Result should be an empty string');
-    }
-
     /**
      * Helper methods.
      */

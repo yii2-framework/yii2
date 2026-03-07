@@ -216,9 +216,8 @@ class FormatConverterTest extends TestCase
     public function testIntlIcuToJuiShortFormDateTime(): void
     {
         $this->assertEqualsAnyWhitespace('m/d/y, : ', FormatConverter::convertDateIcuToJui('short', 'datetime', 'en-US'));
-        // TODO: PHP 8.2+ minimum — review and remove version skip
         $this->assertEquals(
-            PHP_VERSION_ID < 50600 ? 'dd.mm.y :' : 'dd.mm.y, :',
+            'dd.mm.y, :',
             FormatConverter::convertDateIcuToJui('short', 'datetime', 'de-DE')
         );
     }

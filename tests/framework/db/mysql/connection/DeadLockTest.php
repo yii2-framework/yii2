@@ -283,12 +283,6 @@ class DeadLockTest extends ConnectionTest
      */
     private function setErrorHandler(): void
     {
-        // TODO: PHP 8.2+ minimum — review and remove version skip
-        if (PHP_VERSION_ID < 70000) {
-            set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-                throw new ErrorException($errstr, $errno, $errno, $errfile, $errline);
-            });
-        }
     }
 
     /**

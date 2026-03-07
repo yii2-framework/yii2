@@ -26,12 +26,6 @@ trait SessionTestTrait
         /** @var Session $session */
         $session = new $class();
 
-        // TODO: PHP 8.2+ minimum — review and remove version skip
-        if (PHP_VERSION_ID < 50502 && !$session->getUseCustomStorage()) {
-            $this->markTestSkipped('Can not be tested on PHP < 5.5.2 without custom storage class.');
-            return;
-        }
-
         //non-strict-mode test
         $session->useStrictMode = false;
         $session->close();

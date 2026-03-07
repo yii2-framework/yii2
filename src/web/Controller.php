@@ -250,11 +250,7 @@ class Controller extends BaseController
         if ($param === '' && $type->allowsNull()) {
             // check if type can be string for old string behavior compatibility
             foreach ($types as $partialType) {
-                if (
-                    $partialType === null
-                    || !method_exists($partialType, 'isBuiltin')
-                    || !$partialType->isBuiltin()
-                ) {
+                if (!$partialType instanceof \ReflectionNamedType || !$partialType->isBuiltin()) {
                     continue;
                 }
                 $typeName = $partialType->getName();
@@ -270,11 +266,7 @@ class Controller extends BaseController
         $canBeArray = false;
         $canBeString = false;
         foreach ($types as $partialType) {
-            if (
-                $partialType === null
-                || !method_exists($partialType, 'isBuiltin')
-                || !$partialType->isBuiltin()
-            ) {
+            if (!$partialType instanceof \ReflectionNamedType || !$partialType->isBuiltin()) {
                 continue;
             }
             $foundBuiltinType = true;

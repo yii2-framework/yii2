@@ -107,11 +107,8 @@ class FormatterDateTest extends TestCase
         $value->setTimestamp(1451606400); // Fri, 01 Jan 2016 00:00:00 (UTC)
         $this->assertSame('۱۳۹۴', $this->formatter->asDate($value, 'php:Y'));
 
-        // TODO: PHP 8.2+ minimum — review and remove version skip
-        if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
-            $value = new DateTimeImmutable('2016-01-01 00:00:00', new DateTimeZone('UTC'));
-            $this->assertSame('۱۳۹۴', $this->formatter->asDate($value, 'php:Y'));
-        }
+        $value = new DateTimeImmutable('2016-01-01 00:00:00', new DateTimeZone('UTC'));
+        $this->assertSame('۱۳۹۴', $this->formatter->asDate($value, 'php:Y'));
 
         // Buddhist calendar
         $this->formatter->locale = 'fr_FR@calendar=buddhist';
@@ -125,11 +122,8 @@ class FormatterDateTest extends TestCase
         $value->setTimestamp(1451606400); // Fri, 01 Jan 2016 00:00:00 (UTC)
         $this->assertSame('2559', $this->formatter->asDate($value, 'php:Y'));
 
-        // TODO: PHP 8.2+ minimum — review and remove version skip
-        if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
-            $value = new DateTimeImmutable('2016-01-01 00:00:00', new DateTimeZone('UTC'));
-            $this->assertSame('2559', $this->formatter->asDate($value, 'php:Y'));
-        }
+        $value = new DateTimeImmutable('2016-01-01 00:00:00', new DateTimeZone('UTC'));
+        $this->assertSame('2559', $this->formatter->asDate($value, 'php:Y'));
     }
 
     public function testIntlAsTime(): void
@@ -153,12 +147,9 @@ class FormatterDateTest extends TestCase
         $this->assertSameAnyWhitespace(date('g:i:s A', $value->getTimestamp()), $this->formatter->asTime($value));
         $this->assertSame(date('h:i:s A', $value->getTimestamp()), $this->formatter->asTime($value, 'php:h:i:s A'));
 
-        // TODO: PHP 8.2+ minimum — review and remove version skip
-        if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
-            $value = new DateTimeImmutable();
-            $this->assertSameAnyWhitespace(date('g:i:s A', $value->getTimestamp()), $this->formatter->asTime($value));
-            $this->assertSame(date('h:i:s A', $value->getTimestamp()), $this->formatter->asTime($value, 'php:h:i:s A'));
-        }
+        $value = new DateTimeImmutable();
+        $this->assertSameAnyWhitespace(date('g:i:s A', $value->getTimestamp()), $this->formatter->asTime($value));
+        $this->assertSame(date('h:i:s A', $value->getTimestamp()), $this->formatter->asTime($value, 'php:h:i:s A'));
 
         // empty input
         $this->assertSameAnyWhitespace('12:00:00 AM', $this->formatter->asTime(''));
@@ -205,22 +196,16 @@ class FormatterDateTest extends TestCase
         );
         $this->assertSame(date('Y/m/d h:i:s A', $value->getTimestamp()), $this->formatter->asDatetime($date, 'php:Y/m/d h:i:s A'));
 
-        // TODO: PHP 8.2+ minimum — review and remove version skip
-        if (PHP_VERSION_ID >= 50500) {
-            $value = new DateTimeImmutable();
-            $this->assertMatchesRegularExpression(
-                $this->sanitizeWhitespaces(date('~M j, Y,? g:i:s A~', $value->getTimestamp())),
-                $this->sanitizeWhitespaces($this->formatter->asDatetime($value))
-            );
-            $this->assertSame(date('Y/m/d h:i:s A', $value->getTimestamp()), $this->formatter->asDatetime($value, 'php:Y/m/d h:i:s A'));
-        }
+        $value = new DateTimeImmutable();
+        $this->assertMatchesRegularExpression(
+            $this->sanitizeWhitespaces(date('~M j, Y,? g:i:s A~', $value->getTimestamp())),
+            $this->sanitizeWhitespaces($this->formatter->asDatetime($value))
+        );
+        $this->assertSame(date('Y/m/d h:i:s A', $value->getTimestamp()), $this->formatter->asDatetime($value, 'php:Y/m/d h:i:s A'));
 
-        // TODO: PHP 8.2+ minimum — review and remove version skip
-        if (PHP_VERSION_ID >= 50600) {
-            // DATE_ATOM
-            $value = time();
-            $this->assertEquals(date(DATE_ATOM, $value), $this->formatter->asDatetime($value, 'php:' . DATE_ATOM));
-        }
+        // DATE_ATOM
+        $value = time();
+        $this->assertEquals(date(DATE_ATOM, $value), $this->formatter->asDatetime($value, 'php:' . DATE_ATOM));
 
         // empty input
         $this->assertMatchesRegularExpression(
