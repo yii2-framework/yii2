@@ -56,6 +56,7 @@ not available in PHP >= 8.0, so the dual-mode `$useApcu` property has been remov
     'class' => 'yii\caching\ApcuCache',
 ],
 ```
+
 ### CUBRID database driver removal
 
 The CUBRID database driver has been removed from the framework.
