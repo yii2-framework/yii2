@@ -6841,12 +6841,6 @@ parameters:
 			path: tests/framework/behaviors/TimestampBehaviorTest.php
 
 		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:markTestSkipped\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 3
-			path: tests/framework/caching/ApcuCacheTest.php
-
-		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
 			identifier: staticMethod.dynamicCall
 			count: 2
