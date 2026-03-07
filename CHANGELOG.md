@@ -11,3 +11,4 @@
 - refactor(base): remove dead `E_STRICT` handling and `PHP_VERSION_ID < 80100` guards from `ErrorException` and `ErrorHandler`.
 - refactor(base)!: remove all HHVM support — drop `E_HHVM_FATAL_ERROR` constant, `handleHhvmError()` method, `$_hhvmException` property, and all HHVM-specific conditionals and test skips.
 - refactor!: remove `PHP < 8.2` version guards and dead fallbacks across `src/` and `tests`.
+- fix(console): `getActionArgsHelp()` crashes on PHP `8.2+` DNF/intersection types.
