@@ -11,11 +11,18 @@ declare(strict_types=1);
 namespace yiiunit\framework\caching;
 
 use PHPUnit\Framework\Attributes\Group;
+use Xepozz\InternalMocker\MockerState;
+use yii\base\InvalidConfigException;
 use yii\caching\ApcuCache;
 use yiiunit\base\caching\BaseCache;
 
 /**
  * Unit tests for {@see ApcuCache}.
+ *
+ * Requires `apc.enable_cli=1` in `php.ini` for CLI execution.
+ *
+ * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 2.0
  */
 #[Group('apcu')]
 #[Group('caching')]
@@ -28,10 +35,6 @@ final class ApcuCacheTest extends BaseCache
      */
     protected function getCacheInstance(): ApcuCache
     {
-        if ('cli' === PHP_SAPI && !ini_get('apc.enable_cli')) {
-            $this->markTestSkipped('APCu CLI is not enabled. Skipping.');
-        }
-
         if ($this->_cacheInstance === null) {
             $this->_cacheInstance = new ApcuCache();
         }
@@ -39,13 +42,13 @@ final class ApcuCacheTest extends BaseCache
         return $this->_cacheInstance;
     }
 
-    public function testExpire(): void
+    public function testInitThrowsExceptionWhenApcuExtensionNotLoaded(): void
     {
-        $this->markTestSkipped('APCu keys are expiring only on the next request.');
-    }
+        MockerState::addCondition('yii\caching', 'extension_loaded', ['apcu'], false);
 
-    public function testExpireAdd(): void
-    {
-        $this->markTestSkipped('APCu keys are expiring only on the next request.');
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('ApcuCache requires PHP apcu extension to be loaded.');
+
+        new ApcuCache();
     }
 }

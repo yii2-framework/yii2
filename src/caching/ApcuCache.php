@@ -19,7 +19,6 @@ use function apcu_exists;
 use function apcu_fetch;
 use function apcu_store;
 use function array_keys;
-use function extension_loaded;
 use function is_array;
 
 /**
@@ -56,7 +55,7 @@ class ApcuCache extends Cache
      * Checks whether a specified key exists in the cache.
      *
      * This can be faster than getting the value from the cache if the data is big.
-     *`
+     *
      * Note that this method does not check whether the dependency associated with the cached data, if there is any, has
      * changed. So a call to [[get]] may return `false` while exists returns `true`.
      *
