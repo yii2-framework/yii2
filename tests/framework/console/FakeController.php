@@ -110,4 +110,24 @@ class FakeController extends Controller
     {
         return [$foo, $bar, $baz];
     }
+
+    public function actionUnionType(int|string $param)
+    {
+        return $param;
+    }
+
+    public function actionIntersectionType(\Countable&\Iterator $param)
+    {
+        return $param;
+    }
+
+    public function actionDnfType((\Countable&\Iterator)|null $param = null)
+    {
+        return $param;
+    }
+
+    public function actionNullableType(?int $param = null)
+    {
+        return $param;
+    }
 }

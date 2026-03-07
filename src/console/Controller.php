@@ -608,12 +608,7 @@ class Controller extends BaseController
             $type = null;
             $comment = '';
             if ($parameter->hasType()) {
-                $reflectionType = $parameter->getType();
-                $types = method_exists($reflectionType, 'getTypes') ? $reflectionType->getTypes() : [$reflectionType];
-                foreach ($types as $key => $reflectionType) {
-                    $types[$key] = $reflectionType->getName();
-                }
-                $type = implode('|', $types);
+                $type = $this->stringifyReflectionType($parameter->getType());
             }
             // find PhpDoc tag by property name or position
             $key = isset($phpDocParams[$parameter->name]) ? $parameter->name : (isset($phpDocParams[$i]) ? $i : null);
@@ -705,6 +700,38 @@ class Controller extends BaseController
         }
 
         return $options;
+    }
+
+    /**
+     * Converts a ReflectionType to its string representation.
+     *
+     * Handles named types, union types, intersection types, and DNF (Disjunctive Normal Form) types.
+     *
+     * @param \ReflectionType $type the reflection type to stringify.
+     *
+     * @return string the string representation of the type.
+     */
+    private function stringifyReflectionType(\ReflectionType $type): string
+    {
+        if ($type instanceof \ReflectionNamedType) {
+            return $type->getName();
+        }
+
+        $separator = $type instanceof \ReflectionIntersectionType ? '&' : '|';
+        $parts = array_map(
+            function (\ReflectionType $t) use ($type): string {
+                $str = $this->stringifyReflectionType($t);
+
+                if ($type instanceof \ReflectionUnionType && $t instanceof \ReflectionIntersectionType) {
+                    return '(' . $str . ')';
+                }
+
+                return $str;
+            },
+            $type->getTypes(),
+        );
+
+        return implode($separator, $parts);
     }
 
     private $_reflections = [];

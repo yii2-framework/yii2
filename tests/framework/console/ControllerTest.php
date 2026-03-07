@@ -283,15 +283,50 @@ class ControllerTest extends TestCase
         $help = $controller->getActionArgsHelp($controller->createAction('aksi2'));
 
         $this->assertArrayHasKey('values', $help);
-        if (PHP_MAJOR_VERSION > 5) {
-            // declared type
-            $this->assertEquals('array', $help['values']['type']);
-        } else {
-            $this->markTestSkipped('Can not test declared type of parameter $values on PHP < 7.0');
-        }
+        $this->assertSame('array', $help['values']['type']);
         $this->assertArrayHasKey('value', $help);
         // PHPDoc type
-        $this->assertEquals('string', $help['value']['type']);
+        $this->assertSame('string', $help['value']['type']);
+    }
+
+    public function testGetActionArgsHelpWithUnionType(): void
+    {
+        $controller = new FakeController('fake', Yii::$app);
+        $help = $controller->getActionArgsHelp($controller->createAction('union-type'));
+
+        $this->assertArrayHasKey('param', $help);
+        $this->assertSame('string|int', $help['param']['type']);
+        $this->assertTrue($help['param']['required']);
+    }
+
+    public function testGetActionArgsHelpWithIntersectionType(): void
+    {
+        $controller = new FakeController('fake', Yii::$app);
+        $help = $controller->getActionArgsHelp($controller->createAction('intersection-type'));
+
+        $this->assertArrayHasKey('param', $help);
+        $this->assertSame('Countable&Iterator', $help['param']['type']);
+        $this->assertTrue($help['param']['required']);
+    }
+
+    public function testGetActionArgsHelpWithDnfType(): void
+    {
+        $controller = new FakeController('fake', Yii::$app);
+        $help = $controller->getActionArgsHelp($controller->createAction('dnf-type'));
+
+        $this->assertArrayHasKey('param', $help);
+        $this->assertSame('(Countable&Iterator)|null', $help['param']['type']);
+        $this->assertFalse($help['param']['required']);
+    }
+
+    public function testGetActionArgsHelpWithNullableType(): void
+    {
+        $controller = new FakeController('fake', Yii::$app);
+        $help = $controller->getActionArgsHelp($controller->createAction('nullable-type'));
+
+        $this->assertArrayHasKey('param', $help);
+        $this->assertSame('int', $help['param']['type']);
+        $this->assertFalse($help['param']['required']);
     }
 
     public function testGetActionHelpSummaryOnNull(): void
