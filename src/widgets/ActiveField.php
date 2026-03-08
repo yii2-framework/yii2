@@ -578,9 +578,11 @@ class ActiveField extends Component
         $this->addAriaAttributes($options);
         $this->adjustLabelFor($options);
 
-        $this->parts['{label}'] = '';
+        $this->parts['{label}'] ??= '';
 
-        $options = $enclosedByLabel ? $options : $this->generateLabel($options);
+        if (!$enclosedByLabel) {
+            $options = $this->generateLabel($options);
+        }
 
         $this->parts['{input}'] = Html::activeRadio($this->model, $this->attribute, $options);
 
@@ -623,9 +625,11 @@ class ActiveField extends Component
         $this->addAriaAttributes($options);
         $this->adjustLabelFor($options);
 
-        $this->parts['{label}'] = '';
+        $this->parts['{label}'] ??= '';
 
-        $options = $enclosedByLabel ? $options : $this->generateLabel($options);
+        if (!$enclosedByLabel) {
+            $options = $this->generateLabel($options);
+        }
 
         $this->parts['{input}'] = Html::activeCheckbox($this->model, $this->attribute, $options);
 
