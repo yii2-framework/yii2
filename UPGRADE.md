@@ -73,3 +73,64 @@ All HHVM-specific code has been removed from the framework. The framework target
 
 If you referenced `ErrorException::E_HHVM_FATAL_ERROR` or `ErrorHandler::handleHhvmError()` in your application code,
 remove those references.
+
+### jQuery is now optional (strategy pattern)
+
+jQuery is no longer hardcoded in validators and widgets. A new `Application::$useJquery` property (default: `true`)
+controls whether jQuery-based client scripts are registered. When set to `false`, no jQuery assets are loaded and
+`clientValidateAttribute()` returns `null` for all built-in validators.
+
+**No action required** for existing applications — the default behavior is fully backward compatible.
+
+#### New interfaces
+
+- `yii\validators\client\ClientValidatorScriptInterface` — strategy for validator client scripts.
+- `yii\web\client\ClientScriptInterface` — strategy for widget client scripts.
+
+#### New properties
+
+- `yii\base\Application::$useJquery` — master switch for jQuery client scripts (default: `true`).
+- `Validator::$clientScript` — on all 13 validators that support client validation (`BooleanValidator`,
+  `CompareValidator`, `EmailValidator`, `FileValidator`, `ImageValidator`, `IpValidator`, `NumberValidator`,
+  `RangeValidator`, `RegularExpressionValidator`, `RequiredValidator`, `StringValidator`, `TrimValidator`,
+  `UrlValidator`).
+- `ActiveForm::$clientScript`, `GridView::$clientScript`, `CheckboxColumn::$clientScript` — widget-level overrides.
+
+#### New method
+
+- `Validator::getFormattedClientMessage(string, array): string` — public wrapper around the protected
+  `formatMessage()`, used by extracted client script classes.
+
+#### Opting out of jQuery
+
+```php
+// In application configuration
+'useJquery' => false,
+```
+
+When `useJquery` is `false` and no custom `clientScript` strategy is configured:
+- `clientValidateAttribute()` returns `null` on built-in jQuery-backed validators.
+- `getClientOptions()` returns `[]` on built-in jQuery-backed validators.
+- `ActiveForm`, `GridView`, and `CheckboxColumn` do not register the built-in jQuery plugins.
+- No built-in `JqueryAsset`, `ValidationAsset`, `ActiveFormAsset`, or `GridViewAsset` bundles are registered.
+
+> **Note:** Custom `clientScript` strategies are always instantiated regardless of `useJquery`.
+
+#### Custom client script strategy
+
+You can replace the jQuery implementation with a custom one by implementing the interfaces:
+
+```php
+// In a model's rules() method
+public function rules()
+{
+    return [
+        ['username', 'required', 'clientScript' => ['class' => 'app\validators\MyRequiredClientScript']],
+    ];
+}
+
+// Custom form client script
+ActiveForm::begin([
+    'clientScript' => ['class' => 'app\widgets\MyFormClientScript'],
+]);
+```

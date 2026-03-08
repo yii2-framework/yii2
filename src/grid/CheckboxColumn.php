@@ -9,9 +9,15 @@
 namespace yii\grid;
 
 use Closure;
+use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use yii\helpers\Json;
+use yii\jquery\grid\CheckboxColumnJqueryClientScript;
+use yii\web\client\ClientScriptInterface;
+
+use function call_user_func;
+use function is_array;
 
 /**
  * CheckboxColumn displays a column of checkboxes in a grid view.
@@ -75,7 +81,12 @@ class CheckboxColumn extends Column
      * @since 2.0.9
      */
     public $cssClass;
-
+    /**
+     * @var array|ClientScriptInterface|null the client-side script implementation.
+     * When [[Application::$useJquery]] is `true`, defaults to [[CheckboxColumnJqueryClientScript]].
+     * Set to `null` to disable client-side script registration for this column.
+     */
+    public $clientScript = null;
 
     /**
      * {@inheritdoc}
@@ -84,11 +95,21 @@ class CheckboxColumn extends Column
     public function init()
     {
         parent::init();
+
         if (empty($this->name)) {
             throw new InvalidConfigException('The "name" property must be set.');
         }
+
         if (substr_compare($this->name, '[]', -2, 2)) {
             $this->name .= '[]';
+        }
+
+        if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
+            $this->clientScript = ['class' => CheckboxColumnJqueryClientScript::class];
+        }
+
+        if ($this->clientScript !== null && !$this->clientScript instanceof ClientScriptInterface) {
+            $this->clientScript = Yii::createObject($this->clientScript);
         }
 
         $this->registerClientScript();
@@ -106,7 +127,11 @@ class CheckboxColumn extends Column
             return parent::renderHeaderCellContent();
         }
 
-        return Html::checkbox($this->getHeaderCheckBoxName(), false, ['class' => 'select-on-check-all']);
+        return Html::checkbox(
+            $this->getHeaderCheckBoxName(),
+            false,
+            ['class' => 'select-on-check-all'],
+        );
     }
 
     /**
@@ -161,13 +186,12 @@ class CheckboxColumn extends Column
      */
     public function registerClientScript()
     {
-        $id = $this->grid->options['id'];
-        $options = Json::encode([
-            'name' => $this->name,
-            'class' => $this->cssClass,
-            'multiple' => $this->multiple,
-            'checkAll' => $this->grid->showHeader ? $this->getHeaderCheckBoxName() : null,
-        ]);
-        $this->grid->getView()->registerJs("jQuery('#$id').yiiGridView('setSelectionColumn', $options);");
+        if ($this->clientScript instanceof ClientScriptInterface) {
+            $this->clientScript->register(
+                $this,
+                $this->grid->getView(),
+                ['headerCheckBoxName' => $this->getHeaderCheckBoxName()],
+            );
+        }
     }
 }
