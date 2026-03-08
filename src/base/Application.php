@@ -88,7 +88,7 @@ abstract class Application extends Module
      * When set to `true` (default), validators and widgets use jQuery-based client scripts.
      * When set to `false`, no jQuery assets are registered and `clientValidateAttribute()` returns `null`.
      * This allows replacing jQuery with an alternative JS framework or disabling client scripts entirely.
-     * @since 2.0
+     * @since 2.2
      */
     public $useJquery = true;
     /**

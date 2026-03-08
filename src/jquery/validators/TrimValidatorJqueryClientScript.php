@@ -50,7 +50,7 @@ class TrimValidatorJqueryClientScript extends BaseObject implements ClientValida
     public function register(Validator $validator, Model $model, string $attribute, View $view): string|null
     {
         /** @var TrimValidator $validator */
-        if ($validator->skipOnArray && is_array($model->canGetProperty($attribute, checkVars: false))) {
+        if ($validator->skipOnArray && is_array($model->getAttributes([$attribute])[$attribute] ?? null)) {
             return null;
         }
 

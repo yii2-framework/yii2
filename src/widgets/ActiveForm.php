@@ -215,13 +215,14 @@ class ActiveForm extends Widget
 
         $this->options['id'] ??= $this->getId();
 
-        if (
-            $this->enableClientScript
-            && (Yii::$app->useJquery ?? false)
-            && !$this->clientScript instanceof ClientScriptInterface
-        ) {
-            $this->clientScript ??= ['class' => ActiveFormJqueryClientScript::class];
-            $this->clientScript = Yii::createObject($this->clientScript);
+        if ($this->enableClientScript) {
+            if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
+                $this->clientScript = ['class' => ActiveFormJqueryClientScript::class];
+            }
+
+            if ($this->clientScript !== null && !$this->clientScript instanceof ClientScriptInterface) {
+                $this->clientScript = Yii::createObject($this->clientScript);
+            }
         }
 
         ob_start();

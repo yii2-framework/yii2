@@ -104,8 +104,11 @@ class CheckboxColumn extends Column
             $this->name .= '[]';
         }
 
-        if ((Yii::$app->useJquery ?? false) && !$this->clientScript instanceof ClientScriptInterface) {
-            $this->clientScript ??= ['class' => CheckboxColumnJqueryClientScript::class];
+        if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
+            $this->clientScript = ['class' => CheckboxColumnJqueryClientScript::class];
+        }
+
+        if ($this->clientScript !== null && !$this->clientScript instanceof ClientScriptInterface) {
             $this->clientScript = Yii::createObject($this->clientScript);
         }
 

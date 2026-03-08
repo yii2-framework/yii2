@@ -35,18 +35,20 @@ class RequiredValidatorJqueryClientScript extends BaseObject implements ClientVa
         /** @var RequiredValidator $validator */
         $options = [];
 
-        $options['message'] = $validator->getFormattedClientMessage(
-            $validator->message,
-            ['attribute' => $model->getAttributeLabel($attribute)],
-        );
-
         if ($validator->requiredValue !== null) {
             $options['message'] = $validator->getFormattedClientMessage(
                 $validator->message,
                 ['requiredValue' => $validator->requiredValue],
             );
             $options['requiredValue'] = $validator->requiredValue;
+        } else {
+            $options['message'] = $validator->message;
         }
+
+        $options['message'] = $validator->getFormattedClientMessage(
+            $options['message'],
+            ['attribute' => $model->getAttributeLabel($attribute)],
+        );
 
         if ($validator->strict) {
             $options['strict'] = 1;
