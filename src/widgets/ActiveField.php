@@ -990,8 +990,13 @@ class ActiveField extends Component
 
             if (!empty($options['labelOptions'])) {
                 $tag = $options['labelOptions']['tag'] ?? 'label';
+
                 unset($options['labelOptions']['tag']);
-                $this->labelOptions = array_merge($this->labelOptions, $options['labelOptions']);
+
+                $this->labelOptions = [
+                    ...$this->labelOptions,
+                    ...$options['labelOptions'],
+                ];
             }
 
             if ($tag === false) {
@@ -1000,10 +1005,17 @@ class ActiveField extends Component
                 $this->parts['{label}'] = Html::activeLabel(
                     $this->model,
                     $this->attribute,
-                    array_merge(['label' => $options['label']], $this->labelOptions),
+                    [
+                        'label' => $options['label'],
+                        ...$this->labelOptions,
+                    ],
                 );
             } else {
-                $this->parts['{label}'] = Html::tag($tag, $options['label'], $this->labelOptions);
+                $labelOpts = $this->labelOptions;
+
+                unset($labelOpts['label'], $labelOpts['for']);
+
+                $this->parts['{label}'] = Html::tag($tag, $options['label'], $labelOpts);
             }
         }
 
