@@ -108,22 +108,26 @@ controls whether jQuery-based client scripts are registered. When set to `false`
 'useJquery' => false,
 ```
 
-When `useJquery` is `false`:
-- `clientValidateAttribute()` returns `null` on all validators.
-- `getClientOptions()` returns `[]` on all validators.
-- `ActiveForm`, `GridView`, and `CheckboxColumn` do not register any jQuery plugins.
-- No `JqueryAsset`, `ValidationAsset`, `ActiveFormAsset`, or `GridViewAsset` bundles are registered.
+When `useJquery` is `false` and no custom `clientScript` strategy is configured:
+- `clientValidateAttribute()` returns `null` on built-in jQuery-backed validators.
+- `getClientOptions()` returns `[]` on built-in jQuery-backed validators.
+- `ActiveForm`, `GridView`, and `CheckboxColumn` do not register the built-in jQuery plugins.
+- No built-in `JqueryAsset`, `ValidationAsset`, `ActiveFormAsset`, or `GridViewAsset` bundles are registered.
+
+> **Note:** Custom `clientScript` strategies are always instantiated regardless of `useJquery`.
 
 #### Custom client script strategy
 
 You can replace the jQuery implementation with a custom one by implementing the interfaces:
 
 ```php
-// Custom validator client script
-'components' => [
-    // In a validator rule
-    ['required', 'clientScript' => ['class' => 'app\validators\MyRequiredClientScript']],
-],
+// In a model's rules() method
+public function rules()
+{
+    return [
+        ['username', 'required', 'clientScript' => ['class' => 'app\validators\MyRequiredClientScript']],
+    ];
+}
 
 // Custom form client script
 ActiveForm::begin([

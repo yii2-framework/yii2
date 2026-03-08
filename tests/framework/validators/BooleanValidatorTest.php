@@ -111,7 +111,7 @@ class BooleanValidatorTest extends TestCase
 
     public function testClientValidateAttributeReturnsNullWithoutJquery(): void
     {
-        // Without Yii::$app (useJquery defaults to false), clientValidateAttribute returns null
+        // Without Yii::$app (no application context), no client script is initialized
         $validator = new BooleanValidator(
             [
                 'trueValue' => true,
