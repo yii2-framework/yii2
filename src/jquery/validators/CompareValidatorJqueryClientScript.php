@@ -40,7 +40,7 @@ class CompareValidatorJqueryClientScript extends BaseObject implements ClientVal
         $resolvedCompareValue = $validator->compareValue;
 
         if ($resolvedCompareValue instanceof Closure) {
-            $resolvedCompareValue = call_user_func($resolvedCompareValue);
+            $resolvedCompareValue = call_user_func($resolvedCompareValue, $model, $attribute);
         }
 
         $options = [
