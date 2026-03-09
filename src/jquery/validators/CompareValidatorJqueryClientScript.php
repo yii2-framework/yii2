@@ -37,8 +37,10 @@ class CompareValidatorJqueryClientScript extends BaseObject implements ClientVal
     public function getClientOptions(Validator $validator, Model $model, string $attribute): array
     {
         /** @var CompareValidator $validator */
-        if ($validator->compareValue !== null && $validator->compareValue instanceof Closure) {
-            $validator->compareValue = call_user_func($validator->compareValue);
+        $resolvedCompareValue = $validator->compareValue;
+
+        if ($resolvedCompareValue instanceof Closure) {
+            $resolvedCompareValue = call_user_func($resolvedCompareValue);
         }
 
         $options = [
@@ -46,9 +48,9 @@ class CompareValidatorJqueryClientScript extends BaseObject implements ClientVal
             'type' => $validator->type,
         ];
 
-        if ($validator->compareValue !== null) {
-            $options['compareValue'] = $validator->compareValue;
-            $compareLabel = $compareValue = $compareValueOrAttribute = $validator->compareValue;
+        if ($resolvedCompareValue !== null) {
+            $options['compareValue'] = $resolvedCompareValue;
+            $compareLabel = $compareValue = $compareValueOrAttribute = $resolvedCompareValue;
         } else {
             $compareAttribute = $validator->compareAttribute === null
                 ? "{$attribute}_repeat" : $validator->compareAttribute;
