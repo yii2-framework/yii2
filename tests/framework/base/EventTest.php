@@ -386,7 +386,7 @@ final class EventTest extends TestCase
             Post::class,
             'save',
             static function () use (&$order): void {
-            $order[] = 'first';
+                $order[] = 'first';
             },
         );
         Event::on(
@@ -507,9 +507,7 @@ final class EventTest extends TestCase
 
         Event::on(
             Post::class,
-
             'save',
-
             static function (Event $event) use (&$order): void {
                 $order[] = 'first';
                 $event->handled = true;
@@ -578,7 +576,7 @@ final class EventTest extends TestCase
 
     public function testHasHandlersSkipsEmptyWildcardHandlers(): void
     {
-        $this->setInaccessibleProperty(new Event(),  '_eventWildcards', ['save' => ['*\Post' => []]]);
+        $this->setInaccessibleProperty(new Event(), '_eventWildcards', ['save' => ['*\Post' => []]]);
 
         self::assertFalse(
             Event::hasHandlers(Post::class, 'save'),

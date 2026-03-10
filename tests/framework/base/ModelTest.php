@@ -878,10 +878,10 @@ final class ModelTest extends TestCase
             'email' => 'd426@mdm.com',
         ];
 
-        self::assertNotEquals(
-            'd426@mdm.com',
+        self::assertSame(
+            'm2792684@mdm.com',
             $model->email,
-            'Should not be overwritten via mass assignment in update scenario.',
+            'Should retain the existing email in update scenario.',
         );
     }
 
