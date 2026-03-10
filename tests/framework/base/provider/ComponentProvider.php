@@ -1,0 +1,144 @@
+<?php
+
+/**
+ * @link https://www.yiiframework.com/
+ * @copyright Copyright (c) 2008 Yii Software LLC
+ * @license https://www.yiiframework.com/license/
+ */
+
+declare(strict_types=1);
+
+namespace yiiunit\framework\base\provider;
+
+/**
+ * Data provider for {@see \yiiunit\framework\base\ComponentTest} test cases.
+ *
+ * Provides representative input/output pairs for property accessibility checks.
+ *
+ * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 2.2
+ */
+final class ComponentProvider
+{
+    /**
+     * @phpstan-return array<string, array{string, bool, bool}>
+     */
+    public static function hasProperty(): array
+    {
+        return [
+            'behavior property (PascalCase, case-sensitive)' => [
+                'Content',
+                true,
+                false,
+            ],
+            'behavior property with behaviors' => [
+                'content',
+                true,
+                true,
+            ],
+            'behavior property without behaviors' => [
+                'content',
+                false,
+                false,
+            ],
+            'non-existent property' => [
+                'Caption',
+                true,
+                false,
+            ],
+            'public property (camelCase)' => [
+                'text',
+                true,
+                true,
+            ],
+            'public property (PascalCase)' => [
+                'Text',
+                true,
+                true,
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array<string, array{string, bool, bool}>
+     */
+    public static function canGetProperty(): array
+    {
+        return [
+            'behavior property (PascalCase, case-sensitive)' => [
+                'Content',
+                true,
+                false,
+            ],
+            'behavior property with behaviors' => [
+                'content',
+                true,
+                true,
+            ],
+            'behavior property without behaviors' => [
+                'content',
+                false,
+                false,
+            ],
+            'non-existent property' => [
+                'Caption',
+                true,
+                false,
+            ],
+            'public property (camelCase)' => [
+                'text',
+                true,
+                true,
+            ],
+            'public property (PascalCase)' => [
+                'Text',
+                true,
+                true,
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array<string, array{string, bool, bool}>
+     */
+    public static function canSetProperty(): array
+    {
+        return [
+            'behavior property (PascalCase, case-sensitive)' => [
+                'Content',
+                true,
+                false,
+            ],
+            'behavior property with behaviors' => [
+                'content',
+                true,
+                true,
+            ],
+            'behavior property without behaviors' => [
+                'content',
+                false,
+                false,
+            ],
+            'non-existent property' => [
+                'Caption',
+                true,
+                false,
+            ],
+            'public property (camelCase)' => [
+                'text',
+                true,
+                true,
+            ],
+            'public property (PascalCase)' => [
+                'Text',
+                true,
+                true,
+            ],
+            'read-only property' => [
+                'Object',
+                true,
+                false,
+            ],
+        ];
+    }
+}

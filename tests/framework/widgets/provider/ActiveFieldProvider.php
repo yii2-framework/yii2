@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
+namespace yiiunit\framework\widgets\provider;
+
 /**
  * Data provider for {@see \yiiunit\framework\widgets\ActiveFieldTest} test cases.
  *
  * Provides representative input/output pairs for label, hint, radio, and checkbox attributes.
  *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 2.0
+ * @since 2.2
  */
-
-namespace yiiunit\framework\widgets\provider;
-
 final class ActiveFieldProvider
 {
     public static function hint(): array

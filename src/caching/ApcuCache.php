@@ -33,7 +33,7 @@ use function is_array;
  * For more details and usage information on Cache, see the [guide article on caching](guide:caching-overview).
  *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 2.0
+ * @since 2.2
  */
 class ApcuCache extends Cache
 {

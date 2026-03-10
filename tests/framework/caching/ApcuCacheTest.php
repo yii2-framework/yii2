@@ -22,7 +22,7 @@ use yiiunit\base\caching\BaseCache;
  * Requires `apc.enable_cli=1` in `php.ini` for CLI execution.
  *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 2.0
+ * @since 2.2
  */
 #[Group('apcu')]
 #[Group('caching')]

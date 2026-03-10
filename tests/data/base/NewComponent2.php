@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @link https://www.yiiframework.com/
+ * @copyright Copyright (c) 2008 Yii Software LLC
+ * @license https://www.yiiframework.com/license/
+ */
+
+declare(strict_types=1);
+
+namespace yiiunit\data\base;
+
+use yii\base\Component;
+
+/**
+ * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 2.2
+ */
+final class NewComponent2 extends Component
+{
+    public $a;
+    public $b;
+    public $c;
+
+    public function __construct($b, $c)
+    {
+        $this->b = $b;
+        $this->c = $c;
+    }
+}

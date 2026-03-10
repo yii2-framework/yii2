@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\db\sqlite\conditions;
 
+use PHPUnit\Framework\Attributes\Group;
 use yii\base\NotSupportedException;
 use yii\db\conditions\InCondition;
 use yii\db\Query;
@@ -17,11 +18,13 @@ use yii\db\sqlite\conditions\InConditionBuilder;
 use yiiunit\base\db\BaseDatabase;
 
 /**
- * @group sqlite
+ * Unit tests for {@see InConditionBuilder}.
  *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 2.2
  */
-final class InconditionBuilderTest extends BaseDatabase
+#[Group('sqlite')]
+final class InConditionBuilderTest extends BaseDatabase
 {
     public $driverName = 'sqlite';
 
