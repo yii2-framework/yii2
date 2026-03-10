@@ -1,5 +1,10 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## 0.1.0 Under development
 
 - chore: initial commit.
@@ -15,3 +20,4 @@
 - feat(widgets): enhance `ActiveField::label()` with `tag` option and fix `labelOptions` for `checkbox`/`radio`.
 - feat: make jQuery optional via strategy pattern — introduce `Application::$useJquery`, `ClientValidatorScriptInterface`, `ClientScriptInterface`, and extracted jQuery client script classes for all validators and widgets.
 - test(validators): add comprehensive test coverage for `CompareValidator` data-provider-driven tests, closure validation, client-side validation, and numeric type conversion scenarios.
+- tests(base): Raise code coverage to `100%` for `Component`, `Event` and `Model` classes, and update related tests.

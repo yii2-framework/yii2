@@ -6229,81 +6229,15 @@ parameters:
 			path: tests/framework/base/BehaviorTest.php
 
 		-
-			message: '#^Access to an undefined property yiiunit\\framework\\base\\NewComponent\:\:\$as f\.$#'
+			message: '#^Access to an undefined property yiiunit\\data\\base\\NewComponent\:\:\$as f\.$#'
 			identifier: property.notFound
 			count: 1
 			path: tests/framework/base/ComponentTest.php
 
 		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEmpty\(\)\.$#'
-			identifier: staticMethod.dynamicCall
+			message: '#^Access to private property yiiunit\\data\\base\\NewComponent\:\:\$p2\.$#'
+			identifier: property.private
 			count: 3
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 8
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertFalse\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 39
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 2
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertNotEmpty\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 2
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertNotSame\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertNull\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 13
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 12
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 40
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:fail\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 2
-			path: tests/framework/base/ComponentTest.php
-
-		-
-			message: '#^yiiunit\\framework\\base\\NewComponent2\:\:__construct\(\) does not call parent constructor from yii\\base\\BaseObject\.$#'
-			identifier: constructor.missingParentCall
-			count: 1
 			path: tests/framework/base/ComponentTest.php
 
 		-
@@ -6359,60 +6293,6 @@ parameters:
 			identifier: staticMethod.dynamicCall
 			count: 1
 			path: tests/framework/base/ErrorExceptionTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 6
-			path: tests/framework/base/EventTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertFalse\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 15
-			path: tests/framework/base/EventTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 11
-			path: tests/framework/base/EventTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEmpty\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 6
-			path: tests/framework/base/ModelTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 70
-			path: tests/framework/base/ModelTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertFalse\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 16
-			path: tests/framework/base/ModelTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertNotEquals\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/framework/base/ModelTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertNull\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 7
-			path: tests/framework/base/ModelTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 15
-			path: tests/framework/base/ModelTest.php
 
 		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
@@ -7037,6 +6917,18 @@ parameters:
 			identifier: staticMethod.dynamicCall
 			count: 3
 			path: tests/framework/console/ControllerTest.php
+
+		-
+			message: '#^Parameter \$post of method yiiunit\\framework\\console\\FakePhp71Controller\:\:actionInjection\(\) has invalid type yiiunit\\framework\\base\\Post\.$#'
+			identifier: class.notFound
+			count: 1
+			path: tests/framework/console/FakePhp71Controller.php
+
+		-
+			message: '#^Parameter \$post of method yiiunit\\framework\\console\\FakePhp71Controller\:\:actionNullableInjection\(\) has invalid type yiiunit\\framework\\base\\Post\.$#'
+			identifier: class.notFound
+			count: 1
+			path: tests/framework/console/FakePhp71Controller.php
 
 		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
