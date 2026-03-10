@@ -715,7 +715,7 @@ final class ModelTest extends TestCase
         );
     }
 
-    public function testUnsafeAttributes(): void
+    public function testUnsafeAttributeMassAssignment(): void
     {
         $model = new RulesModel();
 
@@ -753,7 +753,10 @@ final class ModelTest extends TestCase
             $model->validate(),
             "Should fail because required 'email' is 'null'.",
         );
+    }
 
+    public function testUnsafeAttributeWithDefaultValue(): void
+    {
         $model = new RulesModel();
 
         $model->rules = [
@@ -781,7 +784,10 @@ final class ModelTest extends TestCase
             $model->user_id,
             'Should get default value instead of mass-assigned value.',
         );
+    }
 
+    public function testUnsafeAttributeOverrideSafeAndRequired(): void
+    {
         $model = new RulesModel();
 
         $model->rules = [
@@ -813,7 +819,10 @@ final class ModelTest extends TestCase
             $model->validate(),
             "Should fail because unsafe 'email' cannot be mass-assigned.",
         );
+    }
 
+    public function testUnsafeAttributeScenarioBehavior(): void
+    {
         $model = new RulesModel();
 
         $model->rules = [

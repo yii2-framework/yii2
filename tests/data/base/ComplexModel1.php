@@ -23,7 +23,7 @@ final class ComplexModel1 extends Model
     public $is_disabled;
     public $name;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['id'], 'required', 'except' => ['administration']],
