@@ -14,4 +14,4 @@ services:
       start_period: 5s
       start_interval: 5s
     volumes:
-      - ./oracle/startup:/container-entrypoint-startdb.d:ro
+      - ../data/oci:/container-entrypoint-startdb.d:ro
