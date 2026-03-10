@@ -432,6 +432,9 @@ final class ModelTest extends TestCase
         );
     }
 
+    /**
+     * TODO: review PR https://github.com/yiisoft/yii2/pull/18265
+     */
     public function testIsAttributeSafeForNumericAttribute(): void
     {
         $model = new RulesModel();
@@ -442,9 +445,9 @@ final class ModelTest extends TestCase
             ]
         ];
 
-        self::assertTrue(
+        self::assertFalse(
             $model->isAttributeSafe('123456'),
-            'Should be recognized as safe.',
+            'Numeric string attributes should not be recognized as safe.',
         );
     }
 
@@ -1338,7 +1341,7 @@ final class ModelTest extends TestCase
             InvalidConfigException::class,
         );
         self::expectExceptionMessage(
-            'Should be explicitly defined for anonymous models',
+            'The "formName()" method should be explicitly defined for anonymous models',
         );
 
         $model->formName();
