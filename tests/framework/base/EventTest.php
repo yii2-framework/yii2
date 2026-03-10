@@ -127,7 +127,7 @@ final class EventTest extends TestCase
 
         self::assertFalse(
             Event::hasHandlers(Post::class, 'save'),
-            "Should be registered before 'on()'.",
+            "Should not be registered before 'on()'.",
         );
 
         Event::on(Post::class, 'save', $handler);
@@ -300,7 +300,7 @@ final class EventTest extends TestCase
     {
         self::assertFalse(
             Event::hasHandlers(Post::class, 'afterSave'),
-            'Should exist before registration.',
+            'Should not exist before registration.',
         );
 
         Event::on(Post::class, 'afterSave', [$this, 'bla-bla']);
@@ -359,7 +359,7 @@ final class EventTest extends TestCase
 
         self::assertFalse(
             Event::hasHandlers(Post::class, 'save'),
-            'Should exist before registration.',
+            'Should not exist before registration.',
         );
 
         Event::on('*\Post', 'save', $handler);
