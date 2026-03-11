@@ -252,6 +252,13 @@ class SchemaTest extends BaseSchema
 
         $indexes = $db->getSchema()->getTableIndexes('lob_test', true);
 
+        $primaryIndexes = array_values(
+            array_filter($indexes, static fn ($index) => $index->isPrimary),
+        );
+
+        $this->assertCount(1, $primaryIndexes);
+        $this->assertSame(['id'], $primaryIndexes[0]->columnNames);
+
         foreach ($indexes as $index) {
             foreach ($index->columnNames as $columnName) {
                 $this->assertNotNull($columnName, 'LOB index with NULL column name should be excluded');
