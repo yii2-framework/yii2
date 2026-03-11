@@ -1,16 +1,17 @@
 services:
   oracle:
-    image: ${DOCKER_ORACLE_IMAGE:-wnameless/oracle-xe-11g-r2:latest}
+    image: ${DOCKER_ORACLE_IMAGE:-gvenzl/oracle-free:slim-faststart}
     environment:
-      ORACLE_ALLOW_REMOTE: "true"
+      ORACLE_PASSWORD: "oracle"
     ports:
       - "1521:1521"
+    shm_size: "1g"
     healthcheck:
-      test:
-        - "CMD-SHELL"
-        - |
-          su -s /bin/bash oracle -c "echo 'SELECT 1 FROM dual;' | /u01/app/oracle/product/11.2.0/xe/bin/sqlplus -S system/oracle@//127.0.0.1:1521/XE" 2>&1 | grep -q '1'
-      interval: 15s
-      timeout: 10s
-      retries: 60
-      start_period: 120s
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+      start_interval: 5s
+    volumes:
+      - ../data/oci:/container-entrypoint-startdb.d:ro
