@@ -89,7 +89,7 @@ final class ControllerProvider
             'nullable type' => [
                 'nullable-type',
                 'param',
-                'int',
+                'int|null',
                 false,
             ],
             'union type' => [
