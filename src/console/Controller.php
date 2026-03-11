@@ -8,6 +8,10 @@
 
 namespace yii\console;
 
+use ReflectionIntersectionType;
+use ReflectionNamedType;
+use ReflectionType;
+use ReflectionUnionType;
 use Yii;
 use yii\base\Action;
 use yii\base\InlineAction;
@@ -707,23 +711,29 @@ class Controller extends BaseController
      *
      * Handles named types, union types, intersection types, and DNF (Disjunctive Normal Form) types.
      *
-     * @param \ReflectionType $type the reflection type to stringify.
+     * @param ReflectionType $type the reflection type to stringify.
      *
      * @return string the string representation of the type.
      */
     private function stringifyReflectionType(\ReflectionType $type): string
     {
-        if ($type instanceof \ReflectionNamedType) {
-            return $type->getName();
+        if ($type instanceof ReflectionNamedType) {
+            $name = $type->getName();
+
+            if ($type->allowsNull() && $name !== 'null' && $name !== 'mixed' && $name !== 'void') {
+                return "{$name}|null";
+            }
+
+            return $name;
         }
 
-        if ($type instanceof \ReflectionUnionType) {
+        if ($type instanceof ReflectionUnionType) {
             $parts = array_map(
-                function (\ReflectionType $nestedType): string {
+                function (ReflectionType $nestedType): string {
                     $str = $this->stringifyReflectionType($nestedType);
 
-                    if ($nestedType instanceof \ReflectionIntersectionType) {
-                        return '(' . $str . ')';
+                    if ($nestedType instanceof ReflectionIntersectionType) {
+                        return "($str)";
                     }
 
                     return $str;
@@ -734,9 +744,9 @@ class Controller extends BaseController
             return implode('|', $parts);
         }
 
-        if ($type instanceof \ReflectionIntersectionType) {
+        if ($type instanceof ReflectionIntersectionType) {
             $parts = array_map(
-                fn(\ReflectionType $nestedType): string => $this->stringifyReflectionType($nestedType),
+                $this->stringifyReflectionType(...),
                 $type->getTypes(),
             );
 

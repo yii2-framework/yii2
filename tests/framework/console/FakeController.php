@@ -130,4 +130,29 @@ class FakeController extends Controller
     {
         return $param;
     }
+
+    public function actionBuiltinTypes(string $name, int $count, float $rate, bool $active)
+    {
+        return [$name, $count, $rate, $active];
+    }
+
+    public function actionClassType(\stdClass $obj)
+    {
+        return $obj;
+    }
+
+    public function actionMixedType(mixed $param)
+    {
+        return $param;
+    }
+
+    public function actionNoTypeWithDefault($param = 42)
+    {
+        return $param;
+    }
+
+    public function actionComplexDnfType((\Countable&\Iterator)|string $param)
+    {
+        return $param;
+    }
 }

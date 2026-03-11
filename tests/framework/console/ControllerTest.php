@@ -18,6 +18,8 @@ use yii\base\Module;
 use yii\console\Application;
 use yii\console\Request;
 use yii\helpers\Console;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
+use yiiunit\framework\console\providers\ControllerProvider;
 use yiiunit\TestCase;
 
 /**
@@ -289,56 +291,31 @@ class ControllerTest extends TestCase
         $this->assertSame('string', $help['value']['type']);
     }
 
-    public function testGetActionArgsHelpWithUnionType(): void
-    {
+    #[DataProviderExternal(ControllerProvider::class, 'getActionArgsHelp')]
+    public function testGetActionArgsHelpTypes(
+        string $actionId,
+        string $paramName,
+        string $expectedType,
+        bool $expectedRequired
+    ): void {
         $controller = new FakeController('fake', Yii::$app);
-        $help = $controller->getActionArgsHelp($controller->createAction('union-type'));
+        $help = $controller->getActionArgsHelp($controller->createAction($actionId));
 
-        $this->assertArrayHasKey('param', $help);
-        $this->assertSame('string|int', $help['param']['type']);
-        $this->assertTrue($help['param']['required']);
+        $this->assertArrayHasKey($paramName, $help, "Parameter '$paramName' should exist in action '$actionId' help.");
+        $this->assertSame($expectedType, $help[$paramName]['type'], "Type for '$paramName' in action '$actionId' should be '$expectedType'.");
+        $this->assertSame($expectedRequired, $help[$paramName]['required'], "Required flag for '$paramName' in action '$actionId' should be " . ($expectedRequired ? '`true`' : '`false`') . '.');
     }
 
-    public function testGetActionArgsHelpWithIntersectionType(): void
-    {
-        $controller = new FakeController('fake', Yii::$app);
-        $help = $controller->getActionArgsHelp($controller->createAction('intersection-type'));
-
-        $this->assertArrayHasKey('param', $help);
-        $this->assertSame('Countable&Iterator', $help['param']['type']);
-        $this->assertTrue($help['param']['required']);
-    }
-
-    public function testGetActionArgsHelpWithDnfType(): void
-    {
-        $controller = new FakeController('fake', Yii::$app);
-        $help = $controller->getActionArgsHelp($controller->createAction('dnf-type'));
-
-        $this->assertArrayHasKey('param', $help);
-        $this->assertSame('(Countable&Iterator)|null', $help['param']['type']);
-        $this->assertFalse($help['param']['required']);
-    }
-
-    public function testGetActionArgsHelpWithNullableType(): void
-    {
-        $controller = new FakeController('fake', Yii::$app);
-        $help = $controller->getActionArgsHelp($controller->createAction('nullable-type'));
-
-        $this->assertArrayHasKey('param', $help);
-        $this->assertSame('int', $help['param']['type']);
-        $this->assertFalse($help['param']['required']);
-    }
-
-    public function testStringifyReflectionTypeWithUnknownSubclass(): void
+    public function testStringifyReflectionTypeFallback(): void
     {
         $controller = new FakeController('fake', Yii::$app);
 
         $mockType = $this->createMock(\ReflectionType::class);
         $mockType->method('__toString')->willReturn('unknown');
 
-        $method = new \ReflectionMethod($controller, 'stringifyReflectionType');
+        $result = $this->invokeMethod($controller, 'stringifyReflectionType', [$mockType]);
 
-        $this->assertSame('unknown', $method->invoke($controller, $mockType));
+        $this->assertSame('unknown', $result, 'Fallback should cast unknown ReflectionType subclass to string.');
     }
 
     public function testGetActionHelpSummaryOnNull(): void
