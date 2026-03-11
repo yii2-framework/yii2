@@ -231,6 +231,64 @@ class SchemaTest extends BaseSchema
         ], $uniqueIndexes);
     }
 
+    /**
+     * Verifies that LOB indexes (internal Oracle indexes for CLOB/BLOB columns) are excluded from
+     * {@see \yii\db\oci\Schema::loadTableIndexes()} results, preventing NULL column names and PHP deprecation
+     * warnings in {@see \yii\db\oci\Schema::quoteColumnName()}.
+     *
+     * @see https://github.com/yii2-framework/core/issues/21
+     */
+    public function testLobIndexesExcluded(): void
+    {
+        $db = $this->getConnection();
+
+        if ($db->getSchema()->getTableSchema('lob_test') !== null) {
+            $db->createCommand()->dropTable('lob_test')->execute();
+        }
+
+        $db->createCommand()->setSql(
+            'CREATE TABLE "lob_test" ("id" NUMBER(10) NOT NULL, "content" CLOB, "data" BLOB, PRIMARY KEY ("id"))'
+        )->execute();
+
+        $indexes = $db->getSchema()->getTableIndexes('lob_test', true);
+
+        $this->assertCount(
+            1,
+            $indexes,
+            'Only the PRIMARY KEY index should remain after filtering LOB indexes.',
+        );
+
+        $primaryIndexes = array_values(
+            array_filter($indexes, static fn ($index): bool => $index->isPrimary),
+        );
+
+        $this->assertCount(
+            1,
+            $primaryIndexes,
+            'Exactly one PRIMARY KEY index should exist.',
+        );
+        $this->assertSame(
+            ['id'],
+            $primaryIndexes[0]->columnNames,
+            "PRIMARY KEY index should contain only the 'id' column.",
+        );
+
+        foreach ($indexes as $index) {
+            foreach ($index->columnNames as $columnName) {
+                $this->assertNotNull(
+                    $columnName,
+                    "LOB index with 'NULL' column name should be excluded.",
+                );
+                $this->assertIsString(
+                    $columnName,
+                    'Index column name must be a string.',
+                );
+            }
+        }
+
+        $db->createCommand()->dropTable('lob_test')->execute();
+    }
+
     public function testCompositeFk(): void
     {
         $this->markTestSkipped('Should be fixed.');
