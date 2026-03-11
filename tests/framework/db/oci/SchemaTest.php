@@ -252,24 +252,36 @@ class SchemaTest extends BaseSchema
 
         $indexes = $db->getSchema()->getTableIndexes('lob_test', true);
 
-        $this->assertCount(1, $indexes);
-
-        $primaryIndexes = array_values(
-            array_filter($indexes, static fn ($index): mixed => $index->isPrimary),
+        $this->assertCount(
+            1,
+            $indexes,
+            'Only the PRIMARY KEY index should remain after filtering LOB indexes.',
         );
 
-        $this->assertCount(1, $primaryIndexes);
-        $this->assertSame(['id'], $primaryIndexes[0]->columnNames);
+        $primaryIndexes = array_values(
+            array_filter($indexes, static fn ($index): bool => $index->isPrimary),
+        );
+
+        $this->assertCount(
+            1,
+            $primaryIndexes,
+            'Exactly one PRIMARY KEY index should exist.',
+        );
+        $this->assertSame(
+            ['id'],
+            $primaryIndexes[0]->columnNames,
+            "PRIMARY KEY index should contain only the 'id' column.",
+        );
 
         foreach ($indexes as $index) {
             foreach ($index->columnNames as $columnName) {
                 $this->assertNotNull(
                     $columnName,
-                    'LOB index with "NULL" column name should be excluded',
+                    "LOB index with 'NULL' column name should be excluded.",
                 );
                 $this->assertIsString(
                     $columnName,
-                    'Index column name must be a string',
+                    'Index column name must be a string.',
                 );
             }
         }
