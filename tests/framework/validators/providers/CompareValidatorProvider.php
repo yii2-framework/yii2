@@ -18,8 +18,8 @@ use yii\validators\CompareValidator;
  * Provides representative input/output pairs for validation, attribute comparison, error messages, operator behavior,
  * and numeric type conversion scenarios.
  *
- * @copyright Copyright (c) 2008 Yii Software LLC.
- * @license https://www.yiiframework.com/license/
+ * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 2.2
  */
 final class CompareValidatorProvider
 {

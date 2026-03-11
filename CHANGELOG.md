@@ -16,10 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(base): remove dead `E_STRICT` handling and `PHP_VERSION_ID < 80100` guards from `ErrorException` and `ErrorHandler`.
 - refactor(base)!: remove all HHVM support — drop `E_HHVM_FATAL_ERROR` constant, `handleHhvmError()` method, `$_hhvmException` property, and all HHVM-specific conditionals and test skips.
 - refactor!: remove `PHP < 8.2` version guards and dead fallbacks across `src/` and `tests`.
-- fix(console): `getActionArgsHelp()` crashes on PHP `8.2+` DNF/intersection types.
 - feat(widgets): enhance `ActiveField::label()` with `tag` option and fix `labelOptions` for `checkbox`/`radio`.
 - feat: make jQuery optional via strategy pattern — introduce `Application::$useJquery`, `ClientValidatorScriptInterface`, `ClientScriptInterface`, and extracted jQuery client script classes for all validators and widgets.
 - test(validators): add comprehensive test coverage for `CompareValidator` data-provider-driven tests, closure validation, client-side validation, and numeric type conversion scenarios.
 - tests(base): raise code coverage to `100%` for `Component`, `Event` and `Model` classes, and update related tests.
 - refactor(tests): simplify BaseDatabase, migrate Oracle to `gvenzl/oracle-free` and optimize test performance.
 - fix(oracle): `loadTableIndexes()` includes LOB indexes with `NULL` column names, causing `strpos()` deprecation on PHP `8.1+`.
+- fix(console): `getActionArgsHelp()` crashes on PHP `8.2+` DNF/intersection types, add data-provider-driven tests for full type coverage.
