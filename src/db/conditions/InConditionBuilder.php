@@ -331,7 +331,7 @@ class InConditionBuilder implements ExpressionBuilderInterface
      */
     private function quoteColumn(string $column): string
     {
-        return strpos($column, '(') === false
+        return !str_contains($column, '(')
             ? $this->queryBuilder->db->quoteColumnName($column)
             : $column;
     }

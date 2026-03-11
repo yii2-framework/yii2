@@ -6,7 +6,7 @@
  * @license https://www.yiiframework.com/license/
  */
 
-declare (strict_types= 1);
+declare(strict_types= 1);
 
 namespace yiiunit\framework\db\sqlite\conditions\providers;
 
