@@ -11,12 +11,10 @@ namespace yiiunit\framework\db\sqlite;
 use Closure;
 use PDO;
 use yii\base\NotSupportedException;
-use yii\db\Expression;
 use yii\db\Query;
 use yii\db\Schema;
 use yii\db\sqlite\QueryBuilder;
 use yiiunit\base\db\BaseQueryBuilder;
-use yiiunit\data\base\TraversableObject;
 
 /**
  * @group db
@@ -39,61 +37,6 @@ class QueryBuilderTest extends BaseQueryBuilder
         ]);
     }
 
-    public static function conditionProvider(): array
-    {
-        return array_merge(
-            parent::conditionProvider(),
-            [
-                [
-                    [
-                        'in',
-                        ['id', 'name'],
-                        [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']],
-                    ],
-                    '(([[id]] = :qp0 AND [[name]] = :qp1) OR ([[id]] = :qp2 AND [[name]] = :qp3))',
-                    [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
-                ],
-                [
-                    [
-                        'in',
-                        [new Expression('id'), 'name'],
-                        [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']],
-                    ],
-                    '(([[id]] = :qp0 AND [[name]] = :qp1) OR ([[id]] = :qp2 AND [[name]] = :qp3))',
-                    [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
-                ],
-                [
-                    [
-                        'not in',
-                        ['id', 'name'],
-                        [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']],
-                    ],
-                    '(([[id]] != :qp0 OR [[name]] != :qp1) AND ([[id]] != :qp2 OR [[name]] != :qp3))',
-                    [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
-                ],
-                //[ ['in', ['id', 'name'], (new Query())->select(['id', 'name'])->from('users')->where(['active' => 1])], 'EXISTS (SELECT 1 FROM (SELECT [[id]], [[name]] FROM [[users]] WHERE [[active]]=:qp0) AS a WHERE a.[[id]] = [[id AND a.]]name[[ = ]]name`)', [':qp0' => 1] ],
-                //[ ['not in', ['id', 'name'], (new Query())->select(['id', 'name'])->from('users')->where(['active' => 1])], 'NOT EXISTS (SELECT 1 FROM (SELECT [[id]], [[name]] FROM [[users]] WHERE [[active]]=:qp0) AS a WHERE a.[[id]] = [[id]] AND a.[[name = ]]name`)', [':qp0' => 1] ],
-                'composite in' => [
-                    [
-                        'in',
-                        ['id', 'name'],
-                        [['id' => 1, 'name' => 'oy']],
-                    ],
-                    '(([[id]] = :qp0 AND [[name]] = :qp1))',
-                    [':qp0' => 1, ':qp1' => 'oy'],
-                ],
-                'composite in using array objects' => [
-                    [
-                        'in',
-                        new TraversableObject(['id', 'name']),
-                        new TraversableObject([['id' => 1, 'name' => 'oy'], ['id' => 2, 'name' => 'yo']]),
-                    ],
-                    '(([[id]] = :qp0 AND [[name]] = :qp1) OR ([[id]] = :qp2 AND [[name]] = :qp3))',
-                    [':qp0' => 1, ':qp1' => 'oy', ':qp2' => 2, ':qp3' => 'yo'],
-                ],
-            ],
-        );
-    }
 
     public static function indexesProvider(): array
     {

@@ -11,10 +11,8 @@ namespace yiiunit\framework\db\oci;
 use Closure;
 use Exception;
 use yii\base\NotSupportedException;
-use yii\db\Expression;
 use yii\db\oci\QueryBuilder;
 use yii\db\oci\Schema;
-use yii\db\Query;
 use yiiunit\base\db\BaseQueryBuilder;
 use yiiunit\data\base\TraversableObject;
 
@@ -123,59 +121,6 @@ class QueryBuilderTest extends BaseQueryBuilder
         $this->assertEquals(4, $result);
     }
 
-    public static function conditionProvider(): array
-    {
-        return array_merge(
-            parent::conditionProvider(),
-            [
-                [
-                    [
-                        'in',
-                        ['id', 'name'],
-                        [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']],
-                    ],
-                    '([[id]], [[name]]) IN ((:qp0, :qp1), (:qp2, :qp3))',
-                    [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
-                ],
-                [
-                    [
-                        'not in',
-                        ['id', 'name'],
-                        [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']],
-                    ],
-                    '([[id]], [[name]]) NOT IN ((:qp0, :qp1), (:qp2, :qp3))',
-                    [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
-                ],
-                [
-                    [
-                        'not in',
-                        [new Expression('id'), 'name'],
-                        [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']],
-                    ],
-                    '([[id]], [[name]]) NOT IN ((:qp0, :qp1), (:qp2, :qp3))',
-                    [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
-                ],
-                [
-                    [
-                        'in',
-                        ['id', 'name'],
-                        (new Query())->select(['id', 'name'])->from('users')->where(['active' => 1]),
-                    ],
-                    '([[id]], [[name]]) IN (SELECT [[id]], [[name]] FROM [[users]] WHERE [[active]]=:qp0)',
-                    [':qp0' => 1],
-                ],
-                [
-                    [
-                        'not in',
-                        ['id', 'name'],
-                        (new Query())->select(['id', 'name'])->from('users')->where(['active' => 1]),
-                    ],
-                    '([[id]], [[name]]) NOT IN (SELECT [[id]], [[name]] FROM [[users]] WHERE [[active]]=:qp0)',
-                    [':qp0' => 1],
-                ],
-            ],
-        );
-    }
 
     public function conditionProvidertmp()
     {

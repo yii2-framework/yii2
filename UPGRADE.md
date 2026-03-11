@@ -37,23 +37,23 @@ Yii::$classMap['app\\helpers\\MyHelper'] = '@app/helpers/MyHelper.php';
 
 ### ApcCache renamed to ApcuCache
 
-The `yii\caching\ApcCache` class has been renamed to `yii\caching\ApcuCache`. The legacy APC extension (`ext-apc`) is
+The `\yii\caching\ApcCache` class has been renamed to `\yii\caching\ApcuCache`. The legacy APC extension (`ext-apc`) is
 not available in PHP >= 8.0, so the dual-mode `$useApcu` property has been removed.
 
-- Replace all references to `yii\caching\ApcCache` with `yii\caching\ApcuCache`.
+- Replace all references to `\yii\caching\ApcCache` with `\yii\caching\ApcuCache`.
 - Remove any `'useApcu' => true` configuration, as it is no longer needed.
 - Migration example:
 
 ```php
 // before
 'cache' => [
-    'class' => 'yii\caching\ApcCache',
+    'class' => '\yii\caching\ApcCache',
     'useApcu' => true,
 ],
 
 // after
 'cache' => [
-    'class' => 'yii\caching\ApcuCache',
+    'class' => '\yii\caching\ApcuCache',
 ],
 ```
 
@@ -65,13 +65,13 @@ The CUBRID database driver has been removed from the framework.
 
 All HHVM-specific code has been removed from the framework. The framework targets PHP 8.1+ on the Zend engine only.
 
-- `yii\base\ErrorException::E_HHVM_FATAL_ERROR` constant has been removed.
-- `yii\base\ErrorHandler::handleHhvmError()` method has been removed.
-- `yii\base\ErrorHandler` no longer registers `handleHhvmError` as the error handler when `HHVM_VERSION` is defined.
+- `\yii\base\ErrorException::E_HHVM_FATAL_ERROR` constant has been removed.
+- `\yii\base\ErrorHandler::handleHhvmError()` method has been removed.
+- `\yii\base\ErrorHandler` no longer registers `handleHhvmError` as the error handler when `HHVM_VERSION` is defined.
 - The `PhpManager` HHVM incompatibility note has been removed from its docblock.
 - All test skips guarded by `defined('HHVM_VERSION')` have been removed.
 
-If you referenced `ErrorException::E_HHVM_FATAL_ERROR` or `ErrorHandler::handleHhvmError()` in your application code,
+If you referenced `\yii\base\ErrorException::E_HHVM_FATAL_ERROR` or `\yii\base\ErrorHandler::handleHhvmError()` in your application code,
 remove those references.
 
 ### jQuery is now optional (strategy pattern)
@@ -84,12 +84,12 @@ controls whether jQuery-based client scripts are registered. When set to `false`
 
 #### New interfaces
 
-- `yii\validators\client\ClientValidatorScriptInterface` — strategy for validator client scripts.
-- `yii\web\client\ClientScriptInterface` — strategy for widget client scripts.
+- `\yii\validators\client\ClientValidatorScriptInterface` — strategy for validator client scripts.
+- `\yii\web\client\ClientScriptInterface` — strategy for widget client scripts.
 
 #### New properties
 
-- `yii\base\Application::$useJquery` — master switch for jQuery client scripts (default: `true`).
+- `\yii\base\Application::$useJquery` — master switch for jQuery client scripts (default: `true`).
 - `Validator::$clientScript` — on all 13 validators that support client validation (`BooleanValidator`,
   `CompareValidator`, `EmailValidator`, `FileValidator`, `ImageValidator`, `IpValidator`, `NumberValidator`,
   `RangeValidator`, `RegularExpressionValidator`, `RequiredValidator`, `StringValidator`, `TrimValidator`,
@@ -125,12 +125,46 @@ You can replace the jQuery implementation with a custom one by implementing the 
 public function rules()
 {
     return [
-        ['username', 'required', 'clientScript' => ['class' => 'app\validators\MyRequiredClientScript']],
+        [
+            'username', 
+            'required', 
+            'clientScript' => ['class' => '\app\validators\MyRequiredClientScript'],
+        ],
     ];
 }
 
 // Custom form client script
-ActiveForm::begin([
-    'clientScript' => ['class' => 'app\widgets\MyFormClientScript'],
-]);
+ActiveForm::begin(['clientScript' => ['class' => '\app\widgets\MyFormClientScript']]); 
 ```
+
+### `InCondition` — typed constructor and return types (#27)
+
+`InCondition` now uses constructor promotion with explicit union types. All public methods declare return types.
+
+If you instantiate `InCondition` directly, ensure the arguments match the new parameter types:
+
+- `$column`: `array|string|ExpressionInterface|Traversable`
+- `$operator`: `string`
+- `$values`: `array|int|string|ExpressionInterface|Traversable`
+
+Return types added: `getOperator(): string`, `getColumn()`, `getValues()`, `fromArrayDefinition(): static`.
+
+### `InConditionBuilder` — typed protected methods (#27)
+
+All `protected` methods in `InConditionBuilder` now declare parameter types and return types. If you extend
+`InConditionBuilder` and override any of the following methods, update your signatures to match:
+
+| Method                                | New signature                                                                                                            |
+|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `build()`                             | `build(ExpressionInterface $expression, array &$params = []): string`                                                    |
+| `buildValues()`                       | `buildValues(ConditionInterface $condition, array\|Traversable $values, array &$params): array`                          |
+| `buildSubqueryInCondition()`          | `buildSubqueryInCondition(string $operator, array\|string\|ExpressionInterface\|Traversable $columns, Query $values, array &$params): string` |
+| `buildCompositeInCondition()`         | `buildCompositeInCondition(string $operator, array\|Traversable $columns, array\|Traversable $values, array &$params): string` |
+| `getNullCondition()`                  | `getNullCondition(string $operator, string $column): string`                                                             |
+| `getRawValuesFromTraversableObject()` | `getRawValuesFromTraversableObject(Traversable $traversableObject): array`                                               |
+| `getNotEqualOperator()`               | `getNotEqualOperator(): string`                                                                                          |
+
+### `oci\InConditionBuilder` — typed `build()` and `splitCondition()` (#27)
+
+`build()` now returns `string` explicitly. `splitCondition()` now returns `string|null` explicitly. If you extend the Oracle
+builder, update your overrides accordingly.
