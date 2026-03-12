@@ -18,10 +18,6 @@ use yii\db\conditions\InCondition;
 /**
  * Unit tests for {@see InCondition}.
  *
- * Test coverage.
- * - Ensures `getColumn()` preserves `ArrayExpression` instances instead of converting them to plain arrays.
- * - Ensures `getValues()` preserves `ArrayExpression` instances instead of converting them to plain arrays.
- *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
  * @since 2.2
  */

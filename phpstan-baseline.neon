@@ -5577,7 +5577,7 @@ parameters:
 		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
 			identifier: staticMethod.dynamicCall
-			count: 50
+			count: 44
 			path: tests/base/db/BaseQueryBuilder.php
 
 		-
