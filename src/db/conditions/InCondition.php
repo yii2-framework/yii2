@@ -52,7 +52,7 @@ class InCondition implements ConditionInterface
      */
     public function getColumn(): array|string|ExpressionInterface
     {
-        if ($this->column instanceof Traversable) {
+        if ($this->column instanceof Traversable && !$this->column instanceof ExpressionInterface) {
             $this->column = iterator_to_array($this->column);
         }
 
@@ -66,7 +66,7 @@ class InCondition implements ConditionInterface
      */
     public function getValues(): array|int|string|ExpressionInterface
     {
-        if ($this->values instanceof Traversable) {
+        if ($this->values instanceof Traversable && !$this->values instanceof ExpressionInterface) {
             $this->values = iterator_to_array($this->values);
         }
 

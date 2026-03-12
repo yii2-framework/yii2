@@ -19,8 +19,8 @@ use yiiunit\data\base\TraversableObject;
  * Provides MSSQL-specific input/output pairs for the IN/NOT IN condition builder. MSSQL uses `!=` instead of `<>` and
  * `[col]` quoting instead of `[[col]]`.
  *
- * @copyright Copyright (C) 2008 Yii Software LLC.
- * @license https://www.yiiframework.com/license/
+ * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 2.2
  */
 final class InConditionBuilderProvider extends \yiiunit\base\db\conditions\providers\InConditionBuilderProvider
 {

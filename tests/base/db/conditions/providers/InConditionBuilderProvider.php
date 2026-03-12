@@ -22,8 +22,8 @@ use yiiunit\data\base\TraversableObject;
  * Provides representative input/output pairs for the IN/NOT IN condition builder. Driver-specific providers extend this
  * class to add or override test cases.
  *
- * @copyright Copyright (C) 2008 Yii Software LLC.
- * @license https://www.yiiframework.com/license/
+ * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 2.2
  */
 class InConditionBuilderProvider
 {
