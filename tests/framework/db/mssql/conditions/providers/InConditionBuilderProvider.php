@@ -53,14 +53,14 @@ final class InConditionBuilderProvider extends \yiiunit\base\db\conditions\provi
                     [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']],
                 ],
                 <<<SQL
-                (([[id]] = :qp0 AND [[name]] = :qp1) OR ([[id]] = :qp2 AND [[name]] = :qp3))
+                (([id] = :qp0 AND [name] = :qp1) OR ([id] = :qp2 AND [name] = :qp3))
                 SQL,
                 [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
             ],
             'composite in with multiple rows' => [
                 ['in', ['id', 'name'], [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']]],
                 <<<SQL
-                (([[id]] = :qp0 AND [[name]] = :qp1) OR ([[id]] = :qp2 AND [[name]] = :qp3))
+                (([id] = :qp0 AND [name] = :qp1) OR ([id] = :qp2 AND [name] = :qp3))
                 SQL,
                 [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
             ],
@@ -78,14 +78,14 @@ final class InConditionBuilderProvider extends \yiiunit\base\db\conditions\provi
                     [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']],
                 ],
                 <<<SQL
-                (([[id]] != :qp0 OR [[name]] != :qp1) AND ([[id]] != :qp2 OR [[name]] != :qp3))
+                (([id] != :qp0 OR [name] != :qp1) AND ([id] != :qp2 OR [name] != :qp3))
                 SQL,
                 [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
             ],
             'composite not in with multiple rows' => [
                 ['not in', ['id', 'name'], [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']]],
                 <<<SQL
-                (([[id]] != :qp0 OR [[name]] != :qp1) AND ([[id]] != :qp2 OR [[name]] != :qp3))
+                (([id] != :qp0 OR [name] != :qp1) AND ([id] != :qp2 OR [name] != :qp3))
                 SQL,
                 [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar'],
             ],
