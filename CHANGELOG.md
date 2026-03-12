@@ -23,3 +23,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(tests): simplify BaseDatabase, migrate Oracle to `gvenzl/oracle-free` and optimize test performance.
 - fix(oracle): `loadTableIndexes()` includes LOB indexes with `NULL` column names, causing `strpos()` deprecation on PHP `8.1+`.
 - fix(console): `getActionArgsHelp()` crashes on PHP `8.2+` DNF/intersection types, add data-provider-driven tests for full type coverage.
+- fix(db)!: composite `IN`/`NOT IN` conditions generate `IS NULL`/`IS NOT NULL` instead of literal `NULL` comparisons.
