@@ -255,6 +255,45 @@ class ErrorHandlerTest extends TestCase
         );
     }
 
+    public function testAfterRenderEventCanModifyOutputInErrorActionView(): void
+    {
+        $handler = Yii::$app->getErrorHandler();
+
+        $handler->errorAction = 'test/error';
+
+        $exception = new NotFoundHttpException('Resource not found');
+        $actualException = null;
+
+        $handler->on(
+            \yii\web\ErrorHandler::EVENT_AFTER_RENDER,
+            static function (ErrorHandlerRenderEvent $event) use (&$actualException): void {
+                $actualException = $event->exception;
+                $event->output .= "\n<!--after-render-error-action-->";
+            },
+        );
+
+        ob_start(); // suppress response output
+
+        $this->invokeMethod(
+            $handler,
+            'renderException',
+            [$exception],
+        );
+
+        ob_get_clean();
+
+        $this->assertSame(
+            $exception,
+            $actualException,
+            "Rendered event should expose the same exception instance for the 'errorAction' HTML path.",
+        );
+        $this->assertStringContainsString(
+            '<!--after-render-error-action-->',
+            Yii::$app->response->data,
+            "Event handler should be able to append custom markup when output is rendered via 'errorAction'.",
+        );
+    }
+
     public function testAfterRenderEventCanModifyOutputForPhpErrors(): void
     {
         $handler = Yii::$app->getErrorHandler();

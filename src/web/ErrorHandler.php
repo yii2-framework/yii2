@@ -135,11 +135,18 @@ class ErrorHandler extends \yii\base\ErrorHandler
                     'exception' => $exception,
                 ]);
             }
-            $response->data = $this->triggerAfterRender($exception, $response->data);
         } elseif ($response->format === Response::FORMAT_RAW) {
             $response->data = static::convertExceptionToString($exception);
         } else {
             $response->data = $this->convertExceptionToArray($exception);
+        }
+
+        if ($response->format === Response::FORMAT_HTML) {
+            if (is_string($response->data)) {
+                $response->data = $this->triggerAfterRender($exception, $response->data);
+            } elseif (is_string($response->content)) {
+                $response->content = $this->triggerAfterRender($exception, $response->content);
+            }
         }
 
         $response->send();
