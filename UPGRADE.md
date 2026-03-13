@@ -178,7 +178,7 @@ builder, update your overrides accordingly.
 
 ### MySQL dead code removal and integer display width cleanup
 
-The minimum supported MySQL version is now **8.0.17** (**MariaDB 10.5+**). The following dead code has been removed:
+The minimum supported MySQL version is now **8.0.19** (**MariaDB 10.5+**). The following dead code has been removed:
 
 - `Schema::isOldMysql()` method and `$_oldMysql` property (checked for MySQL <= 5.1, never called).
 - `QueryBuilder::supportsFractionalSeconds()` method (always `true` for MySQL 8.0+).
