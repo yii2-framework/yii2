@@ -15,10 +15,6 @@ use yii\i18n\Formatter;
 use yiiunit\framework\i18n\IntlTestHelper;
 use yiiunit\TestCase;
 
-/**
- * @group helpers
- * @group i18n
- */
 #[Group('helpers')]
 #[Group('i18n')]
 class FormatConverterTest extends TestCase
