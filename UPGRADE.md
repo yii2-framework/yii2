@@ -176,6 +176,34 @@ All `protected` methods in `InConditionBuilder` now declare parameter types and 
 `build()` now returns `string` explicitly. `splitCondition()` now returns `string|null` explicitly. If you extend the Oracle
 builder, update your overrides accordingly.
 
+### MySQL dead code removal and integer display width cleanup
+
+The minimum supported MySQL version is now **8.0.17** (**MariaDB 10.5+**). The following dead code has been removed:
+
+- `Schema::isOldMysql()` method and `$_oldMysql` property (checked for MySQL <= 5.1, never called).
+- `QueryBuilder::supportsFractionalSeconds()` method (always `true` for MySQL 8.0+).
+- `CacheInterface` / `DbCache` imports from `QueryBuilder` (only used by the removed method).
+- Version checks for MySQL < 5.6 / < 5.6.4 / < 5.7 in tests.
+
+**Integer display width** (`int(11)`, `bigint(20)`, `smallint(6)`, `tinyint(3)`) has been removed from the MySQL type
+map. MySQL 8.0.17+ deprecated display width for integer types and emits deprecation warnings. The new defaults are:
+
+| Before | After |
+| --- | --- |
+| `int(11)` | `int` |
+| `int(10) UNSIGNED` | `int UNSIGNED` |
+| `bigint(20)` | `bigint` |
+| `bigint(20) UNSIGNED` | `bigint UNSIGNED` |
+| `smallint(6)` | `smallint` |
+| `tinyint(3)` | `tinyint` |
+
+`tinyint(1)` for `TYPE_BOOLEAN` is preserved — MySQL uses it as the canonical boolean representation.
+
+Explicit sizes (for example, `$this->primaryKey(8)` → `int(8)`) continue to work as before.
+
+If your application or migrations rely on the exact SQL output of `QueryBuilder::getColumnType()` for integer types
+(for example, in string assertions or snapshot tests), update the expected values.
+
 ### Composite `IN`/`NOT IN` conditions — `IS NULL`/`IS NOT NULL` generation (`#27`)
 
 Composite `IN`/`NOT IN` conditions now generate `IS NULL`/`IS NOT NULL` expressions for `NULL` values in the value list,

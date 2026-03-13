@@ -60,7 +60,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_BIGINT,
                 $this->bigInteger(),
                 [
-                    'mysql' => 'bigint(20)',
+                    'mysql' => 'bigint',
                     'pgsql' => 'bigint',
                     'sqlite' => 'bigint',
                     'oci' => 'NUMBER(20)',
@@ -71,7 +71,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_BIGINT . ' NOT NULL',
                 $this->bigInteger()->notNull(),
                 [
-                    'mysql' => 'bigint(20) NOT NULL',
+                    'mysql' => 'bigint NOT NULL',
                     'pgsql' => 'bigint NOT NULL',
                     'sqlite' => 'bigint NOT NULL',
                     'oci' => 'NUMBER(20) NOT NULL',
@@ -82,7 +82,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_BIGINT . ' CHECK (value > 5)',
                 $this->bigInteger()->check('value > 5'),
                 [
-                    'mysql' => 'bigint(20) CHECK (value > 5)',
+                    'mysql' => 'bigint CHECK (value > 5)',
                     'pgsql' => 'bigint CHECK (value > 5)',
                     'sqlite' => 'bigint CHECK (value > 5)',
                     'oci' => 'NUMBER(20) CHECK (value > 5)',
@@ -115,7 +115,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_BIGPK,
                 $this->bigPrimaryKey(),
                 [
-                    'mysql' => 'bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                    'mysql' => 'bigint NOT NULL AUTO_INCREMENT PRIMARY KEY',
                     'pgsql' => 'bigserial NOT NULL PRIMARY KEY',
                     'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
                 ],
@@ -426,7 +426,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_INTEGER . ' CHECK (value > 5)',
                 $this->integer()->check('value > 5'),
                 [
-                    'mysql' => 'int(11) CHECK (value > 5)',
+                    'mysql' => 'int CHECK (value > 5)',
                     'pgsql' => 'integer CHECK (value > 5)',
                     'sqlite' => 'integer CHECK (value > 5)',
                     'oci' => 'NUMBER(10) CHECK (value > 5)',
@@ -437,7 +437,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_INTEGER . ' NOT NULL',
                 $this->integer()->notNull(),
                 [
-                    'mysql' => 'int(11) NOT NULL',
+                    'mysql' => 'int NOT NULL',
                     'pgsql' => 'integer NOT NULL',
                     'sqlite' => 'integer NOT NULL',
                     'oci' => 'NUMBER(10) NOT NULL',
@@ -470,7 +470,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_INTEGER,
                 $this->integer(),
                 [
-                    'mysql' => 'int(11)',
+                    'mysql' => 'int',
                     'pgsql' => 'integer',
                     'sqlite' => 'integer',
                     'oci' => 'NUMBER(10)',
@@ -536,7 +536,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_PK . ' CHECK (value > 5)',
                 $this->primaryKey()->check('value > 5'),
                 [
-                    'mysql' => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY CHECK (value > 5)',
+                    'mysql' => 'int NOT NULL AUTO_INCREMENT PRIMARY KEY CHECK (value > 5)',
                     'pgsql' => 'serial NOT NULL PRIMARY KEY CHECK (value > 5)',
                     'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL CHECK (value > 5)',
                     'oci' => 'NUMBER(10) NOT NULL PRIMARY KEY CHECK (value > 5)',
@@ -563,7 +563,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_PK,
                 $this->primaryKey(),
                 [
-                    'mysql' => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                    'mysql' => 'int NOT NULL AUTO_INCREMENT PRIMARY KEY',
                     'pgsql' => 'serial NOT NULL PRIMARY KEY',
                     'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
                     'oci' => 'NUMBER(10) NOT NULL PRIMARY KEY',
@@ -585,7 +585,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_TINYINT . ' UNSIGNED',
                 $this->tinyInteger()->unsigned(),
                 [
-                    'mysql' => 'tinyint(3) UNSIGNED',
+                    'mysql' => 'tinyint UNSIGNED',
                     'sqlite' => 'tinyint UNSIGNED',
                 ]
             ],
@@ -593,7 +593,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_TINYINT,
                 $this->tinyInteger(),
                 [
-                    'mysql' => 'tinyint(3)',
+                    'mysql' => 'tinyint',
                     'pgsql' => 'smallint',
                     'sqlite' => 'tinyint',
                     'oci' => 'NUMBER(3)',
@@ -615,7 +615,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_SMALLINT,
                 $this->smallInteger(),
                 [
-                    'mysql' => 'smallint(6)',
+                    'mysql' => 'smallint',
                     'pgsql' => 'smallint',
                     'sqlite' => 'smallint',
                     'oci' => 'NUMBER(5)',
@@ -849,7 +849,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_UPK,
                 $this->primaryKey()->unsigned(),
                 [
-                    'mysql' => 'int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                    'mysql' => 'int UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
                     'pgsql' => 'serial NOT NULL PRIMARY KEY',
                     'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
                 ],
@@ -858,7 +858,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_UBIGPK,
                 $this->bigPrimaryKey()->unsigned(),
                 [
-                    'mysql' => 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                    'mysql' => 'bigint UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY',
                     'pgsql' => 'bigserial NOT NULL PRIMARY KEY',
                     'sqlite' => 'integer PRIMARY KEY AUTOINCREMENT NOT NULL',
                 ],
@@ -867,7 +867,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_INTEGER . " COMMENT 'test comment'",
                 $this->integer()->comment('test comment'),
                 [
-                    'mysql' => "int(11) COMMENT 'test comment'",
+                    'mysql' => "int COMMENT 'test comment'",
                     'sqlsrv' => 'int',
                 ],
                 [
@@ -878,7 +878,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_PK . " COMMENT 'test comment'",
                 $this->primaryKey()->comment('test comment'),
                 [
-                    'mysql' => "int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'test comment'",
+                    'mysql' => "int NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'test comment'",
                     'sqlsrv' => 'int IDENTITY PRIMARY KEY',
                 ],
                 [
@@ -889,7 +889,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_PK . ' FIRST',
                 $this->primaryKey()->first(),
                 [
-                    'mysql' => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST',
+                    'mysql' => 'int NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST',
                     'sqlsrv' => 'int IDENTITY PRIMARY KEY',
                 ],
                 [
@@ -901,7 +901,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_INTEGER . ' FIRST',
                 $this->integer()->first(),
                 [
-                    'mysql' => 'int(11) FIRST',
+                    'mysql' => 'int FIRST',
                     'sqlsrv' => 'int',
                 ],
                 [
@@ -926,7 +926,7 @@ abstract class BaseQueryBuilder extends BaseDatabase
                 Schema::TYPE_INTEGER . ' NOT NULL FIRST',
                 $this->integer()->append('NOT NULL')->first(),
                 [
-                    'mysql' => 'int(11) NOT NULL FIRST',
+                    'mysql' => 'int NOT NULL FIRST',
                     'sqlsrv' => 'int NOT NULL',
                 ],
                 [
