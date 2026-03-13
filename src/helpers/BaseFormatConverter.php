@@ -312,8 +312,7 @@ class BaseFormatConverter
             's' => 'ss',    // Seconds, with leading zeros — 00 through 59
             '\u' => "'u'",
             'u' => '',      // Microseconds. Example: 654321
-            '\v' => "'v'",
-            // `v` (milliseconds) is kept as-is for compatibility.
+            '\v' => "'v'",  // `v` (milliseconds) is kept as-is for compatibility.
             // Timezone
             '\e' => "'e'",
             'e' => 'VV',    // Timezone identifier. Examples: UTC, GMT, Atlantic/Azores
@@ -323,8 +322,7 @@ class BaseFormatConverter
             'O' => 'xx',    // Difference to Greenwich time (GMT) in hours, Example: +0200
             '\P' => "'P'",
             'P' => 'xxx',   // Difference to Greenwich time (GMT) with colon between hours and minutes, Example: +02:00
-            '\p' => "'p'",
-            // `p` (offset with `Z` for UTC) is kept as-is for compatibility.
+            '\p' => "'p'",  // `p` (offset with `Z` for UTC) is kept as-is for compatibility.
             '\T' => "'T'",
             'T' => 'zzz',   // Timezone abbreviation, Examples: EST, MDT ...
             '\Z' => "'Z'",
@@ -336,10 +334,8 @@ class BaseFormatConverter
             'r' => 'eee, dd MMM yyyy HH:mm:ss xx', // RFC 2822 formatted date, Example: Thu, 21 Dec 2000 16:01:07 +0200
             '\U' => "'U'",
             'U' => '',      // Seconds since the Unix Epoch (January 1 1970 00:00:00 GMT)
-            '\X' => "'X'",
-            // `X` (expanded year) is kept as-is for compatibility.
-            '\x' => "'x'",
-            // `x` (expanded year if needed) is kept as-is for compatibility.
+            '\X' => "'X'",  // `X` (expanded year) is kept as-is for compatibility.
+            '\x' => "'x'",  // `x` (expanded year if needed) is kept as-is for compatibility.
             '\\\\' => '\\',
         ]);
 
