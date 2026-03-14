@@ -1457,6 +1457,57 @@ abstract class BaseActiveRecord extends BaseDatabase
         );
     }
 
+    public function testInverseOfMixedAsArrayHasOneWithMixedPrimaryModels(): void
+    {
+        $orderModel = Order::findOne(2);
+        $orderArray = Order::find()->where(['id' => 3])->asArray()->one();
+
+        self::assertInstanceOf(
+            Order::class,
+            $orderModel,
+            'First mixed primary model must be an Order object.'
+        );
+        self::assertIsArray(
+            $orderArray,
+            'Second mixed primary model must be hydrated as array.'
+        );
+
+        $primaryModels = [$orderModel, $orderArray];
+
+        Order::find()->findWith(
+            [
+                'customer2' => function (ActiveQuery $query): void {
+                    $query->asArray(true);
+                },
+            ],
+            $primaryModels,
+        );
+
+        self::assertIsArray(
+            $orderModel->customer2,
+            'Object primary model must receive an array-hydrated customer2 relation.'
+        );
+        self::assertIsArray(
+            $orderModel->customer2['orders2'][0],
+            'Object primary model inverse orders2 items must remain arrays.'
+        );
+        self::assertIsArray(
+            $primaryModels[1]['customer2'],
+            'Array primary model must receive an array-hydrated customer2 relation.'
+        );
+        self::assertNotEmpty(
+            $primaryModels[1]['customer2']['orders2'],
+            'Array primary model inverse orders2 relation must not be empty.'
+        );
+
+        foreach ($primaryModels[1]['customer2']['orders2'] as $relatedOrder) {
+            self::assertIsArray(
+                $relatedOrder,
+                'All inverse orders2 items on the array primary model must remain arrays.'
+            );
+        }
+    }
+
     public function testDefaultValues(): void
     {
         $model = new Type();

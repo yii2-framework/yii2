@@ -383,11 +383,15 @@ trait ActiveRelationTrait
                     } elseif ($this->multiple) {
                         foreach ($primaryModel as $j => $m) {
                             $key = $this->getModelKey($m, $relation->link);
-                            $primaryModels[$i][$j][$name] = isset($buckets[$key]) ? $buckets[$key] : [];
+                            $primaryModels[$i][$j][$name] = isset($buckets[$key])
+                                ? $this->normalizeInverseRelationModels($buckets[$key], true)
+                                : [];
                         }
                     } elseif (!empty($primaryModel[$primaryName])) {
                         $key = $this->getModelKey($primaryModel[$primaryName], $relation->link);
-                        $primaryModels[$i][$primaryName][$name] = isset($buckets[$key]) ? $buckets[$key] : [];
+                        $primaryModels[$i][$primaryName][$name] = isset($buckets[$key])
+                            ? $this->normalizeInverseRelationModels($buckets[$key], true)
+                            : [];
                     }
                 }
             }
