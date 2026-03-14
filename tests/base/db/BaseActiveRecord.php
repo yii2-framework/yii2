@@ -1338,24 +1338,174 @@ abstract class BaseActiveRecord extends BaseDatabase
 
         // request the inverseOf relation without explicitly (eagerly) loading it
         $orders2 = $customer->getOrders2()->all();
-        $this->assertSame($customer, $orders2[0]->customer2);
+
+        self::assertSame(
+            $customer,
+            $orders2[0]->customer2,
+            'Dynamic relation with inverseOf must reuse the same customer instance for as-object all() results.'
+        );
 
         $orders2 = $customer->getOrders2()->one();
-        $this->assertSame($customer, $orders2->customer2);
 
-        // request the inverseOf relation while also explicitly eager loading it (while possible, this is of course redundant)
+        self::assertSame(
+            $customer,
+            $orders2->customer2,
+            'Dynamic relation with inverseOf must reuse the same customer instance for as-object one() results.'
+        );
+
+        // request the inverseOf relation while also explicitly eager loading it (while possible, this is of course
+        // redundant)
         $orders2 = $customer->getOrders2()->with('customer2')->all();
-        $this->assertSame($customer, $orders2[0]->customer2);
+
+        self::assertSame(
+            $customer,
+            $orders2[0]->customer2,
+            'Explicit eager loading must preserve inverseOf identity for as-object all() results.'
+        );
 
         $orders2 = $customer->getOrders2()->with('customer2')->one();
-        $this->assertSame($customer, $orders2->customer2);
+
+        self::assertSame(
+            $customer,
+            $orders2->customer2,
+            'Explicit eager loading must preserve inverseOf identity for as-object one() results.'
+        );
 
         // request the inverseOf relation as array
         $orders2 = $customer->getOrders2()->asArray()->all();
-        $this->assertEquals($customer['id'], $orders2[0]['customer2']['id']);
+
+        self::assertEquals(
+            $customer['id'],
+            $orders2[0]['customer2']['id'],
+            'Inverse relation "customer2" must point to the same customer id for dynamic asArray()->all() results.'
+        );
+        self::assertIsArray(
+            $orders2[0]['customer2'],
+            'Inverse relation "customer2" must remain an array when dynamic relation uses asArray()->all().'
+        );
 
         $orders2 = $customer->getOrders2()->asArray()->one();
-        $this->assertEquals($customer['id'], $orders2['customer2']['id']);
+
+        self::assertEquals(
+            $customer['id'],
+            $orders2['customer2']['id'],
+            'Inverse relation "customer2" must point to the same customer id for dynamic asArray()->one() results.'
+        );
+        self::assertIsArray(
+            $orders2['customer2'],
+            'Inverse relation "customer2" must remain an array when dynamic relation uses asArray()->one().'
+        );
+    }
+
+    public function testInverseOfMixedAsArrayHasMany(): void
+    {
+        $customer = Customer::find()
+            ->where(['id' => 1])
+            ->with(
+                [
+                    'orders2' => function (ActiveQuery $query) {
+                        $query->asArray(true);
+                    },
+                ],
+            )
+            ->one();
+
+        self::assertIsArray(
+            $customer->orders2[0],
+            'Related model in mixed eager loading must be hydrated as array.'
+        );
+        self::assertIsArray(
+            $customer->orders2[0]['customer2'],
+            'Inverse relation "customer2" must be an array in mixed object/array hasMany eager loading.'
+        );
+        self::assertSame(
+            $customer->id,
+            $customer->orders2[0]['customer2']['id'],
+            'Inverse relation "customer2" must point to the same primary customer id.'
+        );
+    }
+
+    public function testInverseOfMixedAsArrayHasOne(): void
+    {
+        $order = Order::find()
+            ->where(['id' => 1])
+            ->with(
+                [
+                    'customer2' => function (ActiveQuery $query) {
+                        $query->asArray(true);
+                    },
+                ],
+            )
+            ->one();
+
+        self::assertIsArray(
+            $order->customer2,
+            'Related hasOne "customer2" must be hydrated as array in mixed eager loading.'
+        );
+        self::assertIsArray(
+            $order->customer2['orders2'],
+            'Inverse hasMany "orders2" must be hydrated as array in mixed eager loading.'
+        );
+        self::assertIsArray(
+            $order->customer2['orders2'][0],
+            'Each inverse "orders2" item must remain an array in mixed eager loading.'
+        );
+        self::assertSame(
+            $order->id,
+            $order->customer2['orders2'][0]['id'],
+            'Inverse "orders2" must contain the original primary order id.'
+        );
+    }
+
+    public function testInverseOfMixedAsArrayHasOneWithMixedPrimaryModels(): void
+    {
+        $orderModel = Order::findOne(2);
+        $orderArray = Order::find()->where(['id' => 3])->asArray()->one();
+
+        self::assertInstanceOf(
+            Order::class,
+            $orderModel,
+            'First mixed primary model must be an Order object.'
+        );
+        self::assertIsArray(
+            $orderArray,
+            'Second mixed primary model must be hydrated as array.'
+        );
+
+        $primaryModels = [$orderModel, $orderArray];
+
+        Order::find()->findWith(
+            [
+                'customer2' => function (ActiveQuery $query): void {
+                    $query->asArray(true);
+                },
+            ],
+            $primaryModels,
+        );
+
+        self::assertIsArray(
+            $orderModel->customer2,
+            'Object primary model must receive an array-hydrated customer2 relation.'
+        );
+        self::assertIsArray(
+            $orderModel->customer2['orders2'][0],
+            'Object primary model inverse orders2 items must remain arrays.'
+        );
+        self::assertIsArray(
+            $primaryModels[1]['customer2'],
+            'Array primary model must receive an array-hydrated customer2 relation.'
+        );
+        self::assertNotEmpty(
+            $primaryModels[1]['customer2']['orders2'],
+            'Array primary model inverse orders2 relation must not be empty.'
+        );
+
+        foreach ($primaryModels[1]['customer2']['orders2'] as $relatedOrder) {
+            self::assertIsArray(
+                $relatedOrder,
+                'All inverse orders2 items on the array primary model must remain arrays.'
+            );
+        }
     }
 
     public function testDefaultValues(): void
