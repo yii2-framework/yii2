@@ -30,3 +30,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(helpers): preserve escaped non-format literals in `FormatConverter::convertDatePhpToIcu()` and keep ICU/PHP round-trip output consistent.
 - fix(helpers): support escaped PHP `date()` format chars `v`, `p`, `X`, `x` in `FormatConverter::convertDatePhpToIcu()`, split escape handling, and optimize the hot path while preserving #35/#37 behavior.
 - refactor(db)!: remove MySQL `< 8.0` dead code and deprecated integer display width from type map (`int(11)` → `int`, `bigint(20)` → `bigint`, etc.); `tinyint(1)` for `BOOLEAN` is preserved.
+- refactor(db)!: remove MSSQL `< 2017` dead code drop `isOldMssql()`, `oldBuildOrderByAndLimit()`, `newBuildOrderByAndLimit()`, ROW_NUMBER() pagination, SQL Server 2005 version checks, and pre-2017 boolean type heuristics; `bit` now maps directly to `boolean` in `typeMap`; minimum supported version is now SQL Server 2017.

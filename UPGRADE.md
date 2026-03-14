@@ -209,5 +209,27 @@ If your application or migrations rely on the exact SQL output of `QueryBuilder:
 Composite `IN`/`NOT IN` conditions now generate `IS NULL`/`IS NOT NULL` expressions for `NULL` values in the value list,
 instead of literal `NULL` comparisons. This aligns with SQL semantics where `column = NULL` always evaluates to `UNKNOWN`.
 
-**Before:** `(col1 = :p0 AND col2 = NULL)` — always fails due to SQL NULL semantics  
+**Before:** `(col1 = :p0 AND col2 = NULL)` — always fails due to SQL NULL semantics
 **After:** `(col1 = :p0 AND col2 IS NULL)` — correctly matches NULL values
+
+### MSSQL dead code removal — minimum SQL Server 2017
+
+The minimum supported SQL Server version is now **2017** (internal version `14`). With PHP 8.2+, `pdo_sqlsrv 5.11+` is
+required. SQL Server 2017 is the oldest version with official Docker images and Microsoft extended support (until October
+2027). The following dead code has been removed:
+
+- `QueryBuilder::isOldMssql()` method (deprecated since 2.0.14, checked for version < 11).
+- `QueryBuilder::oldBuildOrderByAndLimit()` method (ROW_NUMBER()-based pagination for SQL Server 2005–2008).
+- `QueryBuilder::newBuildOrderByAndLimit()` method (inlined into `buildOrderByAndLimit()`).
+- SQL Server 2005 (`v9`) version checks in `QueryBuilder::insert()` and `Schema::insert()`.
+- ROW_NUMBER() workaround in `QueryBuilder::upsert()`.
+- The `getLastInsertID()` fallback in `Schema::insert()` for pre-2005 servers.
+- Pre-2017 boolean type heuristics in `Schema::loadColumnSchema()` (`tinyint(1)` / `bit(n)` size-based mapping).
+- The `$isVersion2017orLater` version check — `bit` now maps directly to `boolean` in `Schema::$typeMap`.
+
+**Type map change:** `Schema::$typeMap['bit']` changed from `TYPE_SMALLINT` to `TYPE_BOOLEAN`. If your application
+reads `$schema->typeMap['bit']` directly, update accordingly.
+
+If your application extends `\yii\db\mssql\QueryBuilder` and overrides `oldBuildOrderByAndLimit()`,
+`newBuildOrderByAndLimit()`, or `isOldMssql()`, remove those overrides. The pagination logic now lives directly in
+`buildOrderByAndLimit()` using the `OFFSET ... FETCH` syntax.

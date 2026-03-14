@@ -21,7 +21,7 @@ use yii\helpers\ArrayHelper;
 use yii\db\Schema as BaseSchema;
 
 /**
- * Schema is the class for retrieving metadata from MS SQL Server databases (version 2008 and above).
+ * Schema is the class for retrieving metadata from MS SQL Server databases (version 2017 and later).
  *
  * @author Timur Ruziev <resurtm@gmail.com>
  * @since 2.0
@@ -49,7 +49,7 @@ class Schema extends BaseSchema implements ConstraintFinderInterface
         // exact numbers
         'bigint' => self::TYPE_BIGINT,
         'numeric' => self::TYPE_DECIMAL,
-        'bit' => self::TYPE_SMALLINT,
+        'bit' => self::TYPE_BOOLEAN,
         'smallint' => self::TYPE_SMALLINT,
         'decimal' => self::TYPE_DECIMAL,
         'smallmoney' => self::TYPE_MONEY,
@@ -380,7 +380,6 @@ SQL;
      */
     protected function loadColumnSchema($info)
     {
-        $isVersion2017orLater = version_compare($this->db->getSchema()->getServerVersion(), '14', '>=');
         $column = $this->createColumnSchema();
 
         $column->name = $info['column_name'];
@@ -400,28 +399,12 @@ SQL;
                 $column->type = $this->typeMap[$type];
             }
 
-            if ($isVersion2017orLater && $type === 'bit') {
-                $column->type = 'boolean';
-            }
-
             if (!empty($matches[2])) {
                 $values = explode(',', $matches[2]);
                 $column->size = $column->precision = (int) $values[0];
 
                 if (isset($values[1])) {
                     $column->scale = (int) $values[1];
-                }
-
-                if ($isVersion2017orLater === false) {
-                    if ($column->size === 1 && ($type === 'tinyint' || $type === 'bit')) {
-                        $column->type = 'boolean';
-                    } elseif ($type === 'bit') {
-                        if ($column->size > 32) {
-                            $column->type = 'bigint';
-                        } elseif ($column->size === 32) {
-                            $column->type = 'integer';
-                        }
-                    }
                 }
             }
         }
@@ -789,7 +772,7 @@ SQL;
     }
 
     /**
-     * Retrieving inserted data from a primary key request of type uniqueidentifier (for SQL Server 2005 or later)
+     * Retrieves inserted data from a primary key request of type uniqueidentifier.
      * {@inheritdoc}
      */
     public function insert($table, $columns)
@@ -799,8 +782,7 @@ SQL;
             return false;
         }
 
-        $isVersion2005orLater = version_compare($this->db->getSchema()->getServerVersion(), '9', '>=');
-        $inserted = $isVersion2005orLater ? $command->pdoStatement->fetch() : [];
+        $inserted = $command->pdoStatement->fetch();
 
         $tableSchema = $this->getTableSchema($table);
         $result = [];
@@ -808,9 +790,6 @@ SQL;
             // @see https://github.com/yiisoft/yii2/issues/13828 & https://github.com/yiisoft/yii2/issues/17474
             if (isset($inserted[$name])) {
                 $result[$name] = $inserted[$name];
-            } elseif ($tableSchema->columns[$name]->autoIncrement) {
-                // for a version earlier than 2005
-                $result[$name] = $this->getLastInsertID($tableSchema->sequenceName);
             } elseif (isset($columns[$name])) {
                 $result[$name] = $columns[$name];
             } else {
