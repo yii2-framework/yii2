@@ -1759,14 +1759,14 @@ parameters:
 			path: src/db/mssql/QueryBuilder.php
 
 		-
-			message: '#^Only booleans are allowed in &&, int\<0, max\> given on the right side\.$#'
-			identifier: booleanAnd.rightNotBoolean
-			count: 2
+			message: '#^Only booleans are allowed in a negated boolean, string\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
 			path: src/db/mssql/QueryBuilder.php
 
 		-
-			message: '#^Only booleans are allowed in a negated boolean, string\|null given\.$#'
-			identifier: booleanNot.exprNotBoolean
+			message: '#^Only booleans are allowed in a ternary operator condition, int\<0, max\> given\.$#'
+			identifier: ternary.condNotBoolean
 			count: 1
 			path: src/db/mssql/QueryBuilder.php
 
@@ -1785,6 +1785,12 @@ parameters:
 		-
 			message: '#^Only booleans are allowed in a ternary operator condition, yii\\db\\TableSchema\|null given\.$#'
 			identifier: ternary.condNotBoolean
+			count: 1
+			path: src/db/mssql/QueryBuilder.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\<0, max\> given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: src/db/mssql/QueryBuilder.php
 
