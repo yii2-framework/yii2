@@ -42,7 +42,10 @@ jobs:
       concurrency-group: mssql-${{ github.ref }}
       coverage-driver: xdebug
       database-env: '{"SA_PASSWORD":"YourStrong!Passw0rd","ACCEPT_EULA":"Y","MSSQL_PID":"Developer"}'
-      database-health-cmd: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'
+      database-health-cmd: >-
+        /bin/bash -c
+        "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'
+        || /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'"
       database-image: mcr.microsoft.com/mssql/server
       database-port: "1433"
       database-type: mssql
@@ -50,7 +53,11 @@ jobs:
       extensions: curl, intl, pdo, pdo_sqlsrv
       hook: |
         sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
-        docker exec -i database /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "IF DB_ID(N'yiitest') IS NULL CREATE DATABASE yiitest;"
+        docker exec -i database bash -c \
+          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' \
+          -Q \"IF DB_ID(N'yiitest') IS NULL CREATE DATABASE yiitest;\" \
+          || /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' \
+          -Q \"IF DB_ID(N'yiitest') IS NULL CREATE DATABASE yiitest;\""
       os: '["ubuntu-22.04"]'
       php-version: '["8.5"]'
       phpunit-group: mssql
@@ -64,7 +71,10 @@ jobs:
       concurrency-group: mssql-dev-${{ github.ref }}
       coverage-driver: none
       database-env: '{"SA_PASSWORD":"YourStrong!Passw0rd","ACCEPT_EULA":"Y","MSSQL_PID":"Developer"}'
-      database-health-cmd: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'
+      database-health-cmd: >-
+        /bin/bash -c
+        "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'
+        || /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1'"
       database-image: mcr.microsoft.com/mssql/server
       database-port: "1433"
       database-type: mssql
@@ -72,7 +82,11 @@ jobs:
       extensions: curl, intl, pdo, pdo_sqlsrv
       hook: |
         sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
-        docker exec -i database /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "IF DB_ID(N'yiitest') IS NULL CREATE DATABASE yiitest;"
+        docker exec -i database bash -c \
+          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' \
+          -Q \"IF DB_ID(N'yiitest') IS NULL CREATE DATABASE yiitest;\" \
+          || /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' \
+          -Q \"IF DB_ID(N'yiitest') IS NULL CREATE DATABASE yiitest;\""
       os: '["ubuntu-22.04"]'
       php-version: '["8.2","8.3","8.4"]'
       phpunit-group: mssql
