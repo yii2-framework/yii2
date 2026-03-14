@@ -15,7 +15,7 @@ use yii\db\Query;
 use yii\db\TableSchema;
 
 /**
- * QueryBuilder is the query builder for MS SQL Server databases (version 2008 and above).
+ * QueryBuilder is the query builder for MS SQL Server databases (version 2017 and later).
  *
  * @author Timur Ruziev <resurtm@gmail.com>
  * @since 2.0
@@ -71,23 +71,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
             return $orderBy === '' ? $sql : $sql . $this->separator . $orderBy;
         }
 
-        if (version_compare($this->db->getSchema()->getServerVersion(), '11', '<')) {
-            return $this->oldBuildOrderByAndLimit($sql, $orderBy, $limit, $offset);
-        }
-
-        return $this->newBuildOrderByAndLimit($sql, $orderBy, $limit, $offset);
-    }
-
-    /**
-     * Builds the ORDER BY/LIMIT/OFFSET clauses for SQL SERVER 2012 or newer.
-     * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET)
-     * @param array $orderBy the order by columns. See [[\yii\db\Query::orderBy]] for more details on how to specify this parameter.
-     * @param int $limit the limit number. See [[\yii\db\Query::limit]] for more details.
-     * @param int $offset the offset number. See [[\yii\db\Query::offset]] for more details.
-     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any)
-     */
-    protected function newBuildOrderByAndLimit($sql, $orderBy, $limit, $offset)
-    {
         $orderBy = $this->buildOrderBy($orderBy);
         if ($orderBy === '') {
             // ORDER BY clause is required when FETCH and OFFSET are in the SQL
@@ -100,39 +83,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $sql .= $this->separator . "OFFSET $offset ROWS";
         if ($this->hasLimit($limit)) {
             $sql .= $this->separator . "FETCH NEXT $limit ROWS ONLY";
-        }
-
-        return $sql;
-    }
-
-    /**
-     * Builds the ORDER BY/LIMIT/OFFSET clauses for SQL SERVER 2005 to 2008.
-     * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET)
-     * @param array $orderBy the order by columns. See [[\yii\db\Query::orderBy]] for more details on how to specify this parameter.
-     * @param int|Expression $limit the limit number. See [[\yii\db\Query::limit]] for more details.
-     * @param int $offset the offset number. See [[\yii\db\Query::offset]] for more details.
-     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any)
-     */
-    protected function oldBuildOrderByAndLimit($sql, $orderBy, $limit, $offset)
-    {
-        $orderBy = $this->buildOrderBy($orderBy);
-        if ($orderBy === '') {
-            // ROW_NUMBER() requires an ORDER BY clause
-            $orderBy = 'ORDER BY (SELECT NULL)';
-        }
-
-        $sql = preg_replace('/^([\s(])*SELECT(\s+DISTINCT)?(?!\s*TOP\s*\()/i', "\\1SELECT\\2 rowNum = ROW_NUMBER() over ($orderBy),", $sql);
-
-        if ($this->hasLimit($limit)) {
-            if ($limit instanceof Expression) {
-                $limit = '(' . (string)$limit . ')';
-            }
-            $sql = "SELECT TOP $limit * FROM ($sql) sub";
-        } else {
-            $sql = "SELECT * FROM ($sql) sub";
-        }
-        if ($this->hasOffset($offset)) {
-            $sql .= $this->separator . "WHERE rowNum > $offset";
         }
 
         return $sql;
@@ -441,17 +391,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * @return bool whether the version of the MSSQL being used is older than 2012.
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\db\Exception
-     * @deprecated 2.0.14 Use [[Schema::getServerVersion]] with [[\version_compare()]].
-     */
-    protected function isOldMssql()
-    {
-        return version_compare($this->db->getSchema()->getServerVersion(), '11', '<');
-    }
-
-    /**
      * {@inheritdoc}
      * @since 2.0.8
      */
@@ -484,52 +423,47 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * {@inheritdoc}
-     * Added OUTPUT construction for getting inserted data (for SQL Server 2005 or later)
-     * OUTPUT clause - The OUTPUT clause is new to SQL Server 2005 and has the ability to access
-     * the INSERTED and DELETED tables as is the case with a trigger.
+     *
+     * Uses the OUTPUT clause to return inserted data.
      */
     public function insert($table, $columns, &$params)
     {
         $columns = $this->normalizeTableRowData($table, $columns, $params);
 
-        $version2005orLater = version_compare($this->db->getSchema()->getServerVersion(), '9', '>=');
-
         list($names, $placeholders, $values, $params) = $this->prepareInsertValues($table, $columns, $params);
         $cols = [];
         $outputColumns = [];
-        if ($version2005orLater) {
-            /** @var TableSchema $schema */
-            $schema = $this->db->getTableSchema($table);
-            foreach ($schema->columns as $column) {
-                if ($column->isComputed) {
-                    continue;
-                }
-
-                $dbType = $column->dbType;
-                if (in_array($dbType, ['varchar', 'nvarchar', 'binary', 'varbinary'])) {
-                    $dbType .= '(MAX)';
-                } elseif (in_array($dbType, ['char',  'nchar'])) {
-                    $dbType .= "($column->size)";
-                }
-
-                if ($column->dbType === Schema::TYPE_TIMESTAMP) {
-                    $dbType = $column->allowNull ? 'varbinary(8)' : 'binary(8)';
-                }
-
-                $quoteColumnName = $this->db->quoteColumnName($column->name);
-                $cols[] = $quoteColumnName . ' ' . $dbType . ' ' . ($column->allowNull ? 'NULL' : '');
-                $outputColumns[] = 'INSERTED.' . $quoteColumnName;
+        /** @var TableSchema $schema */
+        $schema = $this->db->getTableSchema($table);
+        foreach ($schema->columns as $column) {
+            if ($column->isComputed) {
+                continue;
             }
+
+            $dbType = $column->dbType;
+            if (in_array($dbType, ['varchar', 'nvarchar', 'binary', 'varbinary'])) {
+                $dbType .= '(MAX)';
+            } elseif (in_array($dbType, ['char',  'nchar'])) {
+                $dbType .= "($column->size)";
+            }
+
+            if ($column->dbType === Schema::TYPE_TIMESTAMP) {
+                $dbType = $column->allowNull ? 'varbinary(8)' : 'binary(8)';
+            }
+
+            $quoteColumnName = $this->db->quoteColumnName($column->name);
+            $cols[] = $quoteColumnName . ' ' . $dbType . ' ' . ($column->allowNull ? 'NULL' : '');
+            $outputColumns[] = 'INSERTED.' . $quoteColumnName;
         }
 
         $countColumns = count($outputColumns);
 
         $sql = 'INSERT INTO ' . $this->db->quoteTableName($table)
             . (!empty($names) ? ' (' . implode(', ', $names) . ')' : '')
-            . (($version2005orLater && $countColumns) ? ' OUTPUT ' . implode(',', $outputColumns) . ' INTO @temporary_inserted' : '')
+            . ($countColumns ? ' OUTPUT ' . implode(',', $outputColumns) . ' INTO @temporary_inserted' : '')
             . (!empty($placeholders) ? ' VALUES (' . implode(', ', $placeholders) . ')' : $values);
 
-        if ($version2005orLater && $countColumns) {
+        if ($countColumns) {
             $sql = 'SET NOCOUNT ON;DECLARE @temporary_inserted TABLE (' . implode(', ', $cols) . ');' . $sql .
                 ';SELECT * FROM @temporary_inserted';
         }
@@ -568,17 +502,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $on = $this->buildCondition($onCondition, $params);
         list(, $placeholders, $values, $params) = $this->prepareInsertValues($table, $insertColumns, $params);
 
-        /**
-         * Fix number of select query params for old MSSQL version that does not support offset correctly.
-         * @see QueryBuilder::oldBuildOrderByAndLimit
-         */
-        $insertNamesUsing = $insertNames;
-        if (strstr($values, 'rowNum = ROW_NUMBER()') !== false) {
-            $insertNamesUsing = array_merge(['[rowNum]'], $insertNames);
-        }
-
         $mergeSql = 'MERGE ' . $this->db->quoteTableName($table) . ' WITH (HOLDLOCK) '
-            . 'USING (' . (!empty($placeholders) ? 'VALUES (' . implode(', ', $placeholders) . ')' : ltrim($values, ' ')) . ') AS [EXCLUDED] (' . implode(', ', $insertNamesUsing) . ') '
+            . 'USING (' . (!empty($placeholders) ? 'VALUES (' . implode(', ', $placeholders) . ')' : ltrim($values, ' ')) . ') AS [EXCLUDED] (' . implode(', ', $insertNames) . ') '
             . "ON ($on)";
         $insertValues = [];
         foreach ($insertNames as $name) {
