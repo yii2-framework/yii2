@@ -211,7 +211,9 @@ trait ActiveRelationTrait
                     $modelClass = $this->modelClass;
                     $inverseRelation = $modelClass::instance()->getRelation($this->inverseOf);
                 }
-                $result[$i][$this->inverseOf] = $inverseRelation->multiple ? [$this->primaryModel] : $this->primaryModel;
+                $result[$i][$this->inverseOf] = $inverseRelation->multiple
+                    ? [$this->normalizeInverseRelationModel($this->primaryModel, true)]
+                    : $this->normalizeInverseRelationModel($this->primaryModel, true);
             }
         }
     }
@@ -358,7 +360,27 @@ trait ActiveRelationTrait
                 }
             } else {
                 foreach ($primaryModels as $i => $primaryModel) {
-                    if ($this->multiple) {
+                    if ($primaryModel instanceof ActiveRecordInterface) {
+                        if ($this->multiple) {
+                            $relatedModels = $primaryModel->$primaryName;
+                            foreach ($relatedModels as $j => $relatedModel) {
+                                $key = $this->getModelKey($relatedModel, $relation->link);
+                                $relatedModels[$j][$name] = isset($buckets[$key])
+                                    ? $this->normalizeInverseRelationModels($buckets[$key], true)
+                                    : [];
+                            }
+                            $primaryModel->populateRelation($primaryName, $relatedModels);
+                        } else {
+                            $relatedModel = $primaryModel->$primaryName;
+                            if (!empty($relatedModel)) {
+                                $key = $this->getModelKey($relatedModel, $relation->link);
+                                $relatedModel[$name] = isset($buckets[$key])
+                                    ? $this->normalizeInverseRelationModels($buckets[$key], true)
+                                    : [];
+                                $primaryModel->populateRelation($primaryName, $relatedModel);
+                            }
+                        }
+                    } elseif ($this->multiple) {
                         foreach ($primaryModel as $j => $m) {
                             $key = $this->getModelKey($m, $relation->link);
                             $primaryModels[$i][$j][$name] = isset($buckets[$key]) ? $buckets[$key] : [];
@@ -371,23 +393,90 @@ trait ActiveRelationTrait
             }
         } elseif ($this->multiple) {
             foreach ($primaryModels as $i => $primaryModel) {
-                foreach ($primaryModel[$primaryName] as $j => $m) {
-                    if ($m instanceof ActiveRecordInterface) {
-                        $m->populateRelation($name, $primaryModel);
-                    } else {
-                        $primaryModels[$i][$primaryName][$j][$name] = $primaryModel;
+                if ($primaryModel instanceof ActiveRecordInterface) {
+                    $relatedModels = $primaryModel->$primaryName;
+                    foreach ($relatedModels as $j => $m) {
+                        if ($m instanceof ActiveRecordInterface) {
+                            $m->populateRelation($name, $primaryModel);
+                        } else {
+                            $relatedModels[$j][$name] = $this->normalizeInverseRelationModel($primaryModel, true);
+                        }
+                    }
+                    $primaryModel->populateRelation($primaryName, $relatedModels);
+                } else {
+                    foreach ($primaryModel[$primaryName] as $j => $m) {
+                        if ($m instanceof ActiveRecordInterface) {
+                            $m->populateRelation($name, $primaryModel);
+                        } else {
+                            $primaryModels[$i][$primaryName][$j][$name] = $primaryModel;
+                        }
                     }
                 }
             }
         } else {
             foreach ($primaryModels as $i => $primaryModel) {
-                if ($primaryModels[$i][$primaryName] instanceof ActiveRecordInterface) {
+                if ($primaryModel instanceof ActiveRecordInterface) {
+                    $relatedModel = $primaryModel->$primaryName;
+                    if ($relatedModel instanceof ActiveRecordInterface) {
+                        $relatedModel->populateRelation($name, $primaryModel);
+                    } elseif (!empty($relatedModel)) {
+                        $relatedModel[$name] = $this->normalizeInverseRelationModel($primaryModel, true);
+                        $primaryModel->populateRelation($primaryName, $relatedModel);
+                    }
+                } elseif ($primaryModels[$i][$primaryName] instanceof ActiveRecordInterface) {
                     $primaryModels[$i][$primaryName]->populateRelation($name, $primaryModel);
                 } elseif (!empty($primaryModels[$i][$primaryName])) {
                     $primaryModels[$i][$primaryName][$name] = $primaryModel;
                 }
             }
         }
+    }
+
+    /**
+     * @param ActiveRecordInterface|array|null $model
+     * @param bool $asArray
+     * @return ActiveRecordInterface|array|null
+     */
+    private function normalizeInverseRelationModel($model, $asArray)
+    {
+        if (!$asArray || !$model instanceof ActiveRecordInterface) {
+            return $model;
+        }
+
+        $attributes = [];
+        if ($model instanceof ActiveRecord) {
+            foreach (array_keys($model->getOldAttributes()) as $attributeName) {
+                $attributes[$attributeName] = $model->getAttribute($attributeName);
+            }
+
+            if (!empty($attributes)) {
+                return $attributes;
+            }
+        }
+
+        foreach ($model->attributes() as $attributeName) {
+            $attributes[$attributeName] = $model->getAttribute($attributeName);
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param array $models
+     * @param bool $asArray
+     * @return array
+     */
+    private function normalizeInverseRelationModels($models, $asArray)
+    {
+        if (!$asArray) {
+            return $models;
+        }
+
+        foreach ($models as $i => $model) {
+            $models[$i] = $this->normalizeInverseRelationModel($model, true);
+        }
+
+        return $models;
     }
 
     /**

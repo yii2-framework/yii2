@@ -939,7 +939,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property yii\\db\\ActiveQueryInterface\:\:\$link\.$#'
 			identifier: property.notFound
-			count: 4
+			count: 6
 			path: src/db/ActiveQuery.php
 
 		-
@@ -1005,7 +1005,7 @@ parameters:
 		-
 			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
 			identifier: empty.notAllowed
-			count: 39
+			count: 42
 			path: src/db/ActiveQuery.php
 
 		-
@@ -1072,6 +1072,12 @@ parameters:
 			message: '#^Variable property access on yii\\db\\ActiveRecord\.$#'
 			identifier: property.dynamicName
 			count: 2
+			path: src/db/ActiveQuery.php
+
+		-
+			message: '#^Variable property access on yii\\db\\ActiveRecordInterface\.$#'
+			identifier: property.dynamicName
+			count: 4
 			path: src/db/ActiveQuery.php
 
 		-
@@ -4575,7 +4581,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property yiiunit\\data\\ar\\Order\:\:\$customer2\.$#'
 			identifier: property.notFound
-			count: 6
+			count: 7
 			path: tests/base/db/BaseActiveRecord.php
 
 		-
@@ -4929,7 +4935,7 @@ parameters:
 		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
 			identifier: staticMethod.dynamicCall
-			count: 222
+			count: 220
 			path: tests/base/db/BaseActiveRecord.php
 
 		-
@@ -4977,7 +4983,7 @@ parameters:
 		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\)\.$#'
 			identifier: staticMethod.dynamicCall
-			count: 50
+			count: 46
 			path: tests/base/db/BaseActiveRecord.php
 
 		-
