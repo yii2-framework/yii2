@@ -165,6 +165,8 @@
         validationDelay: 500,
         // whether to enable AJAX-based validation.
         enableAjaxValidation: false,
+        // whether at least one client validator has a whenClient condition.
+        hasWhenClient: false,
         // function (attribute, value, messages, deferred, $form), the client-side validation function.
         validate: undefined,
         // status of the input field, 0: empty, not entered before, 1: validated, 2: pending validation, 3: validating
@@ -549,8 +551,17 @@
         findInput($form, attribute).off('.yiiActiveForm');
     };
 
+    var hasValidationError = function ($form, attribute, data) {
+        var $input = findInput($form, attribute),
+            $container = $form.find(attribute.container),
+            $errorElement = data.settings.validationStateOn === 'input' ? $input : $container;
+
+        return $errorElement.hasClass(data.settings.errorCssClass);
+    };
+
     var validateAttribute = function ($form, attribute, forceValidate, validationDelay) {
         var data = $form.data('yiiActiveForm');
+        var hasValueChanges = false;
 
         if (forceValidate) {
             attribute.status = 2;
@@ -559,8 +570,20 @@
             if (!isEqual(this.value, getValue($form, this))) {
                 this.status = 2;
                 forceValidate = true;
+                hasValueChanges = true;
             }
         });
+        if (hasValueChanges) {
+            $.each(data.attributes, function () {
+                if (!this.hasWhenClient || this.status === 2 || this.status === 3) {
+                    return;
+                }
+                if (hasValidationError($form, this, data)) {
+                    this.status = 2;
+                    forceValidate = true;
+                }
+            });
+        }
         if (!forceValidate) {
             return;
         }
