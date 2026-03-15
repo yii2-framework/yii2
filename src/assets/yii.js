@@ -237,7 +237,7 @@ window.yii = (function ($) {
             $e: $e,
             event: event,
             $form: $form,
-            method: !$e.data('method') && $form ? $form.attr('method') : $e.data('method'),
+            method: $e.data('method'),
             action: $e.attr('href'),
             isValidAction: $e.attr('href') && $e.attr('href') !== '#',
             params: params,
@@ -624,12 +624,12 @@ window.yii = (function ($) {
         xhr.done(function (data, textStatus, jqXHR) {
             var scriptData = loadedScripts[jqXHR.yiiUrl];
             // If multiple requests were successfully loaded, perform cleanup only once
-            if (scriptData['xhrDone'] === true) {
+            if (scriptData === true || !scriptData || scriptData.xhrDone === true) {
                 return;
             }
 
-            scriptData['xhrDone'] = true;
-            abortPendingScriptRequests(scriptData['xhrList']);
+            scriptData.xhrDone = true;
+            abortPendingScriptRequests(scriptData.xhrList);
             loadedScripts[jqXHR.yiiUrl] = true;
         }).fail(function (jqXHR, textStatus) {
             if (textStatus === 'abort') {

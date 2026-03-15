@@ -530,11 +530,18 @@ describe('yii', function () {
                         var $container = $('.handle-action .no-method .valid');
                         var $form = $('<form method="post"></form>').appendTo($container);
                         var $element = $('<a href="/tests/index"></a>').appendTo($form);
+                        var initialAssignCalls = windowLocationAssignStub.callCount;
 
                         yii.handleAction($element);
 
                         $form.remove();
-                        verifyPageLoad('/tests/index');
+
+                        assert.isAtLeast(windowLocationAssignStub.callCount, initialAssignCalls + 1);
+                        assert.isTrue(windowLocationAssignStub.calledWith('/tests/index'));
+                        assert.isFalse(pjaxClickStub.called);
+                        assert.equal(formSubmitsCount, 0);
+                        assert.isFalse(pjaxSubmitStub.called);
+                        assert.equal($('form').length, initialFormsCount);
                     });
 
                     withData({
