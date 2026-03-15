@@ -476,7 +476,8 @@ describe('yii', function () {
                 describe('with no form', function () {
                     withData({
                         'link': ['.link'],
-                        'link, data-pjax="0"': ['.link-pjax-0']
+                        'link, data-pjax="0"': ['.link-pjax-0'],
+                        'link, data-pjax="false"': ['.link-pjax-false']
                     }, function (elementSelector) {
                         it(pageLoadMessage, function () {
                             var $element = $('.handle-action .no-method .valid').find(elementSelector);
@@ -667,6 +668,44 @@ describe('yii', function () {
                         assert.equal($savedSubmittedForm.get(0).outerHTML, expectedFormHtml);
                     });
                 });
+
+                describe('with data-params own-property edge cases', function () {
+                    var consoleErrorStub;
+
+                    beforeEach(function () {
+                        consoleErrorStub = sinon.stub(console, 'error');
+                    });
+
+                    afterEach(function () {
+                        consoleErrorStub.restore();
+                    });
+
+                    it('should handle null-prototype params without throwing', function () {
+                        var params = Object.create(null);
+                        params.foo = '1';
+
+                        var $element = $('<a href="/tests/index" data-method="get"></a>');
+                        $element.data('params', params);
+
+                        yii.handleAction($element);
+
+                        verifyFormSubmit();
+                    });
+
+                    it('should handle params with overridden hasOwnProperty without throwing', function () {
+                        var params = {
+                            foo: '1',
+                            hasOwnProperty: 'broken'
+                        };
+
+                        var $element = $('<a href="/tests/index" data-method="get"></a>');
+                        $element.data('params', params);
+
+                        yii.handleAction($element);
+
+                        verifyFormSubmit();
+                    });
+                });
             });
 
             describe('with form', function () {
@@ -763,6 +802,26 @@ describe('yii', function () {
                             '</form>';
                         var submittedFormHtml = StringUtils.cleanHTML($savedSubmittedForm.get(0).outerHTML);
                         assert.equal(submittedFormHtml, expectedSubmittedFormHtml);
+                        assert.equal($form.get(0).outerHTML, initialFormHtml);
+                    });
+
+                    it('should not duplicate pjax submit handlers on repeated submissions', function () {
+                        var firstEvent = $.Event('click');
+                        var secondEvent = $.Event('click');
+                        var $element = $('.handle-action .method .form .new-action-new-method-pjax');
+                        assert.lengthOf($element, 1);
+
+                        var $form = $('#method-form');
+                        var initialFormHtml = $form.get(0).outerHTML;
+                        assert.lengthOf($form, 1);
+
+                        yii.handleAction($element, firstEvent);
+                        yii.handleAction($element, secondEvent);
+
+                        assert.isFalse(windowLocationAssignStub.called);
+                        assert.isFalse(pjaxClickStub.called);
+                        assert.equal(formSubmitsCount, 2);
+                        assert.equal(pjaxSubmitStub.callCount, 2);
                         assert.equal($form.get(0).outerHTML, initialFormHtml);
                     });
                 });
@@ -1288,10 +1347,43 @@ describe('yii', function () {
                         };
 
                         respondToRequestWithSuccess(1);
+
+                        assert.isTrue(server.requests[0].aborted);
+                        assert.isTrue(server.requests[2].aborted);
+
                         respondToRequestWithSuccess(0);
                         respondToRequestWithSuccess(2);
 
                         $.getScript('/js/concurrent_delayed_success.js');
+                        server.respond();
+
+                        assert.lengthOf(server.requests, 3);
+                        assert.equal(server.requests[0].readyState, XHR_DONE);
+                        assert.equal(server.requests[1].readyState, XHR_DONE);
+                        assert.equal(server.requests[2].readyState, XHR_DONE);
+                    });
+                });
+
+                describe('with delayed failed callbacks after first successful completion', function () {
+                    it('should ignore delayed fail callbacks and not throw', function () {
+                        $.getScript('/js/concurrent_delayed_fail.js');
+                        $.getScript('/js/concurrent_delayed_fail.js');
+                        $.getScript('/js/concurrent_delayed_fail.js');
+
+                        assert.lengthOf(server.requests, 3);
+
+                        server.requests[0].abort = function () {
+                            this.aborted = true;
+                        };
+                        server.requests[2].abort = function () {
+                            this.aborted = true;
+                        };
+
+                        respondToRequestWithSuccess(1);
+                        respondToRequestWithError(0);
+                        respondToRequestWithError(2);
+
+                        $.getScript('/js/concurrent_delayed_fail.js');
                         server.respond();
 
                         assert.lengthOf(server.requests, 3);

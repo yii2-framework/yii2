@@ -251,7 +251,7 @@ window.yii = (function ($) {
     {
         var pjax = $e.data('pjax');
 
-        return pjax !== undefined && pjax !== 0 && $.support.pjax;
+        return pjax !== undefined && pjax !== 0 && pjax !== false && $.support.pjax;
     }
 
     function validateActionParams(params, areValidParams)
@@ -261,7 +261,7 @@ window.yii = (function ($) {
         }
 
         $.each(conflictActionParams, function (index, param) {
-            if (params.hasOwnProperty(param)) {
+            if (Object.prototype.hasOwnProperty.call(params, param)) {
                 console.error("Parameter name '" + param + "' conflicts with a same named form property. " +
                     "Please use another name.");
             }
@@ -413,7 +413,7 @@ window.yii = (function ($) {
     function submitActionForm($form, usePjax, pjaxOptions)
     {
         if (usePjax) {
-            $form.on('submit', function (e) {
+            $form.off('submit.yiiPjaxSubmit').on('submit.yiiPjaxSubmit', function (e) {
                 $.pjax.submit(e, pjaxOptions);
             });
         }
@@ -424,6 +424,7 @@ window.yii = (function ($) {
     function restoreActionForm($form, formState, params, areValidParams)
     {
         $.when($form.data('yiiSubmitFinalizePromise')).done(function () {
+            $form.off('submit.yiiPjaxSubmit');
             if (formState.newForm) {
                 $form.remove();
 
@@ -624,7 +625,7 @@ window.yii = (function ($) {
         xhr.done(function (data, textStatus, jqXHR) {
             var scriptData = loadedScripts[jqXHR.yiiUrl];
             // If multiple requests were successfully loaded, perform cleanup only once
-            if (scriptData === true || !scriptData || scriptData.xhrDone === true) {
+            if (shouldSkipScriptSuccessCleanup(scriptData)) {
                 return;
             }
 
@@ -637,11 +638,25 @@ window.yii = (function ($) {
             }
 
             var scriptData = loadedScripts[jqXHR.yiiUrl];
-            delete scriptData['xhrList'][jqXHR.yiiIndex];
-            if (areAllScriptRequestsFailed(scriptData['xhrList'])) {
+            if (!hasScriptRequestList(scriptData)) {
+                return;
+            }
+
+            delete scriptData.xhrList[jqXHR.yiiIndex];
+            if (areAllScriptRequestsFailed(scriptData.xhrList)) {
                 delete loadedScripts[jqXHR.yiiUrl];
             }
         });
+    }
+
+    function shouldSkipScriptSuccessCleanup(scriptData)
+    {
+        return scriptData === true || !scriptData || scriptData.xhrDone === true;
+    }
+
+    function hasScriptRequestList(scriptData)
+    {
+        return !!scriptData && scriptData !== true && typeof scriptData === 'object' && !!scriptData.xhrList;
     }
 
     function abortPendingScriptRequests(xhrList)
