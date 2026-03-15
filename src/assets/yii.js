@@ -227,6 +227,7 @@ window.yii = (function ($) {
 
     var conflictActionParams = ['submit', 'reset', 'elements', 'length', 'name', 'acceptCharset',
         'action', 'enctype', 'method', 'target'];
+    var actionHelperAttribute = 'data-yii-action-helper';
 
     function createActionContext($e, event)
     {
@@ -322,7 +323,7 @@ window.yii = (function ($) {
         setActiveFormSubmitObject(context.$form, context.$e);
         appendActionParams(context.$form, context.params, context.areValidParams);
         submitActionForm(context.$form, context.usePjax, context.pjaxOptions);
-        restoreActionForm(context.$form, formState, context.params, context.areValidParams);
+        restoreActionForm(context.$form, formState);
     }
 
     function prepareActionForm(context)
@@ -330,7 +331,9 @@ window.yii = (function ($) {
         var state = {
             newForm: !context.$form.length,
             oldMethod: undefined,
-            oldAction: undefined
+            oldAction: undefined,
+            oldActionExists: false,
+            actionModified: false
         };
 
         if (state.newForm) {
@@ -341,7 +344,11 @@ window.yii = (function ($) {
 
         state.oldMethod = context.$form.attr('method');
         context.$form.attr('method', context.method);
+        var normalizedMethod = normalizeSubmitMethod(context.$form, context.method, true);
+        appendCsrfField(context.$form, normalizedMethod, true);
         if (context.isValidAction) {
+            state.actionModified = true;
+            state.oldActionExists = context.$form[0].hasAttribute('action');
             state.oldAction = context.$form.attr('action');
             context.$form.attr('action', context.action);
         }
@@ -366,19 +373,19 @@ window.yii = (function ($) {
         return $form;
     }
 
-    function normalizeSubmitMethod($form, method)
+    function normalizeSubmitMethod($form, method, markAsActionHelper)
     {
         if (/(get|post)/i.test(method)) {
             return method;
         }
 
-        $form.append($('<input/>', {name: '_method', value: method, type: 'hidden'}));
+        appendHiddenInput($form, '_method', method, markAsActionHelper);
         $form.attr('method', 'post');
 
         return 'post';
     }
 
-    function appendCsrfField($form, method)
+    function appendCsrfField($form, method, markAsActionHelper)
     {
         if (!/post/i.test(method)) {
             return;
@@ -386,7 +393,7 @@ window.yii = (function ($) {
 
         var csrfParam = pub.getCsrfParam();
         if (csrfParam) {
-            $form.append($('<input/>', {name: csrfParam, value: pub.getCsrfToken(), type: 'hidden'}));
+            appendHiddenInput($form, csrfParam, pub.getCsrfToken(), markAsActionHelper);
         }
     }
 
@@ -406,7 +413,7 @@ window.yii = (function ($) {
         }
 
         $.each(params, function (name, value) {
-            $form.append($('<input/>').attr({name: name, value: value, type: 'hidden'}));
+            appendHiddenInput($form, name, value, true);
         });
     }
 
@@ -421,7 +428,7 @@ window.yii = (function ($) {
         $form.trigger('submit');
     }
 
-    function restoreActionForm($form, formState, params, areValidParams)
+    function restoreActionForm($form, formState)
     {
         $.when($form.data('yiiSubmitFinalizePromise')).done(function () {
             $form.off('submit.yiiPjaxSubmit');
@@ -431,23 +438,31 @@ window.yii = (function ($) {
                 return;
             }
 
-            if (formState.oldAction !== undefined) {
-                $form.attr('action', formState.oldAction);
+            if (formState.actionModified) {
+                if (formState.oldActionExists) {
+                    $form.attr('action', formState.oldAction);
+                } else {
+                    $form.removeAttr('action');
+                }
             }
             $form.attr('method', formState.oldMethod);
-            removeActionParams($form, params, areValidParams);
+            removeActionParams($form);
         });
     }
 
-    function removeActionParams($form, params, areValidParams)
+    function removeActionParams($form)
     {
-        if (!areValidParams) {
-            return;
+        $('input[type="hidden"][' + actionHelperAttribute + '="true"]', $form).remove();
+    }
+
+    function appendHiddenInput($form, name, value, markAsActionHelper)
+    {
+        var attributes = {name: name, value: value, type: 'hidden'};
+        if (markAsActionHelper) {
+            attributes[actionHelperAttribute] = 'true';
         }
 
-        $.each(params, function (name) {
-            $('input[name="' + name + '"]', $form).remove();
-        });
+        $form.append($('<input/>').attr(attributes));
     }
 
     function getQueryString(url)
@@ -462,19 +477,24 @@ window.yii = (function ($) {
 
     function appendQueryParam(params, pair)
     {
-        var pairData = pair.split('=');
-        var name = decodeURIComponent(pairData[0].replace(/\+/g, '%20'));
+        var pairSeparatorPosition = pair.indexOf('=');
+        var name = decodeURIComponent(getQueryParamName(pair, pairSeparatorPosition).replace(/\+/g, '%20'));
         if (!name.length) {
             return;
         }
 
-        var value = getQueryParamValue(pairData);
+        var value = getQueryParamValue(pair, pairSeparatorPosition);
         setQueryParamValue(params, name, value);
     }
 
-    function getQueryParamValue(pairData)
+    function getQueryParamName(pair, pairSeparatorPosition)
     {
-        return pairData.length > 1 ? decodeURIComponent(pairData[1].replace(/\+/g, '%20')) : '';
+        return pairSeparatorPosition < 0 ? pair : pair.substring(0, pairSeparatorPosition);
+    }
+
+    function getQueryParamValue(pair, pairSeparatorPosition)
+    {
+        return pairSeparatorPosition < 0 ? '' : decodeURIComponent(pair.substring(pairSeparatorPosition + 1).replace(/\+/g, '%20'));
     }
 
     function setQueryParamValue(params, name, value)

@@ -601,8 +601,8 @@ describe('yii', function () {
                     'data-method="get", data-params, target': [
                         '.get-params-target',
                         '<form method="get" action="/tests/index" target="_blank" style="display: none;">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-method="head", data-params': [
@@ -610,24 +610,24 @@ describe('yii', function () {
                         '<form method="post" action="/tests/index" style="display: none;">' +
                         '<input name="_method" value="head" type="hidden">' +
                         '<input name="_csrf" value="foobar" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-method="post", data-params': [
                         '.post',
                         '<form method="post" action="/tests/index" style="display: none;">' +
                         '<input name="_csrf" value="foobar" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-method="post", data-params, upper case': [
                         '.post-upper-case',
                         '<form method="POST" action="/tests/index" style="display: none;">' +
                         '<input name="_csrf" value="foobar" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-method="put", data-params': [
@@ -635,8 +635,8 @@ describe('yii', function () {
                         '<form method="post" action="/tests/index" style="display: none;">' +
                         '<input name="_method" value="put" type="hidden">' +
                         '<input name="_csrf" value="foobar" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ]
                 }, function (elementSelector, expectedFormHtml) {
@@ -662,8 +662,8 @@ describe('yii', function () {
                         verifyFormSubmitWithPjax($element, event);
 
                         var expectedFormHtml = '<form method="get" action="/tests/index" style="display: none;">' +
-                            '<input name="foo" value="1" type="hidden">' +
-                            '<input name="bar" value="2" type="hidden">' +
+                            '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                            '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                             '</form>';
                         assert.equal($savedSubmittedForm.get(0).outerHTML, expectedFormHtml);
                     });
@@ -715,8 +715,9 @@ describe('yii', function () {
                         '#method-form',
                         '<form id="method-form" method="post" action="/search">' +
                         '<input name="query" value="a">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-form, same action, same method, data-params': [
@@ -724,8 +725,8 @@ describe('yii', function () {
                         '#method-form',
                         '<form id="method-form" method="get" action="/tests/search">' +
                         '<input name="query" value="a">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-form, invalid action, new method, data-params': [
@@ -733,8 +734,40 @@ describe('yii', function () {
                         '#method-form',
                         '<form id="method-form" method="post" action="/tests/search">' +
                         '<input name="query" value="a">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
+                        '</form>'
+                    ],
+                    'data-form, new action, put method, data-params': [
+                        '.new-action-put-method',
+                        '#method-form',
+                        '<form id="method-form" method="post" action="/tests/index">' +
+                        '<input name="query" value="a">' +
+                        '<input name="_method" value="put" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
+                        '</form>'
+                    ],
+                    'data-form without original action, new action, new method, data-params': [
+                        '.new-action-form-without-action',
+                        '#form-without-action',
+                        '<form id="form-without-action" method="post" action="/tests/index">' +
+                        '<input name="query" value="a">' +
+                        '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
+                        '</form>'
+                    ],
+                    'data-form with pre-existing field colliding with data-params': [
+                        '.params-name-collision',
+                        '#form-params-name-collision',
+                        '<form id="form-params-name-collision" method="get" action="/tests/search">' +
+                        '<input name="query" value="a">' +
+                        '<input name="foo" value="existing" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     // This is a test for this PR:
@@ -749,8 +782,8 @@ describe('yii', function () {
                         '<input name="query" value="a">' +
                         '<input name="method" value="b" type="hidden">' +
                         '<input name="action" value="c" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ]
                 }, function (elementSelector, formSelector, expectedSubmittedFormHtml) {
@@ -797,8 +830,9 @@ describe('yii', function () {
 
                         var expectedSubmittedFormHtml = '<form id="method-form" method="post" action="/search">' +
                             '<input name="query" value="a">' +
-                            '<input name="foo" value="1" type="hidden">' +
-                            '<input name="bar" value="2" type="hidden">' +
+                            '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                            '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                            '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                             '</form>';
                         var submittedFormHtml = StringUtils.cleanHTML($savedSubmittedForm.get(0).outerHTML);
                         assert.equal(submittedFormHtml, expectedSubmittedFormHtml);
@@ -835,6 +869,7 @@ describe('yii', function () {
             // https://github.com/yiisoft/yii2/issues/13738
             'question mark, no query parameters': ['/posts/index?', {}],
             'query parameters': ['/posts/index?foo=1&bar=2', {foo: '1', bar: '2'}],
+            'query parameter value with "=" signs': ['/posts/index?token=a=b=&bar=2', {token: 'a=b=', bar: '2'}],
             'query parameter with multiple values (not array)': ['/posts/index?foo=1&foo=2', {'foo': ['1', '2']}],
             'query parameter with multiple values (array)': ['/posts/index?foo[]=1&foo[]=2', {'foo[]': ['1', '2']}],
             'query parameter with empty value': ['/posts/index?foo=1&foo2', {'foo': '1', 'foo2': ''}],
