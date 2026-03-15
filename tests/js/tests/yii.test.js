@@ -526,6 +526,17 @@ describe('yii', function () {
                 });
 
                 describe('with form', function () {
+                    it(pageLoadMessage + ' when link is inside a form with explicit method', function () {
+                        var $container = $('.handle-action .no-method .valid');
+                        var $form = $('<form method="post"></form>').appendTo($container);
+                        var $element = $('<a href="/tests/index"></a>').appendTo($form);
+
+                        yii.handleAction($element);
+
+                        $form.remove();
+                        verifyPageLoad('/tests/index');
+                    });
+
                     withData({
                         'submit, data-form': ['.submit-outside-form', '#submit-separate-form'],
                         'submit, inside a form': ['.submit-inside-form', '#submit-parent-form']
@@ -1251,6 +1262,35 @@ describe('yii', function () {
                         assert.isTrue(server.requests[2].aborted);
                         assert.equal(server.requests[3].readyState, XHR_DONE);
                         assert.isUndefined(server.requests[3].aborted);
+                    });
+                });
+
+                describe('with delayed successful callbacks after first successful completion', function () {
+                    it('should ignore delayed callbacks and not throw', function () {
+                        $.getScript('/js/concurrent_delayed_success.js');
+                        $.getScript('/js/concurrent_delayed_success.js');
+                        $.getScript('/js/concurrent_delayed_success.js');
+
+                        assert.lengthOf(server.requests, 3);
+
+                        server.requests[0].abort = function () {
+                            this.aborted = true;
+                        };
+                        server.requests[2].abort = function () {
+                            this.aborted = true;
+                        };
+
+                        respondToRequestWithSuccess(1);
+                        respondToRequestWithSuccess(0);
+                        respondToRequestWithSuccess(2);
+
+                        $.getScript('/js/concurrent_delayed_success.js');
+                        server.respond();
+
+                        assert.lengthOf(server.requests, 3);
+                        assert.equal(server.requests[0].readyState, XHR_DONE);
+                        assert.equal(server.requests[1].readyState, XHR_DONE);
+                        assert.equal(server.requests[2].readyState, XHR_DONE);
                     });
                 });
             });

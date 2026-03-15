@@ -355,6 +355,53 @@ describe('yii.activeForm', function () {
                 $activeForm.yiiActiveForm('validate');
                 assert.notEqual(null, eventData);
             });
+
+            it('should preserve previously invalid untouched attributes when validating another field', function () {
+                var afterValidateErrorSpy = sinon.spy();
+                var $firstInput = $('#test-att1');
+                var $secondInput = $('#test-att2');
+                var $firstField = $('.field-test-att1');
+                var firstAttribute;
+                var secondAttribute;
+
+                $activeForm = $('#w4');
+                $activeForm.yiiActiveForm('destroy');
+                $firstField.removeClass('has-error has-success');
+                $firstField.find('.help-block').empty();
+
+                $activeForm.yiiActiveForm([{
+                    id: 'test-att1',
+                    input: '#test-att1',
+                    container: '.field-test-att1',
+                    validate: function (attribute, value, messages) {
+                        if (value === '') {
+                            messages.push('Att1 cannot be blank.');
+                        }
+                    }
+                }, {
+                    id: 'test-att2',
+                    input: '#test-att2',
+                    container: '.field-test-att2'
+                }]).on('afterValidate', afterValidateErrorSpy);
+
+                firstAttribute = $activeForm.yiiActiveForm('find', 'test-att1');
+                secondAttribute = $activeForm.yiiActiveForm('find', 'test-att2');
+
+                $firstInput.val('');
+                firstAttribute.status = 2;
+                $activeForm.yiiActiveForm('validate');
+                assert.isTrue($firstField.hasClass('has-error'));
+
+                $secondInput.val('changed');
+                secondAttribute.status = 2;
+                $activeForm.yiiActiveForm('validate');
+
+                var secondErrorAttributes = afterValidateErrorSpy.getCall(1).args[2];
+                assert.deepEqual(['test-att1'], secondErrorAttributes.map(function (attribute) {
+                    return attribute.id;
+                }));
+            });
+
         });
     });
 });

@@ -818,7 +818,7 @@
             return false;
         }
 
-        var errorAttributes = collectErrorAttributes($form, data.attributes, messages, submitting);
+        var errorAttributes = collectErrorAttributes($form, data, data.attributes, messages, submitting);
 
         $form.trigger(events.afterValidate, [messages, errorAttributes]);
 
@@ -830,23 +830,36 @@
         submitFinalize($form);
     };
 
-    var collectErrorAttributes = function ($form, attributes, messages, submitting) {
+    var collectErrorAttributes = function ($form, data, attributes, messages, submitting) {
         var errorAttributes = [];
         $.each(attributes, function () {
-            collectErrorAttribute($form, this, messages, submitting, errorAttributes);
+            collectErrorAttribute($form, data, this, messages, submitting, errorAttributes);
         });
 
         return errorAttributes;
     };
 
-    var collectErrorAttribute = function ($form, attribute, messages, submitting, errorAttributes) {
-        var hasError = submitting
-            ? updateInput($form, attribute, messages)
-            : attrHasError($form, attribute, messages);
+    var collectErrorAttribute = function ($form, data, attribute, messages, submitting, errorAttributes) {
         var $input = findInput($form, attribute);
-        if (!$input.is(':disabled') && !attribute.cancelled && hasError) {
+        if ($input.is(':disabled') || attribute.cancelled) {
+            return;
+        }
+
+        if (hasAttributeError($form, data, attribute, messages, submitting)) {
             errorAttributes.push(attribute);
         }
+    };
+
+    var hasAttributeError = function ($form, data, attribute, messages, submitting) {
+        if (submitting) {
+            return updateInput($form, attribute, messages);
+        }
+
+        if (attribute.status === 2 || attribute.status === 3 || messages[attribute.id] !== undefined) {
+            return attrHasError($form, attribute, messages);
+        }
+
+        return hasValidationError($form, attribute, data);
     };
 
     var handleSubmittingValidationResult = function ($form, data, messages, errorAttributes) {
