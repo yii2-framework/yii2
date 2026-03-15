@@ -49,5 +49,26 @@ class BlobTest extends BaseDatabase
             $result,
             'BLOB column should return the exact serialized string that was inserted.',
         );
+
+        $updatedBlob = 'a:2:{s:13:"template";s:1:"2";s:4:"name";s:4:"test";}';
+
+        $db->createCommand()->update(
+            'type',
+            ['blob_col' => $updatedBlob],
+            ['int_col' => $key],
+        )->execute();
+
+        $result = (new Query())
+            ->select(['blob_col'])
+            ->from('type')
+            ->where(['int_col' => $key])
+            ->createCommand($db)
+            ->queryScalar();
+
+        $this->assertSame(
+            $updatedBlob,
+            $result,
+            'BLOB column should return the exact serialized string after update.',
+        );
     }
 }

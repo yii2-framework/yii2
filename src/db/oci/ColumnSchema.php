@@ -34,8 +34,8 @@ class ColumnSchema extends \yii\db\ColumnSchema
     public function dbTypecast($value)
     {
         if ($this->type === Schema::TYPE_BINARY && $this->dbType === 'BLOB') {
-            if ($value instanceof PdoValue && is_string($value->getValue())) {
-                $value = $value->getValue();
+            if ($value instanceof PdoValue) {
+                return parent::dbTypecast($value);
             }
 
             if (is_string($value)) {
@@ -43,7 +43,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
 
                 return new Expression(
                     'TO_BLOB(UTL_RAW.CAST_TO_RAW(:' . $placeholder . '))',
-                    [$placeholder => $value]
+                    [':' . $placeholder => $value]
                 );
             }
         }
