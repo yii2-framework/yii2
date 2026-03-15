@@ -81,6 +81,7 @@ describe('yii', function () {
     before(function () {
         $ = window.$;
         registerTestableCode();
+        // eslint-disable-next-line global-require
         sinon = require('sinon');
         addPjaxAttributes();
         yiiGetBaseCurrentUrlStub = sinon.stub(yii, 'getBaseCurrentUrl', function () {
@@ -154,6 +155,30 @@ describe('yii', function () {
         var confirmed;
         var okSpy;
         var cancelSpy;
+
+        function getConfirmCallbacksMessage(expectOkCalled, expectCancelCalled) {
+            var messageMap = {
+                '1:0': 'ok callback should be called once',
+                '0:1': 'cancel callback should be called once',
+                '0:0': 'ok and cancel callbacks should not be called',
+                '1:1': 'ok and cancel callbacks should be called once'
+            };
+
+            return messageMap[(expectOkCalled ? 1 : 0) + ':' + (expectCancelCalled ? 1 : 0)];
+        }
+
+        function getOptionalCallback(isEnabled, callback) {
+            return isEnabled ? callback : undefined;
+        }
+
+        function assertCallbackCalls(spy, shouldBeCalled) {
+            if (shouldBeCalled) {
+                assert.isTrue(spy.calledOnce);
+                return;
+            }
+
+            assert.isFalse(spy.called);
+        }
 
         beforeEach(function () {
             windowConfirmStub = sinon.stub(window, 'confirm', function () {
@@ -232,28 +257,20 @@ describe('yii', function () {
             var confirmChoice = data.confirmChoice;
             var expectOkCalled = data.expectOkCalled;
             var expectCancelCalled = data.expectCancelCalled;
-
-            var message = 'should return undefined, confirm should be called once with according message, ';
-            if (expectOkCalled && !expectCancelCalled) {
-                message += 'ok callback should be called once';
-            } else if (!expectOkCalled && expectCancelCalled) {
-                message += 'cancel callback should be called once';
-            } else if (!expectOkCalled && !expectCancelCalled) {
-                message += 'ok and cancel callbacks should not be called';
-            } else {
-                message += 'ok and cancel callbacks should be called once';
-            }
+            var message = 'should return undefined, confirm should be called once with according message, ' +
+                getConfirmCallbacksMessage(expectOkCalled, expectCancelCalled);
 
             it(message, function () {
                 confirmed = confirmChoice;
-
-                var result = yii.confirm('Are you sure?', setOk ? okSpy : undefined, setCancel ? cancelSpy : undefined);
+                var okCallback = getOptionalCallback(setOk, okSpy);
+                var cancelCallback = getOptionalCallback(setCancel, cancelSpy);
+                var result = yii.confirm('Are you sure?', okCallback, cancelCallback);
 
                 assert.isUndefined(result);
                 assert.isTrue(windowConfirmStub.calledOnce);
                 assert.deepEqual(windowConfirmStub.getCall(0).args, ['Are you sure?']);
-                expectOkCalled ? assert.isTrue(okSpy.calledOnce) : assert.isFalse(okSpy.called);
-                expectCancelCalled ? assert.isTrue(cancelSpy.calledOnce) : assert.isFalse(cancelSpy.called);
+                assertCallbackCalls(okSpy, expectOkCalled);
+                assertCallbackCalls(cancelSpy, expectCancelCalled);
             });
         });
     });
@@ -459,7 +476,8 @@ describe('yii', function () {
                 describe('with no form', function () {
                     withData({
                         'link': ['.link'],
-                        'link, data-pjax="0"': ['.link-pjax-0']
+                        'link, data-pjax="0"': ['.link-pjax-0'],
+                        'link, data-pjax="false"': ['.link-pjax-false']
                     }, function (elementSelector) {
                         it(pageLoadMessage, function () {
                             var $element = $('.handle-action .no-method .valid').find(elementSelector);
@@ -509,6 +527,24 @@ describe('yii', function () {
                 });
 
                 describe('with form', function () {
+                    it(pageLoadMessage + ' when link is inside a form with explicit method', function () {
+                        var $container = $('.handle-action .no-method .valid');
+                        var $form = $('<form method="post"></form>').appendTo($container);
+                        var $element = $('<a href="/tests/index"></a>').appendTo($form);
+                        var initialAssignCalls = windowLocationAssignStub.callCount;
+
+                        yii.handleAction($element);
+
+                        $form.remove();
+
+                        assert.isAtLeast(windowLocationAssignStub.callCount, initialAssignCalls + 1);
+                        assert.isTrue(windowLocationAssignStub.calledWith('/tests/index'));
+                        assert.isFalse(pjaxClickStub.called);
+                        assert.equal(formSubmitsCount, 0);
+                        assert.isFalse(pjaxSubmitStub.called);
+                        assert.equal($('form').length, initialFormsCount);
+                    });
+
                     withData({
                         'submit, data-form': ['.submit-outside-form', '#submit-separate-form'],
                         'submit, inside a form': ['.submit-inside-form', '#submit-parent-form']
@@ -565,8 +601,8 @@ describe('yii', function () {
                     'data-method="get", data-params, target': [
                         '.get-params-target',
                         '<form method="get" action="/tests/index" target="_blank" style="display: none;">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-method="head", data-params': [
@@ -574,24 +610,24 @@ describe('yii', function () {
                         '<form method="post" action="/tests/index" style="display: none;">' +
                         '<input name="_method" value="head" type="hidden">' +
                         '<input name="_csrf" value="foobar" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-method="post", data-params': [
                         '.post',
                         '<form method="post" action="/tests/index" style="display: none;">' +
                         '<input name="_csrf" value="foobar" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-method="post", data-params, upper case': [
                         '.post-upper-case',
                         '<form method="POST" action="/tests/index" style="display: none;">' +
                         '<input name="_csrf" value="foobar" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-method="put", data-params': [
@@ -599,8 +635,8 @@ describe('yii', function () {
                         '<form method="post" action="/tests/index" style="display: none;">' +
                         '<input name="_method" value="put" type="hidden">' +
                         '<input name="_csrf" value="foobar" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ]
                 }, function (elementSelector, expectedFormHtml) {
@@ -626,10 +662,48 @@ describe('yii', function () {
                         verifyFormSubmitWithPjax($element, event);
 
                         var expectedFormHtml = '<form method="get" action="/tests/index" style="display: none;">' +
-                            '<input name="foo" value="1" type="hidden">' +
-                            '<input name="bar" value="2" type="hidden">' +
+                            '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                            '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                             '</form>';
                         assert.equal($savedSubmittedForm.get(0).outerHTML, expectedFormHtml);
+                    });
+                });
+
+                describe('with data-params own-property edge cases', function () {
+                    var consoleErrorStub;
+
+                    beforeEach(function () {
+                        consoleErrorStub = sinon.stub(console, 'error');
+                    });
+
+                    afterEach(function () {
+                        consoleErrorStub.restore();
+                    });
+
+                    it('should handle null-prototype params without throwing', function () {
+                        var params = Object.create(null);
+                        params.foo = '1';
+
+                        var $element = $('<a href="/tests/index" data-method="get"></a>');
+                        $element.data('params', params);
+
+                        yii.handleAction($element);
+
+                        verifyFormSubmit();
+                    });
+
+                    it('should handle params with overridden hasOwnProperty without throwing', function () {
+                        var params = {
+                            foo: '1',
+                            hasOwnProperty: 'broken'
+                        };
+
+                        var $element = $('<a href="/tests/index" data-method="get"></a>');
+                        $element.data('params', params);
+
+                        yii.handleAction($element);
+
+                        verifyFormSubmit();
                     });
                 });
             });
@@ -641,8 +715,9 @@ describe('yii', function () {
                         '#method-form',
                         '<form id="method-form" method="post" action="/search">' +
                         '<input name="query" value="a">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-form, same action, same method, data-params': [
@@ -650,8 +725,8 @@ describe('yii', function () {
                         '#method-form',
                         '<form id="method-form" method="get" action="/tests/search">' +
                         '<input name="query" value="a">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     'data-form, invalid action, new method, data-params': [
@@ -659,8 +734,40 @@ describe('yii', function () {
                         '#method-form',
                         '<form id="method-form" method="post" action="/tests/search">' +
                         '<input name="query" value="a">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
+                        '</form>'
+                    ],
+                    'data-form, new action, put method, data-params': [
+                        '.new-action-put-method',
+                        '#method-form',
+                        '<form id="method-form" method="post" action="/tests/index">' +
+                        '<input name="query" value="a">' +
+                        '<input name="_method" value="put" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
+                        '</form>'
+                    ],
+                    'data-form without original action, new action, new method, data-params': [
+                        '.new-action-form-without-action',
+                        '#form-without-action',
+                        '<form id="form-without-action" method="post" action="/tests/index">' +
+                        '<input name="query" value="a">' +
+                        '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
+                        '</form>'
+                    ],
+                    'data-form with pre-existing field colliding with data-params': [
+                        '.params-name-collision',
+                        '#form-params-name-collision',
+                        '<form id="form-params-name-collision" method="get" action="/tests/search">' +
+                        '<input name="query" value="a">' +
+                        '<input name="foo" value="existing" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ],
                     // This is a test for this PR:
@@ -675,8 +782,8 @@ describe('yii', function () {
                         '<input name="query" value="a">' +
                         '<input name="method" value="b" type="hidden">' +
                         '<input name="action" value="c" type="hidden">' +
-                        '<input name="foo" value="1" type="hidden">' +
-                        '<input name="bar" value="2" type="hidden">' +
+                        '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                        '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                         '</form>'
                     ]
                 }, function (elementSelector, formSelector, expectedSubmittedFormHtml) {
@@ -723,11 +830,32 @@ describe('yii', function () {
 
                         var expectedSubmittedFormHtml = '<form id="method-form" method="post" action="/search">' +
                             '<input name="query" value="a">' +
-                            '<input name="foo" value="1" type="hidden">' +
-                            '<input name="bar" value="2" type="hidden">' +
+                            '<input name="_csrf" value="foobar" type="hidden" data-yii-action-helper="true">' +
+                            '<input name="foo" value="1" type="hidden" data-yii-action-helper="true">' +
+                            '<input name="bar" value="2" type="hidden" data-yii-action-helper="true">' +
                             '</form>';
                         var submittedFormHtml = StringUtils.cleanHTML($savedSubmittedForm.get(0).outerHTML);
                         assert.equal(submittedFormHtml, expectedSubmittedFormHtml);
+                        assert.equal($form.get(0).outerHTML, initialFormHtml);
+                    });
+
+                    it('should not duplicate pjax submit handlers on repeated submissions', function () {
+                        var firstEvent = $.Event('click');
+                        var secondEvent = $.Event('click');
+                        var $element = $('.handle-action .method .form .new-action-new-method-pjax');
+                        assert.lengthOf($element, 1);
+
+                        var $form = $('#method-form');
+                        var initialFormHtml = $form.get(0).outerHTML;
+                        assert.lengthOf($form, 1);
+
+                        yii.handleAction($element, firstEvent);
+                        yii.handleAction($element, secondEvent);
+
+                        assert.isFalse(windowLocationAssignStub.called);
+                        assert.isFalse(pjaxClickStub.called);
+                        assert.equal(formSubmitsCount, 2);
+                        assert.equal(pjaxSubmitStub.callCount, 2);
                         assert.equal($form.get(0).outerHTML, initialFormHtml);
                     });
                 });
@@ -741,6 +869,7 @@ describe('yii', function () {
             // https://github.com/yiisoft/yii2/issues/13738
             'question mark, no query parameters': ['/posts/index?', {}],
             'query parameters': ['/posts/index?foo=1&bar=2', {foo: '1', bar: '2'}],
+            'query parameter value with "=" signs': ['/posts/index?token=a=b=&bar=2', {token: 'a=b=', bar: '2'}],
             'query parameter with multiple values (not array)': ['/posts/index?foo=1&foo=2', {'foo': ['1', '2']}],
             'query parameter with multiple values (array)': ['/posts/index?foo[]=1&foo[]=2', {'foo[]': ['1', '2']}],
             'query parameter with empty value': ['/posts/index?foo=1&foo2', {'foo': '1', 'foo2': ''}],
@@ -816,65 +945,51 @@ describe('yii', function () {
             it(message, function () {
                 // Root module
 
-                var module = (function () {
-                    return {
-                        isActive: rootModuleIsActive,
-                        init: rootModuleInit
-                    };
-                })();
+                var module = {
+                    isActive: rootModuleIsActive,
+                    init: rootModuleInit
+                };
 
                 // Submodules
 
-                module.isActiveUndefined = (function () {
-                    return {
-                        init: function () {
-                            calledInitMethods.push('isActiveUndefined');
-                        }
-                    };
-                })();
+                module.isActiveUndefined = {
+                    init: function () {
+                        calledInitMethods.push('isActiveUndefined');
+                    }
+                };
 
-                module.isActiveTrue = (function () {
-                    return {
-                        isActive: true,
-                        init: function () {
-                            calledInitMethods.push('isActiveTrue');
-                        }
-                    };
-                })();
+                module.isActiveTrue = {
+                    isActive: true,
+                    init: function () {
+                        calledInitMethods.push('isActiveTrue');
+                    }
+                };
 
-                module.isActiveFalse = (function () {
-                    return {
-                        isActive: false,
-                        init: function () {
-                            calledInitMethods.push('isActiveFalse');
-                        }
-                    };
-                })();
+                module.isActiveFalse = {
+                    isActive: false,
+                    init: function () {
+                        calledInitMethods.push('isActiveFalse');
+                    }
+                };
 
-                module.initNotFunction = (function () {
-                    return {
-                        init: 'init'
-                    };
-                })();
+                module.initNotFunction = {
+                    init: 'init'
+                };
 
                 module.someInteger = 1;
                 module.someString = 'string';
 
-                module.subModule = (function () {
-                    return {
-                        init: function () {
-                            calledInitMethods.push('subModule');
-                        }
-                    };
-                })();
+                module.subModule = {
+                    init: function () {
+                        calledInitMethods.push('subModule');
+                    }
+                };
 
-                module.subModule.subModule2 = (function () {
-                    return {
-                        init: function () {
-                            calledInitMethods.push('subModule2');
-                        }
-                    };
-                })();
+                module.subModule.subModule2 = {
+                    init: function () {
+                        calledInitMethods.push('subModule2');
+                    }
+                };
 
                 yii.initModule(module);
                 assert.deepEqual(calledInitMethods, expectedCalledInitMethods);
@@ -1248,6 +1363,68 @@ describe('yii', function () {
                         assert.isTrue(server.requests[2].aborted);
                         assert.equal(server.requests[3].readyState, XHR_DONE);
                         assert.isUndefined(server.requests[3].aborted);
+                    });
+                });
+
+                describe('with delayed successful callbacks after first successful completion', function () {
+                    it('should ignore delayed callbacks and not throw', function () {
+                        $.getScript('/js/concurrent_delayed_success.js');
+                        $.getScript('/js/concurrent_delayed_success.js');
+                        $.getScript('/js/concurrent_delayed_success.js');
+
+                        assert.lengthOf(server.requests, 3);
+
+                        server.requests[0].abort = function () {
+                            this.aborted = true;
+                        };
+                        server.requests[2].abort = function () {
+                            this.aborted = true;
+                        };
+
+                        respondToRequestWithSuccess(1);
+
+                        assert.isTrue(server.requests[0].aborted);
+                        assert.isTrue(server.requests[2].aborted);
+
+                        respondToRequestWithSuccess(0);
+                        respondToRequestWithSuccess(2);
+
+                        $.getScript('/js/concurrent_delayed_success.js');
+                        server.respond();
+
+                        assert.lengthOf(server.requests, 3);
+                        assert.equal(server.requests[0].readyState, XHR_DONE);
+                        assert.equal(server.requests[1].readyState, XHR_DONE);
+                        assert.equal(server.requests[2].readyState, XHR_DONE);
+                    });
+                });
+
+                describe('with delayed failed callbacks after first successful completion', function () {
+                    it('should ignore delayed fail callbacks and not throw', function () {
+                        $.getScript('/js/concurrent_delayed_fail.js');
+                        $.getScript('/js/concurrent_delayed_fail.js');
+                        $.getScript('/js/concurrent_delayed_fail.js');
+
+                        assert.lengthOf(server.requests, 3);
+
+                        server.requests[0].abort = function () {
+                            this.aborted = true;
+                        };
+                        server.requests[2].abort = function () {
+                            this.aborted = true;
+                        };
+
+                        respondToRequestWithSuccess(1);
+                        respondToRequestWithError(0);
+                        respondToRequestWithError(2);
+
+                        $.getScript('/js/concurrent_delayed_fail.js');
+                        server.respond();
+
+                        assert.lengthOf(server.requests, 3);
+                        assert.equal(server.requests[0].readyState, XHR_DONE);
+                        assert.equal(server.requests[1].readyState, XHR_DONE);
+                        assert.equal(server.requests[2].readyState, XHR_DONE);
                     });
                 });
             });

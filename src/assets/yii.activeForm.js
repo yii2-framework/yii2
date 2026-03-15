@@ -9,6 +9,7 @@
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
+// eslint-disable-next-line max-statements
 (function ($) {
 
     $.fn.yiiActiveForm = function (method) {
@@ -196,6 +197,166 @@
         }
     };
 
+    var validateClientAttribute = function ($form, data, attribute, messages, deferreds) {
+        attribute.$form = $form;
+        attribute.cancelled = false;
+
+        var $input = findInput($form, attribute);
+        if (shouldSkipClientValidation($input) || !shouldValidateAttribute(data, attribute)) {
+            return false;
+        }
+
+        var msg = getValidationMessages(messages, attribute.id);
+        return runClientValidation($form, attribute, msg, deferreds);
+    };
+
+    var shouldSkipClientValidation = function ($input) {
+        return isInputDisabled($input) || hasInvalidSelectMarkup($input);
+    };
+
+    var isInputDisabled = function ($input) {
+        return $input.toArray().every(function (input) {
+            return $(input).is(':disabled');
+        });
+    };
+
+    var hasInvalidSelectMarkup = function ($input) {
+        if (!isSingleSelectInput($input) || !isRequiredSingleSelect($input)) {
+            return false;
+        }
+
+        return isSelectMissingEmptyOption($input[0].options);
+    };
+
+    var isSingleSelectInput = function ($input) {
+        return $input.length && $input[0].tagName.toLowerCase() === 'select';
+    };
+
+    var isRequiredSingleSelect = function ($input) {
+        var isRequired = $input.attr('required');
+        var isMultiple = $input.attr('multiple');
+        var size = parseInt($input.attr('size') || 1, 10);
+
+        return isRequired && !isMultiple && size === 1;
+    };
+
+    var isSelectMissingEmptyOption = function (options) {
+        if (!options || !options.length) {
+            return true;
+        }
+
+        return options[0] && (options[0].value !== '' && options[0].text !== '');
+    };
+
+    var shouldValidateAttribute = function (data, attribute) {
+        return data.submitting || attribute.status === 2 || attribute.status === 3;
+    };
+
+    var getValidationMessages = function (messages, attributeId) {
+        if (messages[attributeId] === undefined) {
+            messages[attributeId] = [];
+        }
+
+        return messages[attributeId];
+    };
+
+    var runClientValidation = function ($form, attribute, msg, deferreds) {
+        var event = $.Event(events.beforeValidateAttribute);
+        $form.trigger(event, [attribute, msg, deferreds]);
+        if (event.result === false) {
+            attribute.cancelled = true;
+            return false;
+        }
+
+        if (attribute.validate) {
+            attribute.validate(attribute, getValue($form, attribute), msg, deferreds, $form);
+        }
+
+        return !!attribute.enableAjaxValidation;
+    };
+
+    var completeValidation = function ($form, data, messages, deferreds, needAjaxValidation, submitting) {
+        removeEmptyMessages(messages);
+        if (shouldRunAjaxValidation(data, messages, needAjaxValidation)) {
+            sendAjaxValidation($form, data, messages, submitting);
+            return;
+        }
+
+        finalizeValidationWithoutAjax($form, data, messages, submitting);
+    };
+
+    var removeEmptyMessages = function (messages) {
+        for (var messageId in messages) {
+            if (messages[messageId].length === 0) {
+                delete messages[messageId];
+            }
+        }
+    };
+
+    var shouldRunAjaxValidation = function (data, messages, needAjaxValidation) {
+        return needAjaxValidation && ($.isEmptyObject(messages) || data.submitting);
+    };
+
+    var sendAjaxValidation = function ($form, data, messages, submitting) {
+        $.ajax({
+            url: data.settings.validationUrl,
+            type: $form.attr('method'),
+            data: $form.serialize() + buildAjaxValidationData($form, data.submitObject, data.settings.ajaxParam),
+            dataType: data.settings.ajaxDataType,
+            complete: function (jqXHR, textStatus) {
+                currentAjaxRequest = null;
+                $form.trigger(events.ajaxComplete, [jqXHR, textStatus]);
+            },
+            beforeSend: function (jqXHR, settings) {
+                currentAjaxRequest = jqXHR;
+                $form.trigger(events.ajaxBeforeSend, [jqXHR, settings]);
+            },
+            success: function (msgs) {
+                var validationMessages = filterAjaxValidationMessages(data.attributes, msgs, messages);
+                updateInputs($form, validationMessages, submitting);
+            },
+            error: function () {
+                data.submitting = false;
+                submitFinalize($form);
+            }
+        });
+    };
+
+    var buildAjaxValidationData = function ($form, $button, ajaxParamName) {
+        var data = '&' + ajaxParamName + '=' + $form.attr('id');
+        if ($button && $button.length && $button.attr('name')) {
+            data += '&' + $button.attr('name') + '=' + $button.attr('value');
+        }
+
+        return data;
+    };
+
+    var filterAjaxValidationMessages = function (attributes, ajaxMessages, messages) {
+        if (ajaxMessages === null || typeof ajaxMessages !== 'object') {
+            return messages;
+        }
+
+        $.each(attributes, function () {
+            if (!this.enableAjaxValidation || this.cancelled) {
+                delete ajaxMessages[this.id];
+            }
+        });
+
+        return $.extend(messages, ajaxMessages);
+    };
+
+    var finalizeValidationWithoutAjax = function ($form, data, messages, submitting) {
+        if (data.submitting) {
+            // delay callback so that the form can be submitted without problem
+            window.setTimeout(function () {
+                updateInputs($form, messages, submitting);
+            }, 200);
+            return;
+        }
+
+        updateInputs($form, messages, submitting);
+    };
+
 
     var methods = {
         init: function (attributes, options) {
@@ -255,9 +416,9 @@
             var $form = $(this),
                 attributes = $form.data('yiiActiveForm').attributes,
                 index = -1,
-                attribute = undefined;
+                attribute;
             $.each(attributes, function (i) {
-                if (attributes[i]['id'] == id) {
+                if (attributes[i]['id'] === id) {
                     index = i;
                     attribute = attributes[i];
                     return false;
@@ -274,7 +435,7 @@
         // manually trigger the validation of the attribute with the specified ID
         validateAttribute: function (id) {
             var attribute = methods.find.call(this, id);
-            if (attribute != undefined) {
+            if (attribute !== undefined) {
                 validateAttribute($(this), attribute, true);
             }
         },
@@ -282,9 +443,9 @@
         // find an attribute config based on the specified attribute ID
         find: function (id) {
             var attributes = $(this).data('yiiActiveForm').attributes,
-                result = undefined;
+                result;
             $.each(attributes, function (i) {
-                if (attributes[i]['id'] == id) {
+                if (attributes[i]['id'] === id) {
                     result = attributes[i];
                     return false;
                 }
@@ -329,108 +490,14 @@
 
             // client-side validation
             $.each(data.attributes, function () {
-                this.$form = $form;
-                var $input = findInput($form, this);
-
-                var disabled = $input.toArray().reduce(function (result, next) {
-                    return result && $(next).is(':disabled');
-                }, true);
-                if (disabled) {
-                    return true;
-                }
-                // validate markup for select input
-                if ($input.length && $input[0].tagName.toLowerCase() === 'select') {
-                    var opts = $input[0].options, isEmpty = !opts || !opts.length, isRequired = $input.attr('required'),
-                        isMultiple = $input.attr('multiple'), size = $input.attr('size') || 1;
-                    // check if valid HTML markup for select input, else return validation as `true`
-                    // https://w3c.github.io/html-reference/select.html
-                    if (isRequired && !isMultiple && parseInt(size, 10) === 1) { // invalid select markup condition
-                        if (isEmpty) { // empty option elements for the select
-                            return true;
-                        }
-                        if (opts[0] && (opts[0].value !== '' && opts[0].text !== '')) { // first option is not empty
-                            return true;
-                        }
-                    }
-                }
-                this.cancelled = false;
-                // perform validation only if the form is being submitted or if an attribute is pending validation
-                if (data.submitting || this.status === 2 || this.status === 3) {
-                    var msg = messages[this.id];
-                    if (msg === undefined) {
-                        msg = [];
-                        messages[this.id] = msg;
-                    }
-
-                    var event = $.Event(events.beforeValidateAttribute);
-                    $form.trigger(event, [this, msg, deferreds]);
-                    if (event.result !== false) {
-                        if (this.validate) {
-                            this.validate(this, getValue($form, this), msg, deferreds, $form);
-                        }
-                        if (this.enableAjaxValidation) {
-                            needAjaxValidation = true;
-                        }
-                    } else {
-                        this.cancelled = true;
-                    }
+                if (validateClientAttribute($form, data, this, messages, deferreds)) {
+                    needAjaxValidation = true;
                 }
             });
 
             // ajax validation
             $.when.apply(this, deferreds).always(function () {
-                // Remove empty message arrays
-                for (var i in messages) {
-                    if (0 === messages[i].length) {
-                        delete messages[i];
-                    }
-                }
-                if (needAjaxValidation && ($.isEmptyObject(messages) || data.submitting)) {
-                    var $button = data.submitObject,
-                        extData = '&' + data.settings.ajaxParam + '=' + $form.attr('id');
-                    if ($button && $button.length && $button.attr('name')) {
-                        extData += '&' + $button.attr('name') + '=' + $button.attr('value');
-                    }
-                    $.ajax({
-                        url: data.settings.validationUrl,
-                        type: $form.attr('method'),
-                        data: $form.serialize() + extData,
-                        dataType: data.settings.ajaxDataType,
-                        complete: function (jqXHR, textStatus) {
-                            currentAjaxRequest = null;
-                            $form.trigger(events.ajaxComplete, [jqXHR, textStatus]);
-                        },
-                        beforeSend: function (jqXHR, settings) {
-                            currentAjaxRequest = jqXHR;
-                            $form.trigger(events.ajaxBeforeSend, [jqXHR, settings]);
-                        },
-                        success: function (msgs) {
-                            if (msgs !== null && typeof msgs === 'object') {
-                                $.each(data.attributes, function () {
-                                    if (!this.enableAjaxValidation || this.cancelled) {
-                                        delete msgs[this.id];
-                                    }
-                                });
-                                updateInputs($form, $.extend(messages, msgs), submitting);
-                            } else {
-                                updateInputs($form, messages, submitting);
-                            }
-                        },
-                        error: function () {
-                            data.submitting = false;
-                            submitFinalize($form);
-                        }
-                    });
-                } else {
-                    if (data.submitting) {
-                        // delay callback so that the form can be submitted without problem
-                        window.setTimeout(function () {
-                            updateInputs($form, messages, submitting);
-                        }, 200);
-                    } else {
-                        updateInputs($form, messages, submitting);
-                    }
-                }
+                completeValidation($form, data, messages, deferreds, needAjaxValidation, submitting);
             });
         },
 
@@ -513,7 +580,7 @@
          */
         updateAttribute: function (id, messages) {
             var attribute = methods.find.call(this, id);
-            if (attribute != undefined) {
+            if (attribute !== undefined) {
                 var msg = {};
                 msg[id] = messages;
                 updateInput($(this), attribute, msg);
@@ -530,7 +597,7 @@
         }
         if (attribute.validateOnBlur) {
             $input.on('blur.yiiActiveForm', function () {
-                if (attribute.status == 0 || attribute.status == 1) {
+                if (attribute.status === 0 || attribute.status === 1) {
                     validateAttribute($form, attribute, true);
                 }
             });
@@ -656,16 +723,9 @@
             return false;
         }
 
-        for (var i = 0; i < keys1.length; i += 1) {
-            if (!obj2.hasOwnProperty(keys1[i])) {
-                return false;
-            }
-            if (obj1[keys1[i]] !== obj2[keys1[i]]) {
-                return false;
-            }
-        }
-
-        return true;
+        return keys1.every(function (key) {
+            return obj2.hasOwnProperty(key) && obj1[key] === obj2[key];
+        });
     };
 
     /**
@@ -758,52 +818,104 @@
             return false;
         }
 
-        var errorAttributes = [], $input;
-        $.each(data.attributes, function () {
-            var hasError = (submitting && updateInput($form, this, messages)) || (!submitting && attrHasError($form, this, messages));
-            $input = findInput($form, this);
-
-            if (!$input.is(':disabled') && !this.cancelled && hasError) {
-                errorAttributes.push(this);
-            }
-        });
+        var errorAttributes = collectErrorAttributes($form, data, data.attributes, messages, submitting);
 
         $form.trigger(events.afterValidate, [messages, errorAttributes]);
 
         if (submitting) {
-            updateSummary($form, messages);
-            if (errorAttributes.length) {
-                if (data.settings.scrollToError) {
-                    var h = $(document).height(), top = $form.find($.map(errorAttributes, function (attribute) {
-                        return attribute.input;
-                    }).join(',')).first().closest(':visible').offset().top - data.settings.scrollToErrorOffset;
-                    top = top < 0 ? 0 : (top > h ? h : top);
-                    var wtop = $(window).scrollTop();
-                    if (top < wtop || top > wtop + $(window).height()) {
-                        $(window).scrollTop(top);
-                    }
-                }
-                data.submitting = false;
-            } else {
-                data.validated = true;
-                if (!data.validate_only) {
-                    if (data.submitObject) {
-                        applyButtonOptions($form, data.submitObject);
-                    }
-                    $form.submit();
-                    if (data.submitObject) {
-                        restoreButtonOptions($form);
-                    }
-                }
-            }
+            handleSubmittingValidationResult($form, data, messages, errorAttributes);
         } else {
-            $.each(data.attributes, function () {
-                if (!this.cancelled && (this.status === 2 || this.status === 3)) {
-                    updateInput($form, this, messages);
-                }
-            });
+            updatePendingAttributes($form, data.attributes, messages);
         }
         submitFinalize($form);
+    };
+
+    var collectErrorAttributes = function ($form, data, attributes, messages, submitting) {
+        var errorAttributes = [];
+        $.each(attributes, function () {
+            collectErrorAttribute($form, data, this, messages, submitting, errorAttributes);
+        });
+
+        return errorAttributes;
+    };
+
+    var collectErrorAttribute = function ($form, data, attribute, messages, submitting, errorAttributes) {
+        var $input = findInput($form, attribute);
+        if ($input.is(':disabled') || attribute.cancelled) {
+            return;
+        }
+
+        if (hasAttributeError($form, data, attribute, messages, submitting)) {
+            errorAttributes.push(attribute);
+        }
+    };
+
+    var hasAttributeError = function ($form, data, attribute, messages, submitting) {
+        if (submitting) {
+            return updateInput($form, attribute, messages);
+        }
+
+        if (attribute.status === 2 || attribute.status === 3 || messages[attribute.id] !== undefined) {
+            return attrHasError($form, attribute, messages);
+        }
+
+        return hasValidationError($form, attribute, data);
+    };
+
+    var handleSubmittingValidationResult = function ($form, data, messages, errorAttributes) {
+        updateSummary($form, messages);
+        if (errorAttributes.length) {
+            scrollToFirstError($form, errorAttributes, data.settings.scrollToError, data.settings.scrollToErrorOffset);
+            data.submitting = false;
+            return;
+        }
+
+        data.validated = true;
+        if (!data.validate_only) {
+            submitValidatedForm($form, data.submitObject);
+        }
+    };
+
+    var updatePendingAttributes = function ($form, attributes, messages) {
+        $.each(attributes, function () {
+            if (!this.cancelled && (this.status === 2 || this.status === 3)) {
+                updateInput($form, this, messages);
+            }
+        });
+    };
+
+    var scrollToFirstError = function ($form, errorAttributes, shouldScroll, scrollOffset) {
+        if (!shouldScroll) {
+            return;
+        }
+
+        var documentHeight = $(document).height();
+        var top = getFirstErrorTop($form, errorAttributes, scrollOffset);
+        top = top < 0 ? 0 : (top > documentHeight ? documentHeight : top);
+        var windowTop = $(window).scrollTop();
+        if (top < windowTop || top > windowTop + $(window).height()) {
+            $(window).scrollTop(top);
+        }
+    };
+
+    var getFirstErrorTop = function ($form, errorAttributes, scrollOffset) {
+        var firstErrorSelector = $.map(errorAttributes, function (attribute) {
+            return attribute.input;
+        }).join(',');
+
+        return $form.find(firstErrorSelector).first().closest(':visible').offset().top - scrollOffset;
+    };
+
+    var submitValidatedForm = function ($form, $submitObject) {
+        if ($submitObject) {
+            applyButtonOptions($form, $submitObject);
+        }
+
+        $form.submit();
+
+        if ($submitObject) {
+            restoreButtonOptions($form);
+        }
     };
 
     /**
@@ -814,7 +926,7 @@
         var data = $form.data('yiiActiveForm');
         var $button = data.submitObject || $form.find(':submit:first');
         // TODO: if the submission is caused by "change" event, it will not work
-        if ($button.length && $button.attr('type') == 'submit' && $button.attr('name')) {
+        if ($button.length && $button.attr('type') === 'submit' && $button.attr('name')) {
             // simulate button input value
             var $hiddenButton = $('input[type="hidden"][name="' + $button.attr('name') + '"]', $form);
             if (!$hiddenButton.length) {
@@ -963,4 +1075,4 @@
 
     var currentAjaxRequest = null;
 
-})(window.jQuery);
+}(window.jQuery));
