@@ -194,7 +194,7 @@
                 $grid.find(inputs + (this.checked ? ":not(:checked)" : ":checked")).prop('checked', this.checked).change();
             });
             var handler = function () {
-                var all = $grid.find(inputs).length == $grid.find(inputs + ":checked").length;
+                var all = $grid.find(inputs).length === $grid.find(inputs + ":checked").length;
                 $grid.find(checkAllInput + (all ? ":not(:checked)" : ":checked")).prop('checked', all).change();
             };
             initEventHandler($grid, 'checkRow', 'click.yiiGridView', "#" + id + " " + inputs, handler);
@@ -259,4 +259,4 @@
         $(document).on(event, selector, callback);
         gridEventHandlers[id][type] = {event: event, selector: selector};
     }
-})(window.jQuery);
+}(window.jQuery));

@@ -41,6 +41,7 @@
  *
  * You must call "yii.initModule()" once for the root module of all your modules.
  */
+// eslint-disable-next-line max-statements
 window.yii = (function ($) {
     var pub = {
         /**
@@ -108,10 +109,15 @@ window.yii = (function ($) {
          * @param cancel a callback to be called when the user cancels the confirmation
          */
         confirm: function (message, ok, cancel) {
-            if (window.confirm(message)) {
-                !ok || ok();
+            var confirmHandler = window.confirm;
+            if (confirmHandler.call(window, message)) {
+                if (ok) {
+                    ok();
+                }
             } else {
-                !cancel || cancel();
+                if (cancel) {
+                    cancel();
+                }
             }
         },
 
@@ -151,167 +157,33 @@ window.yii = (function ($) {
          * @param event Related event
          */
         handleAction: function ($e, event) {
-            var $form = $e.attr('data-form') ? $('#' + $e.attr('data-form')) : $e.closest('form'),
-                method = !$e.data('method') && $form ? $form.attr('method') : $e.data('method'),
-                action = $e.attr('href'),
-                isValidAction = action && action !== '#',
-                params = $e.data('params'),
-                areValidParams = params && $.isPlainObject(params),
-                pjax = $e.data('pjax'),
-                usePjax = pjax !== undefined && pjax !== 0 && $.support.pjax,
-                pjaxContainer,
-                pjaxOptions = {},
-                conflictParams = ['submit', 'reset', 'elements', 'length', 'name', 'acceptCharset',
-                    'action', 'enctype', 'method', 'target'];
-
-            // Forms and their child elements should not use input names or ids that conflict with properties of a form,
-            // such as submit, length, or method.
-            $.each(conflictParams, function (index, param) {
-                if (areValidParams && params.hasOwnProperty(param)) {
-                    console.error("Parameter name '" + param + "' conflicts with a same named form property. " +
-                        "Please use another name.");
-                }
-            });
-
-            if (usePjax) {
-                pjaxContainer = $e.data('pjax-container');
-                if (pjaxContainer === undefined || !pjaxContainer.length) {
-                    pjaxContainer = $e.closest('[data-pjax-container]').attr('id')
-                        ? ('#' + $e.closest('[data-pjax-container]').attr('id'))
-                        : '';
-                }
-                if (!pjaxContainer.length) {
-                    pjaxContainer = 'body';
-                }
-                pjaxOptions = {
-                    container: pjaxContainer,
-                    push: !!$e.data('pjax-push-state'),
-                    replace: !!$e.data('pjax-replace-state'),
-                    scrollTo: $e.data('pjax-scrollto'),
-                    pushRedirect: $e.data('pjax-push-redirect'),
-                    replaceRedirect: $e.data('pjax-replace-redirect'),
-                    skipOuterContainers: $e.data('pjax-skip-outer-containers'),
-                    timeout: $e.data('pjax-timeout'),
-                    originalEvent: event,
-                    originalTarget: $e
-                };
+            var context = createActionContext($e, event);
+            validateActionParams(context.params, context.areValidParams);
+            if (context.usePjax) {
+                context.pjaxOptions = createPjaxOptions(context.$e, event);
             }
 
-            if (method === undefined) {
-                if (isValidAction) {
-                    usePjax ? $.pjax.click(event, pjaxOptions) : window.location.assign(action);
-                } else if ($e.is(':submit') && $form.length) {
-                    if (usePjax) {
-                        $form.on('submit', function (e) {
-                            $.pjax.submit(e, pjaxOptions);
-                        });
-                    }
-                    $form.trigger('submit');
-                }
+            if (context.method === undefined) {
+                handleActionWithoutMethod(context);
                 return;
             }
 
-            var oldMethod,
-                oldAction,
-                newForm = !$form.length;
-            if (!newForm) {
-                oldMethod = $form.attr('method');
-                $form.attr('method', method);
-                if (isValidAction) {
-                    oldAction = $form.attr('action');
-                    $form.attr('action', action);
-                }
-            } else {
-                if (!isValidAction) {
-                    action = pub.getCurrentUrl();
-                }
-                $form = $('<form/>', {method: method, action: action});
-                var target = $e.attr('target');
-                if (target) {
-                    $form.attr('target', target);
-                }
-                if (!/(get|post)/i.test(method)) {
-                    $form.append($('<input/>', {name: '_method', value: method, type: 'hidden'}));
-                    method = 'post';
-                    $form.attr('method', method);
-                }
-                if (/post/i.test(method)) {
-                    var csrfParam = pub.getCsrfParam();
-                    if (csrfParam) {
-                        $form.append($('<input/>', {name: csrfParam, value: pub.getCsrfToken(), type: 'hidden'}));
-                    }
-                }
-                $form.hide().appendTo('body');
-            }
-
-            var activeFormData = $form.data('yiiActiveForm');
-            if (activeFormData) {
-                // Remember the element triggered the form submission. This is used by yii.activeForm.js.
-                activeFormData.submitObject = $e;
-            }
-
-            if (areValidParams) {
-                $.each(params, function (name, value) {
-                    $form.append($('<input/>').attr({name: name, value: value, type: 'hidden'}));
-                });
-            }
-
-            if (usePjax) {
-                $form.on('submit', function (e) {
-                    $.pjax.submit(e, pjaxOptions);
-                });
-            }
-
-            $form.trigger('submit');
-
-            $.when($form.data('yiiSubmitFinalizePromise')).done(function () {
-                if (newForm) {
-                    $form.remove();
-                    return;
-                }
-
-                if (oldAction !== undefined) {
-                    $form.attr('action', oldAction);
-                }
-                $form.attr('method', oldMethod);
-
-                if (areValidParams) {
-                    $.each(params, function (name) {
-                        $('input[name="' + name + '"]', $form).remove();
-                    });
-                }
-            });
+            handleActionWithMethod(context);
         },
 
         getQueryParams: function (url) {
-            var pos = url.indexOf('?');
-            if (pos < 0) {
+            var queryString = getQueryString(url);
+            if (queryString === null) {
                 return {};
             }
 
-            var pairs = $.grep(url.substring(pos + 1).split('#')[0].split('&'), function (value) {
+            return $.grep(queryString.split('&'), function (value) {
                 return value !== '';
-            });
-            var params = {};
+            }).reduce(function (params, pair) {
+                appendQueryParam(params, pair);
 
-            for (var i = 0, len = pairs.length; i < len; i++) {
-                var pair = pairs[i].split('=');
-                var name = decodeURIComponent(pair[0].replace(/\+/g, '%20'));
-                var value = pair.length > 1 ? decodeURIComponent(pair[1].replace(/\+/g, '%20')) : '';
-                if (!name.length) {
-                    continue;
-                }
-                if (params[name] === undefined) {
-                    params[name] = value || '';
-                } else {
-                    if (!$.isArray(params[name])) {
-                        params[name] = [params[name]];
-                    }
-                    params[name].push(value || '');
-                }
-            }
-
-            return params;
+                return params;
+            }, {});
         },
 
         initModule: function (module) {
@@ -352,6 +224,277 @@ window.yii = (function ($) {
             return window.location.href;
         }
     };
+
+    var conflictActionParams = ['submit', 'reset', 'elements', 'length', 'name', 'acceptCharset',
+        'action', 'enctype', 'method', 'target'];
+
+    function createActionContext($e, event)
+    {
+        var $form = $e.attr('data-form') ? $('#' + $e.attr('data-form')) : $e.closest('form');
+        var params = $e.data('params');
+
+        return {
+            $e: $e,
+            event: event,
+            $form: $form,
+            method: !$e.data('method') && $form ? $form.attr('method') : $e.data('method'),
+            action: $e.attr('href'),
+            isValidAction: $e.attr('href') && $e.attr('href') !== '#',
+            params: params,
+            areValidParams: params && $.isPlainObject(params),
+            usePjax: isPjaxEnabled($e),
+            pjaxOptions: {}
+        };
+    }
+
+    function isPjaxEnabled($e)
+    {
+        var pjax = $e.data('pjax');
+
+        return pjax !== undefined && pjax !== 0 && $.support.pjax;
+    }
+
+    function validateActionParams(params, areValidParams)
+    {
+        if (!areValidParams) {
+            return;
+        }
+
+        $.each(conflictActionParams, function (index, param) {
+            if (params.hasOwnProperty(param)) {
+                console.error("Parameter name '" + param + "' conflicts with a same named form property. " +
+                    "Please use another name.");
+            }
+        });
+    }
+
+    function createPjaxOptions($e, event)
+    {
+        return {
+            container: getPjaxContainer($e),
+            push: !!$e.data('pjax-push-state'),
+            replace: !!$e.data('pjax-replace-state'),
+            scrollTo: $e.data('pjax-scrollto'),
+            pushRedirect: $e.data('pjax-push-redirect'),
+            replaceRedirect: $e.data('pjax-replace-redirect'),
+            skipOuterContainers: $e.data('pjax-skip-outer-containers'),
+            timeout: $e.data('pjax-timeout'),
+            originalEvent: event,
+            originalTarget: $e
+        };
+    }
+
+    function getPjaxContainer($e)
+    {
+        var container = $e.data('pjax-container');
+        if (container !== undefined && container.length) {
+            return container;
+        }
+
+        var closestContainerId = $e.closest('[data-pjax-container]').attr('id');
+        if (closestContainerId) {
+            return '#' + closestContainerId;
+        }
+
+        return 'body';
+    }
+
+    function handleActionWithoutMethod(context)
+    {
+        if (context.isValidAction) {
+            if (context.usePjax) {
+                $.pjax.click(context.event, context.pjaxOptions);
+            } else {
+                window.location.assign(context.action);
+            }
+
+            return;
+        }
+
+        if (context.$e.is(':submit') && context.$form.length) {
+            submitActionForm(context.$form, context.usePjax, context.pjaxOptions);
+        }
+    }
+
+    function handleActionWithMethod(context)
+    {
+        var formState = prepareActionForm(context);
+        setActiveFormSubmitObject(context.$form, context.$e);
+        appendActionParams(context.$form, context.params, context.areValidParams);
+        submitActionForm(context.$form, context.usePjax, context.pjaxOptions);
+        restoreActionForm(context.$form, formState, context.params, context.areValidParams);
+    }
+
+    function prepareActionForm(context)
+    {
+        var state = {
+            newForm: !context.$form.length,
+            oldMethod: undefined,
+            oldAction: undefined
+        };
+
+        if (state.newForm) {
+            context.$form = createActionForm(context);
+
+            return state;
+        }
+
+        state.oldMethod = context.$form.attr('method');
+        context.$form.attr('method', context.method);
+        if (context.isValidAction) {
+            state.oldAction = context.$form.attr('action');
+            context.$form.attr('action', context.action);
+        }
+
+        return state;
+    }
+
+    function createActionForm(context)
+    {
+        var action = context.isValidAction ? context.action : pub.getCurrentUrl();
+        var method = context.method;
+        var $form = $('<form/>', {method: method, action: action});
+        var target = context.$e.attr('target');
+        if (target) {
+            $form.attr('target', target);
+        }
+
+        method = normalizeSubmitMethod($form, method);
+        appendCsrfField($form, method);
+        $form.hide().appendTo('body');
+
+        return $form;
+    }
+
+    function normalizeSubmitMethod($form, method)
+    {
+        if (/(get|post)/i.test(method)) {
+            return method;
+        }
+
+        $form.append($('<input/>', {name: '_method', value: method, type: 'hidden'}));
+        $form.attr('method', 'post');
+
+        return 'post';
+    }
+
+    function appendCsrfField($form, method)
+    {
+        if (!/post/i.test(method)) {
+            return;
+        }
+
+        var csrfParam = pub.getCsrfParam();
+        if (csrfParam) {
+            $form.append($('<input/>', {name: csrfParam, value: pub.getCsrfToken(), type: 'hidden'}));
+        }
+    }
+
+    function setActiveFormSubmitObject($form, $e)
+    {
+        var activeFormData = $form.data('yiiActiveForm');
+        if (activeFormData) {
+            // Remember the element triggered the form submission. This is used by yii.activeForm.js.
+            activeFormData.submitObject = $e;
+        }
+    }
+
+    function appendActionParams($form, params, areValidParams)
+    {
+        if (!areValidParams) {
+            return;
+        }
+
+        $.each(params, function (name, value) {
+            $form.append($('<input/>').attr({name: name, value: value, type: 'hidden'}));
+        });
+    }
+
+    function submitActionForm($form, usePjax, pjaxOptions)
+    {
+        if (usePjax) {
+            $form.on('submit', function (e) {
+                $.pjax.submit(e, pjaxOptions);
+            });
+        }
+
+        $form.trigger('submit');
+    }
+
+    function restoreActionForm($form, formState, params, areValidParams)
+    {
+        $.when($form.data('yiiSubmitFinalizePromise')).done(function () {
+            if (formState.newForm) {
+                $form.remove();
+
+                return;
+            }
+
+            if (formState.oldAction !== undefined) {
+                $form.attr('action', formState.oldAction);
+            }
+            $form.attr('method', formState.oldMethod);
+            removeActionParams($form, params, areValidParams);
+        });
+    }
+
+    function removeActionParams($form, params, areValidParams)
+    {
+        if (!areValidParams) {
+            return;
+        }
+
+        $.each(params, function (name) {
+            $('input[name="' + name + '"]', $form).remove();
+        });
+    }
+
+    function getQueryString(url)
+    {
+        var querySeparatorPosition = url.indexOf('?');
+        if (querySeparatorPosition < 0) {
+            return null;
+        }
+
+        return url.substring(querySeparatorPosition + 1).split('#')[0];
+    }
+
+    function appendQueryParam(params, pair)
+    {
+        var pairData = pair.split('=');
+        var name = decodeURIComponent(pairData[0].replace(/\+/g, '%20'));
+        if (!name.length) {
+            return;
+        }
+
+        var value = getQueryParamValue(pairData);
+        setQueryParamValue(params, name, value);
+    }
+
+    function getQueryParamValue(pairData)
+    {
+        return pairData.length > 1 ? decodeURIComponent(pairData[1].replace(/\+/g, '%20')) : '';
+    }
+
+    function setQueryParamValue(params, name, value)
+    {
+        if (params[name] === undefined) {
+            params[name] = value || '';
+
+            return;
+        }
+
+        appendQueryParamValue(params, name, value);
+    }
+
+    function appendQueryParamValue(params, name, value)
+    {
+        if (!$.isArray(params[name])) {
+            params[name] = [params[name]];
+        }
+
+        params[name].push(value || '');
+    }
 
     function initCsrfHandler()
     {
@@ -401,65 +544,7 @@ window.yii = (function ($) {
         });
 
         $.ajaxPrefilter('script', function (options, originalOptions, xhr) {
-            if (options.dataType == 'jsonp') {
-                return;
-            }
-
-            var url = getAbsoluteUrl(options.url),
-                forbiddenRepeatedLoad = loadedScripts[url] === true && !isReloadableAsset(url),
-                cleanupRunning = loadedScripts[url] !== undefined && loadedScripts[url]['xhrDone'] === true;
-
-            if (forbiddenRepeatedLoad || cleanupRunning) {
-                xhr.abort();
-                return;
-            }
-
-            if (loadedScripts[url] === undefined || loadedScripts[url] === true) {
-                loadedScripts[url] = {
-                    xhrList: [],
-                    xhrDone: false
-                };
-            }
-
-            xhr.done(function (data, textStatus, jqXHR) {
-                // If multiple requests were successfully loaded, perform cleanup only once
-                if (loadedScripts[jqXHR.yiiUrl]['xhrDone'] === true) {
-                    return;
-                }
-
-                loadedScripts[jqXHR.yiiUrl]['xhrDone'] = true;
-
-                for (var i = 0, len = loadedScripts[jqXHR.yiiUrl]['xhrList'].length; i < len; i++) {
-                    var singleXhr = loadedScripts[jqXHR.yiiUrl]['xhrList'][i];
-                    if (singleXhr && singleXhr.readyState !== XMLHttpRequest.DONE) {
-                        singleXhr.abort();
-                    }
-                }
-
-                loadedScripts[jqXHR.yiiUrl] = true;
-            }).fail(function (jqXHR, textStatus) {
-                if (textStatus === 'abort') {
-                    return;
-                }
-
-                delete loadedScripts[jqXHR.yiiUrl]['xhrList'][jqXHR.yiiIndex];
-
-                var allFailed = true;
-                for (var i = 0, len = loadedScripts[jqXHR.yiiUrl]['xhrList'].length; i < len; i++) {
-                    if (loadedScripts[jqXHR.yiiUrl]['xhrList'][i]) {
-                        allFailed = false;
-                    }
-                }
-
-                if (allFailed) {
-                    delete loadedScripts[jqXHR.yiiUrl];
-                }
-            });
-            // Use prefix for custom XHR properties to avoid possible conflicts with existing properties
-            xhr.yiiIndex = loadedScripts[url]['xhrList'].length;
-            xhr.yiiUrl = url;
-
-            loadedScripts[url]['xhrList'][xhr.yiiIndex] = xhr;
+            handleScriptAjaxPrefilter(options, xhr, loadedScripts);
         });
 
         $(document).ajaxComplete(function () {
@@ -470,7 +555,11 @@ window.yii = (function ($) {
                     return;
                 }
 
-                $.inArray(url, styleSheets) === -1 ? styleSheets.push(url) : $(this).remove();
+                if ($.inArray(url, styleSheets) === -1) {
+                    styleSheets.push(url);
+                } else {
+                    $(this).remove();
+                }
             });
         });
     }
@@ -478,29 +567,144 @@ window.yii = (function ($) {
     function initDataMethods()
     {
         var handler = function (event) {
-            var $this = $(this),
-                method = $this.data('method'),
-                message = $this.data('confirm'),
-                form = $this.data('form');
-
-            if (method === undefined && message === undefined && form === undefined) {
+            var actionData = getDataMethodActionData($(this));
+            if (shouldSkipDataMethod(actionData)) {
                 return true;
             }
 
-            if (message !== undefined && message !== false && message !== '') {
-                $.proxy(pub.confirm, this)(message, function () {
-                    pub.handleAction($this, event);
-                });
-            } else {
-                pub.handleAction($this, event);
-            }
+            executeDataMethodAction(this, actionData, event);
             event.stopImmediatePropagation();
+
             return false;
         };
 
         // handle data-confirm and data-method for clickable and changeable elements
         $(document).on('click.yii', pub.clickableSelector, handler)
             .on('change.yii', pub.changeableSelector, handler);
+    }
+
+    function handleScriptAjaxPrefilter(options, xhr, loadedScripts)
+    {
+        if (options.dataType === 'jsonp') {
+            return;
+        }
+
+        var url = getAbsoluteUrl(options.url);
+        if (shouldAbortScriptRequest(loadedScripts, url)) {
+            xhr.abort();
+
+            return;
+        }
+
+        ensureScriptRequestData(loadedScripts, url);
+        attachScriptRequestHandlers(xhr, loadedScripts);
+        registerScriptRequest(xhr, loadedScripts, url);
+    }
+
+    function shouldAbortScriptRequest(loadedScripts, url)
+    {
+        var forbiddenRepeatedLoad = loadedScripts[url] === true && !isReloadableAsset(url);
+        var cleanupRunning = loadedScripts[url] !== undefined && loadedScripts[url]['xhrDone'] === true;
+
+        return forbiddenRepeatedLoad || cleanupRunning;
+    }
+
+    function ensureScriptRequestData(loadedScripts, url)
+    {
+        if (loadedScripts[url] === undefined || loadedScripts[url] === true) {
+            loadedScripts[url] = {
+                xhrList: [],
+                xhrDone: false
+            };
+        }
+    }
+
+    function attachScriptRequestHandlers(xhr, loadedScripts)
+    {
+        xhr.done(function (data, textStatus, jqXHR) {
+            var scriptData = loadedScripts[jqXHR.yiiUrl];
+            // If multiple requests were successfully loaded, perform cleanup only once
+            if (scriptData['xhrDone'] === true) {
+                return;
+            }
+
+            scriptData['xhrDone'] = true;
+            abortPendingScriptRequests(scriptData['xhrList']);
+            loadedScripts[jqXHR.yiiUrl] = true;
+        }).fail(function (jqXHR, textStatus) {
+            if (textStatus === 'abort') {
+                return;
+            }
+
+            var scriptData = loadedScripts[jqXHR.yiiUrl];
+            delete scriptData['xhrList'][jqXHR.yiiIndex];
+            if (areAllScriptRequestsFailed(scriptData['xhrList'])) {
+                delete loadedScripts[jqXHR.yiiUrl];
+            }
+        });
+    }
+
+    function abortPendingScriptRequests(xhrList)
+    {
+        for (var i = 0, len = xhrList.length; i < len; i++) {
+            var singleXhr = xhrList[i];
+            if (singleXhr && singleXhr.readyState !== XMLHttpRequest.DONE) {
+                singleXhr.abort();
+            }
+        }
+    }
+
+    function areAllScriptRequestsFailed(xhrList)
+    {
+        for (var i = 0, len = xhrList.length; i < len; i++) {
+            if (xhrList[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function registerScriptRequest(xhr, loadedScripts, url)
+    {
+        // Use prefix for custom XHR properties to avoid possible conflicts with existing properties
+        xhr.yiiIndex = loadedScripts[url]['xhrList'].length;
+        xhr.yiiUrl = url;
+
+        loadedScripts[url]['xhrList'][xhr.yiiIndex] = xhr;
+    }
+
+    function getDataMethodActionData($element)
+    {
+        return {
+            $element: $element,
+            method: $element.data('method'),
+            message: $element.data('confirm'),
+            form: $element.data('form')
+        };
+    }
+
+    function shouldSkipDataMethod(actionData)
+    {
+        return actionData.method === undefined && actionData.message === undefined && actionData.form === undefined;
+    }
+
+    function executeDataMethodAction(context, actionData, event)
+    {
+        if (isConfirmationMessageEnabled(actionData.message)) {
+            $.proxy(pub.confirm, context)(actionData.message, function () {
+                pub.handleAction(actionData.$element, event);
+            });
+
+            return;
+        }
+
+        pub.handleAction(actionData.$element, event);
+    }
+
+    function isConfirmationMessageEnabled(message)
+    {
+        return message !== undefined && message !== false && message !== '';
     }
 
     function isReloadableAsset(url)
@@ -533,7 +737,7 @@ window.yii = (function ($) {
     }
 
     return pub;
-})(window.jQuery);
+}(window.jQuery));
 
 window.jQuery(function () {
     window.yii.initModule(window.yii);

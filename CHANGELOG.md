@@ -41,3 +41,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(db)!: remove SQLite `< 3.40.0` dead code drop `batchInsert()` UNION SELECT fallback for `< 3.7.11`, remove `testUpsert()` version guard for `< 3.8.3`, remove `DbSessionTest` version guard, and update Schema PHPDoc from `SQLite (2/3)` to `SQLite 3`; minimum supported version is now SQLite `3.40.0`.
 - fix(db): add Oracle BLOB `dbTypecast()` to `ColumnSchema` wrapping string values in `TO_BLOB(UTL_RAW.CAST_TO_RAW(:placeholder))` expressions to avoid direct string binding errors on BLOB columns.
 - fix(widgets): clear stale client-side errors for conditional (`whenClient`) validators after related field changes.
+- refactor(js): remove all ESLint warnings in core JS assets/tests and enforce `npm run lint` with `--max-warnings=0`.

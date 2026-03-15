@@ -56,6 +56,7 @@ describe('yii.activeForm', function () {
     before(function () {
         $ = window.$;
         registerTestableCode();
+        // eslint-disable-next-line global-require
         sinon = require('sinon');
     });
 
@@ -102,23 +103,18 @@ describe('yii.activeForm', function () {
                 test_text: 'text input'
             };
 
-            for (var key in inputTypes) {
-                if (inputTypes.hasOwnProperty(key)) {
-                    (function () {
-                        var inputId = key;
-                        it(inputTypes[key] + ' disabled field', function () {
-                            $activeForm = $('#w1');
-                            $activeForm.yiiActiveForm({
-                                id: inputId,
-                                input: '#' + inputId
-                            });
-                            $activeForm.yiiActiveForm('validate');
+            Object.keys(inputTypes).forEach(function (inputId) {
+                it(inputTypes[inputId] + ' disabled field', function () {
+                    $activeForm = $('#w1');
+                    $activeForm.yiiActiveForm({
+                        id: inputId,
+                        input: '#' + inputId
+                    });
+                    $activeForm.yiiActiveForm('validate');
 
-                            assert.isFalse($activeForm.data('yiiActiveForm').validated);
-                        });
-                    })();
-                }
-            }
+                    assert.isFalse($activeForm.data('yiiActiveForm').validated);
+                });
+            });
         });
 
         describe('if at least one of the items is disabled', function () {

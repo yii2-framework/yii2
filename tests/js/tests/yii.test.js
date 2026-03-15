@@ -81,6 +81,7 @@ describe('yii', function () {
     before(function () {
         $ = window.$;
         registerTestableCode();
+        // eslint-disable-next-line global-require
         sinon = require('sinon');
         addPjaxAttributes();
         yiiGetBaseCurrentUrlStub = sinon.stub(yii, 'getBaseCurrentUrl', function () {
@@ -154,6 +155,30 @@ describe('yii', function () {
         var confirmed;
         var okSpy;
         var cancelSpy;
+
+        function getConfirmCallbacksMessage(expectOkCalled, expectCancelCalled) {
+            var messageMap = {
+                '1:0': 'ok callback should be called once',
+                '0:1': 'cancel callback should be called once',
+                '0:0': 'ok and cancel callbacks should not be called',
+                '1:1': 'ok and cancel callbacks should be called once'
+            };
+
+            return messageMap[(expectOkCalled ? 1 : 0) + ':' + (expectCancelCalled ? 1 : 0)];
+        }
+
+        function getOptionalCallback(isEnabled, callback) {
+            return isEnabled ? callback : undefined;
+        }
+
+        function assertCallbackCalls(spy, shouldBeCalled) {
+            if (shouldBeCalled) {
+                assert.isTrue(spy.calledOnce);
+                return;
+            }
+
+            assert.isFalse(spy.called);
+        }
 
         beforeEach(function () {
             windowConfirmStub = sinon.stub(window, 'confirm', function () {
@@ -232,28 +257,20 @@ describe('yii', function () {
             var confirmChoice = data.confirmChoice;
             var expectOkCalled = data.expectOkCalled;
             var expectCancelCalled = data.expectCancelCalled;
-
-            var message = 'should return undefined, confirm should be called once with according message, ';
-            if (expectOkCalled && !expectCancelCalled) {
-                message += 'ok callback should be called once';
-            } else if (!expectOkCalled && expectCancelCalled) {
-                message += 'cancel callback should be called once';
-            } else if (!expectOkCalled && !expectCancelCalled) {
-                message += 'ok and cancel callbacks should not be called';
-            } else {
-                message += 'ok and cancel callbacks should be called once';
-            }
+            var message = 'should return undefined, confirm should be called once with according message, ' +
+                getConfirmCallbacksMessage(expectOkCalled, expectCancelCalled);
 
             it(message, function () {
                 confirmed = confirmChoice;
-
-                var result = yii.confirm('Are you sure?', setOk ? okSpy : undefined, setCancel ? cancelSpy : undefined);
+                var okCallback = getOptionalCallback(setOk, okSpy);
+                var cancelCallback = getOptionalCallback(setCancel, cancelSpy);
+                var result = yii.confirm('Are you sure?', okCallback, cancelCallback);
 
                 assert.isUndefined(result);
                 assert.isTrue(windowConfirmStub.calledOnce);
                 assert.deepEqual(windowConfirmStub.getCall(0).args, ['Are you sure?']);
-                expectOkCalled ? assert.isTrue(okSpy.calledOnce) : assert.isFalse(okSpy.called);
-                expectCancelCalled ? assert.isTrue(cancelSpy.calledOnce) : assert.isFalse(cancelSpy.called);
+                assertCallbackCalls(okSpy, expectOkCalled);
+                assertCallbackCalls(cancelSpy, expectCancelCalled);
             });
         });
     });
@@ -816,65 +833,51 @@ describe('yii', function () {
             it(message, function () {
                 // Root module
 
-                var module = (function () {
-                    return {
-                        isActive: rootModuleIsActive,
-                        init: rootModuleInit
-                    };
-                })();
+                var module = {
+                    isActive: rootModuleIsActive,
+                    init: rootModuleInit
+                };
 
                 // Submodules
 
-                module.isActiveUndefined = (function () {
-                    return {
-                        init: function () {
-                            calledInitMethods.push('isActiveUndefined');
-                        }
-                    };
-                })();
+                module.isActiveUndefined = {
+                    init: function () {
+                        calledInitMethods.push('isActiveUndefined');
+                    }
+                };
 
-                module.isActiveTrue = (function () {
-                    return {
-                        isActive: true,
-                        init: function () {
-                            calledInitMethods.push('isActiveTrue');
-                        }
-                    };
-                })();
+                module.isActiveTrue = {
+                    isActive: true,
+                    init: function () {
+                        calledInitMethods.push('isActiveTrue');
+                    }
+                };
 
-                module.isActiveFalse = (function () {
-                    return {
-                        isActive: false,
-                        init: function () {
-                            calledInitMethods.push('isActiveFalse');
-                        }
-                    };
-                })();
+                module.isActiveFalse = {
+                    isActive: false,
+                    init: function () {
+                        calledInitMethods.push('isActiveFalse');
+                    }
+                };
 
-                module.initNotFunction = (function () {
-                    return {
-                        init: 'init'
-                    };
-                })();
+                module.initNotFunction = {
+                    init: 'init'
+                };
 
                 module.someInteger = 1;
                 module.someString = 'string';
 
-                module.subModule = (function () {
-                    return {
-                        init: function () {
-                            calledInitMethods.push('subModule');
-                        }
-                    };
-                })();
+                module.subModule = {
+                    init: function () {
+                        calledInitMethods.push('subModule');
+                    }
+                };
 
-                module.subModule.subModule2 = (function () {
-                    return {
-                        init: function () {
-                            calledInitMethods.push('subModule2');
-                        }
-                    };
-                })();
+                module.subModule.subModule2 = {
+                    init: function () {
+                        calledInitMethods.push('subModule2');
+                    }
+                };
 
                 yii.initModule(module);
                 assert.deepEqual(calledInitMethods, expectedCalledInitMethods);

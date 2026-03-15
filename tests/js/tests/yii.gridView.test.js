@@ -58,6 +58,7 @@ describe('yii.gridView', function () {
     before(function () {
         $ = window.$;
         registerTestableCode();
+        // eslint-disable-next-line global-require
         sinon = require('sinon');
     });
 
@@ -82,65 +83,67 @@ describe('yii.gridView', function () {
         $checkRowCheckboxes.prop('checked', false);
     });
 
-    /**
-     * Simulate pressing "Enter" button while focused on some element
-     * @param $el
-     */
-    function pressEnter($el) {
-        var e = $.Event('keydown', {keyCode: 13});
-        $el.trigger(e);
-    }
+    var interactions = {
+        /**
+         * Simulate pressing "Enter" button while focused on some element
+         * @param $el
+         */
+        pressEnter: function ($el) {
+            var e = $.Event('keydown', {keyCode: 13});
+            $el.trigger(e);
+        },
 
-    /**
-     * Simulate pressing keyboard button while focused on the text input. For simplicity, intended to use with letter
-     * buttons, such as "a", "b", etc. Case insensitive.
-     * @param $el
-     * @param buttonName
-     */
-    function pressButton($el, buttonName) {
-        $el.val(buttonName);
-        var keyCode = buttonName.charCodeAt(0);
-        var e = $.Event('keydown', {keyCode: keyCode});
-        $el.trigger(e);
-    }
+        /**
+         * Simulate pressing keyboard button while focused on the text input. For simplicity, intended to use with
+         * letter buttons, such as "a", "b", etc. Case insensitive.
+         * @param $el
+         * @param buttonName
+         */
+        pressButton: function ($el, buttonName) {
+            $el.val(buttonName);
+            var keyCode = buttonName.charCodeAt(0);
+            var e = $.Event('keydown', {keyCode: keyCode});
+            $el.trigger(e);
+        },
 
-    /**
-     * Simulate changing value in the select
-     * @param $el
-     * @param value
-     */
-    function changeValue($el, value) {
-        $el.val(value);
-        var e = $.Event('change');
-        $el.trigger(e);
-    }
+        /**
+         * Simulate changing value in the select
+         * @param $el
+         * @param value
+         */
+        changeValue: function ($el, value) {
+            $el.val(value);
+            var e = $.Event('change');
+            $el.trigger(e);
+        },
 
-    /**
-     * Simulate losing focus of the element after the value was changed
-     * @param $el
-     */
-    function loseFocus($el) {
-        var e = $.Event('change');
-        $el.trigger(e);
-    }
+        /**
+         * Simulate losing focus of the element after the value was changed
+         * @param $el
+         */
+        loseFocus: function ($el) {
+            var e = $.Event('change');
+            $el.trigger(e);
+        },
 
-    /**
-     * Simulate click in the checkbox
-     * @param $el
-     */
-    function click($el) {
-        $el.click();
-    }
+        /**
+         * Simulate click in the checkbox
+         * @param $el
+         */
+        click: function ($el) {
+            $el.click();
+        },
 
-    /**
-     * Simulate hovering on the new value and pressing "Enter" button in the select
-     * @param $el
-     */
-    function hoverAndPressEnter($el) {
-        pressEnter($el);
-        // After pressing enter while hovering the value will be immediately changed as well like with losing focus
-        loseFocus($el);
-    }
+        /**
+         * Simulate hovering on the new value and pressing "Enter" button in the select
+         * @param $el
+         */
+        hoverAndPressEnter: function ($el) {
+            this.pressEnter($el);
+            // After pressing enter while hovering the value will be immediately changed as well like with losing focus
+            this.loseFocus($el);
+        }
+    };
 
     describe('init', function () {
         var customSettings = {
@@ -187,10 +190,10 @@ describe('yii.gridView', function () {
                     filterSelector: '#w0-filters select'
                 });
 
-                pressEnter($textInput);
+                interactions.pressEnter($textInput);
                 assert.isFalse(jQuerySubmitStub.called);
 
-                changeValue($select, 1);
+                interactions.changeValue($select, 1);
                 assert.isTrue(jQuerySubmitStub.calledOnce);
             });
         });
@@ -493,7 +496,7 @@ describe('yii.gridView', function () {
                         filterOnFocusOut: false
                     });
 
-                    pressEnter($textInput);
+                    interactions.pressEnter($textInput);
                     assert.isTrue(jQuerySubmitStub.calledOnce);
                 });
                 it('set option filterOnFocusOut off and change value', function () {
@@ -503,7 +506,7 @@ describe('yii.gridView', function () {
                         filterOnFocusOut: false
                     });
 
-                    changeValue($select, 1);
+                    interactions.changeValue($select, 1);
                     assert.isFalse(jQuerySubmitStub.calledOnce);
                 });
                 it('set option filterOnFocusOut off and lose focus', function () {
@@ -513,29 +516,29 @@ describe('yii.gridView', function () {
                         filterOnFocusOut: false
                     });
 
-                    loseFocus($textInput);
+                    interactions.loseFocus($textInput);
                     assert.isFalse(jQuerySubmitStub.calledOnce);
                 });
             });
 
             describe('with text entered in the text input', function () {
                 it('should not submit form', function () {
-                    pressButton($textInput, 'a');
+                    interactions.pressButton($textInput, 'a');
                     assert.isFalse(jQuerySubmitStub.called);
                 });
             });
 
             describe('with "Enter" pressed in the text input', function () {
                 it('should submit form once', function () {
-                    pressEnter($textInput);
+                    interactions.pressEnter($textInput);
                     assert.isTrue(jQuerySubmitStub.calledOnce);
                 });
             });
 
             describe('with text entered in the text input and lost focus', function () {
                 it('should submit form once', function () {
-                    pressButton($textInput, 'a');
-                    loseFocus($textInput);
+                    interactions.pressButton($textInput, 'a');
+                    interactions.loseFocus($textInput);
 
                     assert.isTrue(jQuerySubmitStub.calledOnce);
                 });
@@ -543,7 +546,7 @@ describe('yii.gridView', function () {
 
             describe('with value changed in the select', function () {
                 it('should submit form once', function () {
-                    changeValue($select, 1);
+                    interactions.changeValue($select, 1);
                     assert.isTrue(jQuerySubmitStub.calledOnce);
                 });
             });
@@ -552,7 +555,7 @@ describe('yii.gridView', function () {
                 it('should submit form once', function () {
                     // Simulate hovering on new value and pressing "Enter"
                     $select.val(1);
-                    hoverAndPressEnter($select);
+                    interactions.hoverAndPressEnter($select);
 
                     assert.isTrue(jQuerySubmitStub.calledOnce);
                 });
@@ -577,11 +580,11 @@ describe('yii.gridView', function () {
 
                     assert.equal($gridView.yiiGridView('data').selectionColumn, 'selection[]');
 
-                    click($checkAllCheckbox);
+                    interactions.click($checkAllCheckbox);
                     assert.lengthOf($checkRowCheckboxes.filter(':checked'), 0);
 
-                    click($checkAllCheckbox); // Back to initial condition
-                    click($checkRowCheckboxes);
+                    interactions.click($checkAllCheckbox); // Back to initial condition
+                    interactions.click($checkRowCheckboxes);
                     assert.isFalse($checkAllCheckbox.prop('checked'));
                 });
             });
@@ -604,6 +607,15 @@ describe('yii.gridView', function () {
                 'class option': [{'class': 'w0-check-row'}]
             }, function (customOptions) {
                 it('should update data and "check all" functionality should work', function () {
+                    function assertCheckboxState(expected) {
+                        assert.lengthOf($checkRowCheckboxes.filter(':checked'), expected.checkedRows);
+                        assert.strictEqual($checkAllCheckbox.prop('checked'), expected.checkAllChecked);
+                        assert.equal(changedSpy.callCount, expected.changeCalls);
+                        if (expected.firstRowChecked !== undefined) {
+                            assert.strictEqual($checkFirstRowCheckbox.prop('checked'), expected.firstRowChecked);
+                        }
+                    }
+
                     $gridView = $('#w0').yiiGridView(settings);
 
                     var defaultOptions = {name: 'selection[]', multiple: true, checkAll: 'selection_all'};
@@ -617,58 +629,39 @@ describe('yii.gridView', function () {
                         .on('change.yiiGridView', changedSpy);
 
                     var $checkFirstRowCheckbox = $checkRowCheckboxes.filter('[value="1"]');
+                    var steps = [
+                        {target: $checkAllCheckbox, checkedRows: 3, checkAllChecked: true, changeCalls: 3},
+                        {target: $checkAllCheckbox, checkedRows: 0, checkAllChecked: false, changeCalls: 3},
+                        {target: $checkRowCheckboxes, checkedRows: 3, checkAllChecked: true, changeCalls: 3},
+                        {target: $checkRowCheckboxes, checkedRows: 0, checkAllChecked: false, changeCalls: 3},
+                        {
+                            target: $checkFirstRowCheckbox,
+                            checkedRows: 1,
+                            checkAllChecked: false,
+                            changeCalls: 1,
+                            firstRowChecked: true
+                        },
+                        {
+                            target: $checkAllCheckbox,
+                            checkedRows: 3,
+                            checkAllChecked: true,
+                            // "change" should be called 2 more times for the remaining 2 unchecked rows
+                            changeCalls: 2
+                        },
+                        {
+                            target: $checkFirstRowCheckbox,
+                            checkedRows: 2,
+                            checkAllChecked: false,
+                            changeCalls: 1,
+                            firstRowChecked: false
+                        }
+                    ];
 
-                    // Check all
-                    changedSpy.reset();
-                    click($checkAllCheckbox);
-                    assert.lengthOf($checkRowCheckboxes.filter(':checked'), 3);
-                    assert.isTrue($checkAllCheckbox.prop('checked'));
-                    assert.equal(changedSpy.callCount, 3);
-
-                    // Uncheck all
-                    changedSpy.reset();
-                    click($checkAllCheckbox);
-                    assert.lengthOf($checkRowCheckboxes.filter(':checked'), 0);
-                    assert.isFalse($checkAllCheckbox.prop('checked'));
-                    assert.equal(changedSpy.callCount, 3);
-
-                    // Check all manually
-                    changedSpy.reset();
-                    click($checkRowCheckboxes);
-                    assert.lengthOf($checkRowCheckboxes.filter(':checked'), 3);
-                    assert.isTrue($checkAllCheckbox.prop('checked'));
-                    assert.equal(changedSpy.callCount, 3);
-
-                    // Uncheck all manually
-                    changedSpy.reset();
-                    click($checkRowCheckboxes);
-                    assert.lengthOf($checkRowCheckboxes.filter(':checked'), 0);
-                    assert.isFalse($checkAllCheckbox.prop('checked'));
-                    assert.equal(changedSpy.callCount, 3);
-
-                    // Check first row
-                    changedSpy.reset();
-                    click($checkFirstRowCheckbox);
-                    assert.isTrue($checkFirstRowCheckbox.prop('checked'));
-                    assert.lengthOf($checkRowCheckboxes.filter(':checked'), 1);
-                    assert.isFalse($checkAllCheckbox.prop('checked'));
-                    assert.equal(changedSpy.callCount, 1);
-
-                    // Then check all
-                    changedSpy.reset();
-                    click($checkAllCheckbox);
-                    assert.lengthOf($checkRowCheckboxes.filter(':checked'), 3);
-                    assert.isTrue($checkAllCheckbox.prop('checked'));
-                    // "change" should be called 2 more times for the remaining 2 unchecked rows
-                    assert.equal(changedSpy.callCount, 2);
-
-                    // Uncheck first row
-                    changedSpy.reset();
-                    click($checkFirstRowCheckbox);
-                    assert.isFalse($checkFirstRowCheckbox.prop('checked'));
-                    assert.lengthOf($checkRowCheckboxes.filter(':checked'), 2);
-                    assert.isFalse($checkAllCheckbox.prop('checked'));
-                    assert.equal(changedSpy.callCount, 1);
+                    $.each(steps, function (index, step) {
+                        changedSpy.reset();
+                        interactions.click(step.target);
+                        assertCheckboxState(step);
+                    });
                 });
             });
         });
@@ -713,9 +706,9 @@ describe('yii.gridView', function () {
                 });
 
                 // Click first row checkbox ("prop" on "check all" checkbox should not be called)
-                click($gridView.find('input[name="selection[]"][value="1"]'));
+                interactions.click($gridView.find('input[name="selection[]"][value="1"]'));
                 // Click "check all" checkbox ("prop" should be called once on the remaining unchecked row)
-                click($gridView.find('input[name="selection_all"]'));
+                interactions.click($gridView.find('input[name="selection_all"]'));
 
                 assert.equal(jQueryPropStub.callCount, 1);
             });
@@ -812,10 +805,10 @@ describe('yii.gridView', function () {
             });
             $gridView2.yiiGridView('destroy');
 
-            pressEnter($gridView2.find('input[name="PostSearch[id]"]'));
+            interactions.pressEnter($gridView2.find('input[name="PostSearch[id]"]'));
             assert.isFalse(jQuerySubmitStub.called);
 
-            pressEnter($textInput);
+            interactions.pressEnter($textInput);
             assert.isTrue(jQuerySubmitStub.calledOnce);
         });
 
@@ -828,12 +821,12 @@ describe('yii.gridView', function () {
             $gridView2.yiiGridView('setSelectionColumn', options);
             $gridView2.yiiGridView('destroy');
 
-            click($gridView2.find('input[name="selection_all"]'));
-            click($gridView2.find('input[name="selection[]"][value="1"]'));
+            interactions.click($gridView2.find('input[name="selection_all"]'));
+            interactions.click($gridView2.find('input[name="selection[]"][value="1"]'));
             assert.equal(jQueryPropStub.callCount, 0);
 
-            click($checkRowCheckboxes.filter('[value="1"]')); // Click first row checkbox ("prop" on "check all" checkbox should not be called)
-            click($checkAllCheckbox); // Click "check all" checkbox ("prop" should be called 2 times on the remaining unchecked rows)
+            interactions.click($checkRowCheckboxes.filter('[value="1"]')); // Click first row checkbox ("prop" on "check all" checkbox should not be called)
+            interactions.click($checkAllCheckbox); // Click "check all" checkbox ("prop" should be called 2 times on the remaining unchecked rows)
             assert.equal(jQueryPropStub.callCount, 2);
         });
     });

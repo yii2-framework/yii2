@@ -66,4 +66,4 @@
             return this.data('yiiCaptcha');
         }
     };
-})(window.jQuery);
+}(window.jQuery));
