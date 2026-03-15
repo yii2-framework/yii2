@@ -559,6 +559,15 @@
         return $errorElement.hasClass(data.settings.errorCssClass);
     };
 
+    var cancelActiveValidation = function (data) {
+        if (currentAjaxRequest !== null) {
+            currentAjaxRequest.abort();
+        }
+        if (data.settings.timer !== undefined) {
+            clearTimeout(data.settings.timer);
+        }
+    };
+
     var validateAttribute = function ($form, attribute, forceValidate, validationDelay) {
         var data = $form.data('yiiActiveForm');
         var hasValueChanges = false;
@@ -588,12 +597,7 @@
             return;
         }
 
-        if (currentAjaxRequest !== null) {
-            currentAjaxRequest.abort();
-        }
-        if (data.settings.timer !== undefined) {
-            clearTimeout(data.settings.timer);
-        }
+        cancelActiveValidation(data);
         data.settings.timer = window.setTimeout(function () {
             if (data.submitting || $form.is(':hidden')) {
                 return;
