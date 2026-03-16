@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -9,8 +11,13 @@
 namespace yii\db\pgsql;
 
 use yii\db\ArrayExpression;
+use yii\db\Expression;
 use yii\db\ExpressionInterface;
 use yii\db\JsonExpression;
+
+use function in_array;
+use function is_array;
+use function is_bool;
 
 /**
  * Class ColumnSchema for PostgreSQL database.
@@ -91,9 +98,11 @@ class ColumnSchema extends \yii\db\ColumnSchema
             if ($this->disableArraySupport) {
                 return $value;
             }
+
             if (!is_array($value)) {
                 $value = $this->getArrayParser()->parse($value);
             }
+
             if (is_array($value)) {
                 array_walk_recursive($value, function (&$val, $key) {
                     $val = $this->phpTypecastValue($val);
@@ -124,6 +133,10 @@ class ColumnSchema extends \yii\db\ColumnSchema
 
         switch ($this->type) {
             case Schema::TYPE_BOOLEAN:
+                if (is_bool($value)) {
+                    return $value;
+                }
+
                 switch (strtolower($value)) {
                     case 't':
                     case 'true':
@@ -132,12 +145,80 @@ class ColumnSchema extends \yii\db\ColumnSchema
                     case 'false':
                         return false;
                 }
+
                 return (bool) $value;
             case Schema::TYPE_JSON:
                 return $this->disableJsonSupport ? $value : json_decode($value, true);
         }
 
         return parent::phpTypecast($value);
+    }
+
+    /**
+     * Converts a PostgreSQL column default value to its PHP representation.
+     *
+     * Handles PostgreSQL-specific default value formats:
+     * - `null` → `null`.
+     * - Temporal columns (`timestamp`, `date`, `time`) with `NOW()`, `CURRENT_TIMESTAMP`, `CURRENT_DATE`,
+     *   `CURRENT_TIME`, or any expression containing `(` → {@see Expression}.
+     * - Boolean type: `'true'` → `true`, anything else → `false`.
+     * - Binary bit `B'...'::` → integer via `bindec()`.
+     * - Quoted bit `'(\d+)'::"bit"` → integer via `bindec()`.
+     * - Cast notation `'...'::[type]` → extracted value passed to `phpTypecast()`.
+     * - Parenthesized `(value)::type` → extracted value, with `NULL` detection, passed to `phpTypecast()`.
+     * - Fallback → delegates to `phpTypecast()`.
+     *
+     * @param mixed $value default value in PostgreSQL format.
+     *
+     * @return mixed converted value.
+     *
+     * @since 2.0.24
+     */
+    public function defaultPhpTypecast($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (
+            in_array($this->type, [Schema::TYPE_TIMESTAMP, Schema::TYPE_DATE, Schema::TYPE_TIME], true)
+            && (
+                in_array(
+                    strtoupper($value),
+                    ['NOW()', 'CURRENT_TIMESTAMP', 'CURRENT_DATE', 'CURRENT_TIME'],
+                    true
+                )
+                || (false !== strpos($value, '('))
+            )
+        ) {
+            return new Expression($value);
+        }
+
+        if ($this->type === 'boolean') {
+            return ($value === 'true');
+        }
+
+        if (preg_match("/^B'(.*?)'::/", $value, $matches)) {
+            return bindec($matches[1]);
+        }
+
+        if (preg_match("/^'(\d+)'::\"bit\"$/", $value, $matches)) {
+            return bindec($matches[1]);
+        }
+
+        if (preg_match("/^'(.*?)'::/", $value, $matches)) {
+            return $this->phpTypecast($matches[1]);
+        }
+
+        if (preg_match('/^(\()?(.*?)(?(1)\))(?:::.+)?$/', $value, $matches)) {
+            if ($matches[2] === 'NULL') {
+                return null;
+            }
+
+            return $this->phpTypecast($matches[2]);
+        }
+
+        return $this->phpTypecast($value);
     }
 
     /**
