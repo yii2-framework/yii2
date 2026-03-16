@@ -163,11 +163,11 @@ final class ColumnSchemaProvider
                 20,
                 'nchar(20)',
             ],
-            'nvarchar appends MAX' => [
-                'nvarchar',
+            'nvarchar(max) returns as-is' => [
+                'nvarchar(max)',
                 false,
                 null,
-                'nvarchar(MAX)',
+                'nvarchar(max)',
             ],
             'timestamp not nullable' => [
                 Schema::TYPE_TIMESTAMP,
@@ -181,17 +181,17 @@ final class ColumnSchemaProvider
                 null,
                 'varbinary(8)',
             ],
-            'varbinary appends MAX' => [
-                'varbinary',
+            'varbinary(max) returns as-is' => [
+                'varbinary(max)',
                 false,
                 null,
-                'varbinary(MAX)',
+                'varbinary(max)',
             ],
-            'varchar appends MAX' => [
-                'varchar',
+            'varchar(max) returns as-is' => [
+                'varchar(max)',
                 false,
                 null,
-                'varchar(MAX)',
+                'varchar(max)',
             ],
         ];
     }

@@ -399,7 +399,7 @@ SQL;
                 $column->type = $this->typeMap[$type];
             }
 
-            if (!empty($matches[2])) {
+            if (!empty($matches[2]) && strcasecmp($matches[2], 'max') !== 0) {
                 $values = explode(',', $matches[2]);
                 $column->size = $column->precision = (int) $values[0];
 
@@ -441,7 +441,8 @@ SQL;
             CASE
                 WHEN [t].[name] IN ('char','varchar','nchar','nvarchar','binary','varbinary') THEN
                     CASE
-                        WHEN [c].[max_length] = -1 THEN [t].[name]
+                        WHEN [c].[max_length] = -1 AND [t].[name] IN ('varchar','nvarchar','varbinary') THEN
+                            [t].[name] + '(max)'
                         WHEN [t].[name] IN ('nchar','nvarchar') THEN
                             [t].[name] + '(' + CAST([c].[max_length] / 2 AS VARCHAR) + ')'
                         ELSE
@@ -565,12 +566,12 @@ SQL;
      */
     protected function findForeignKeys($table)
     {
-        $object = $table->name;
+        $object = $this->quoteSimpleTableName($table->name);
         if ($table->schemaName !== null) {
-            $object = $table->schemaName . '.' . $object;
+            $object = $this->quoteSimpleTableName($table->schemaName) . '.' . $object;
         }
         if ($table->catalogName !== null) {
-            $object = $table->catalogName . '.' . $object;
+            $object = $this->quoteSimpleTableName($table->catalogName) . '.' . $object;
         }
 
         // please refer to the following page for more details:

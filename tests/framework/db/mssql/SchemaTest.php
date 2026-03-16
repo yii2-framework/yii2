@@ -160,7 +160,7 @@ class SchemaTest extends BaseSchema
         $columns['float_col2']['phpType'] = 'double';
         $columns['float_col2']['type'] = 'float';
         $columns['float_col2']['scale'] = null;
-        $columns['blob_col']['dbType'] = 'varbinary';
+        $columns['blob_col']['dbType'] = 'varbinary(max)';
         $columns['time']['dbType'] = 'datetime';
         $columns['time']['type'] = 'datetime';
         $columns['bool_col']['dbType'] = 'tinyint';
