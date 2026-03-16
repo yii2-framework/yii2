@@ -424,14 +424,14 @@ SQL;
      */
     protected function findColumns($table)
     {
-        $fullName = "[{$table->name}]";
+        $fullName = $this->quoteSimpleTableName($table->name);
 
         if ($table->schemaName !== null) {
-            $fullName = "[{$table->schemaName}]." . $fullName;
+            $fullName = $this->quoteSimpleTableName($table->schemaName) . '.' . $fullName;
         }
 
         if ($table->catalogName !== null) {
-            $fullName = "[{$table->catalogName}]." . $fullName;
+            $fullName = $this->quoteSimpleTableName($table->catalogName) . '.' . $fullName;
         }
 
         $sql = <<<SQL
