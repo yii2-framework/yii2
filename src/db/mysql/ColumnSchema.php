@@ -88,7 +88,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
      * - `CURRENT_TIMESTAMP` / `current_timestamp()` on temporal columns (`timestamp`, `datetime`, `date`, `time`)
      *   → `Expression('CURRENT_TIMESTAMP')` or `Expression('CURRENT_TIMESTAMP(N)')`.
      * - `b'...'` bit defaults when `$this->dbType` starts with `bit` → integer via `bindec()`.
-     * - Everything else → delegates to `parent::phpTypecast()`.
+     * - Everything else → delegates to `$this->phpTypecast()`.
      *
      * @param mixed $value default value in MySQL format.
      *
@@ -107,7 +107,9 @@ class ColumnSchema extends \yii\db\ColumnSchema
             && in_array($this->type, ['timestamp', 'datetime', 'date', 'time'], true)
             && preg_match('/^current_timestamp(?:\(([0-9]*)\))?$/i', $value, $matches)
         ) {
-            return new Expression('CURRENT_TIMESTAMP' . (!empty($matches[1]) ? '(' . $matches[1] . ')' : ''));
+            $precision = $matches[1] ?? '';
+
+            return new Expression('CURRENT_TIMESTAMP' . ($precision !== '' ? "({$precision})" : ''));
         }
 
         if (is_string($value) && strncasecmp($this->dbType, 'bit', 3) === 0) {

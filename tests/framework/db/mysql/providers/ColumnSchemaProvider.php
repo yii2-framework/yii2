@@ -77,6 +77,13 @@ final class ColumnSchemaProvider
                 'CURRENT_TIMESTAMP',
                 new Expression('CURRENT_TIMESTAMP'),
             ],
+            'CURRENT_TIMESTAMP(0) on timestamp column preserves precision' => [
+                'timestamp',
+                'timestamp',
+                'string',
+                'CURRENT_TIMESTAMP(0)',
+                new Expression('CURRENT_TIMESTAMP(0)'),
+            ],
             'JSON default decodes to PHP array' => [
                 'json',
                 'json',
