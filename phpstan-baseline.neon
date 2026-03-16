@@ -1849,6 +1849,12 @@ parameters:
 			path: src/db/mssql/SqlsrvPDO.php
 
 		-
+			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/db/mysql/ColumnSchema.php
+
+		-
 			message: '#^Call to an undefined method yii\\db\\ExpressionInterface\:\:getValue\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -1861,15 +1867,9 @@ parameters:
 			path: src/db/mysql/QueryBuilder.php
 
 		-
-			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
-			identifier: function.strict
-			count: 1
-			path: src/db/mysql/Schema.php
-
-		-
 			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
 			identifier: empty.notAllowed
-			count: 2
+			count: 1
 			path: src/db/mysql/Schema.php
 
 		-

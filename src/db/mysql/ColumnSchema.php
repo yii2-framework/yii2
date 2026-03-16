@@ -114,6 +114,6 @@ class ColumnSchema extends \yii\db\ColumnSchema
             return bindec(trim($value, "b'"));
         }
 
-        return parent::phpTypecast($value);
+        return $this->phpTypecast($value);
     }
 }
