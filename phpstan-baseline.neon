@@ -1753,9 +1753,9 @@ parameters:
 			path: src/db/mssql/QueryBuilder.php
 
 		-
-			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
-			identifier: function.strict
-			count: 2
+			message: '#^Call to an undefined method yii\\db\\ColumnSchema\:\:getOutputColumnDeclaration\(\)\.$#'
+			identifier: method.notFound
+			count: 1
 			path: src/db/mssql/QueryBuilder.php
 
 		-
@@ -1826,12 +1826,6 @@ parameters:
 
 		-
 			message: '#^Only booleans are allowed in a negated boolean, int given\.$#'
-			identifier: booleanNot.exprNotBoolean
-			count: 1
-			path: src/db/mssql/Schema.php
-
-		-
-			message: '#^Only booleans are allowed in a negated boolean, null given\.$#'
 			identifier: booleanNot.exprNotBoolean
 			count: 1
 			path: src/db/mssql/Schema.php

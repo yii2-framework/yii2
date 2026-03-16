@@ -423,19 +423,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
                 continue;
             }
 
-            $dbType = $column->dbType;
-            if (in_array($dbType, ['varchar', 'nvarchar', 'binary', 'varbinary'])) {
-                $dbType .= '(MAX)';
-            } elseif (in_array($dbType, ['char',  'nchar'])) {
-                $dbType .= "($column->size)";
-            }
-
-            if ($column->dbType === Schema::TYPE_TIMESTAMP) {
-                $dbType = $column->allowNull ? 'varbinary(8)' : 'binary(8)';
-            }
-
             $quoteColumnName = $this->db->quoteColumnName($column->name);
-            $cols[] = $quoteColumnName . ' ' . $dbType . ' ' . ($column->allowNull ? 'NULL' : '');
+            $cols[] = $quoteColumnName . ' ' . $column->getOutputColumnDeclaration() . ' ' . ($column->allowNull ? 'NULL' : '');
             $outputColumns[] = 'INSERTED.' . $quoteColumnName;
         }
 
