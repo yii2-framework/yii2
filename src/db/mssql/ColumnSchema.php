@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -9,12 +11,22 @@
 namespace yii\db\mssql;
 
 use yii\db\Expression;
+
+use function in_array;
 use function is_string;
 
 /**
- * Class ColumnSchema for MSSQL database
+ * Represents the metadata of a column in a Microsoft SQL Server database table.
+ *
+ * Extends the base {@see \yii\db\ColumnSchema} with MSSQL-specific type handling:
+ * - Converts `varbinary` values to explicit `CONVERT()` expressions for safe binding.
+ * - Provides OUTPUT clause type declarations for `INSERT ... OUTPUT INTO` temp tables.
+ * - Strips MSSQL default value formatting `('value')` and normalizes `(NULL)` / `CURRENT_TIMESTAMP` defaults.
  *
  * @since 2.0.23
+ *
+ * @copyright Copyright (c) 2008 Yii Software LLC
+ * @license https://www.yiiframework.com/license/
  */
 class ColumnSchema extends \yii\db\ColumnSchema
 {
@@ -49,18 +61,57 @@ class ColumnSchema extends \yii\db\ColumnSchema
     }
 
     /**
-     * Prepares default value and converts it according to [[phpType]]
-     * @param mixed $value default value
-     * @return mixed converted value
+     * Converts a MSSQL column default value to its PHP representation.
+     *
+     * Handles MSSQL-specific default value formats:
+     * - `(NULL)` string literal → `null`.
+     * - `('value')` wrapper → unwrapped and cast via {@see \yii\db\ColumnSchema::phpTypecast()}.
+     * - `CURRENT_TIMESTAMP` on `timestamp` columns → `null` (server-managed value).
+     *
+     * @param mixed $value default value in MSSQL format.
+     *
+     * @return mixed converted value.
+     *
      * @since 2.0.24
      */
     public function defaultPhpTypecast($value)
     {
-        if ($value !== null) {
-            // convert from MSSQL column_default format, e.g. ('1') -> 1, ('string') -> string
-            $value = substr(substr($value, 2), 0, -2);
+        if ($value === null || $value === '(NULL)') {
+            return null;
         }
 
+        if ($this->type === Schema::TYPE_TIMESTAMP && $value === 'CURRENT_TIMESTAMP') {
+            return null;
+        }
+
+        // convert from MSSQL column_default format, for example. ('1') -> 1, ('string') -> string
+        $value = substr(substr($value, 2), 0, -2);
+
         return parent::phpTypecast($value);
+    }
+
+    /**
+     * Returns the SQL type declaration for this column in an OUTPUT clause temp table.
+     *
+     * Appends `(MAX)` to variable-length types (`varchar`, `nvarchar`, `binary`, `varbinary`), preserves the declared
+     * size for fixed-length types (`char`, `nchar`), and maps `timestamp` to `varbinary(8)` or `binary(8)`.
+     *
+     * @return string SQL type declaration.
+     */
+    public function getOutputColumnDeclaration(): string
+    {
+        if ($this->dbType === Schema::TYPE_TIMESTAMP) {
+            return $this->allowNull ? 'varbinary(8)' : 'binary(8)';
+        }
+
+        $dbType = $this->dbType;
+
+        if (in_array($dbType, ['varchar', 'nvarchar', 'binary', 'varbinary'], true)) {
+            $dbType .= '(MAX)';
+        } elseif (in_array($dbType, ['char', 'nchar'], true)) {
+            $dbType .= "($this->size)";
+        }
+
+        return $dbType;
     }
 }

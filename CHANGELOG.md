@@ -42,3 +42,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(db): add Oracle BLOB `dbTypecast()` to `ColumnSchema` wrapping string values in `TO_BLOB(UTL_RAW.CAST_TO_RAW(:placeholder))` expressions to avoid direct string binding errors on BLOB columns.
 - fix(widgets): clear stale client-side errors for conditional (`whenClient`) validators after related field changes.
 - refactor(js): remove all ESLint warnings in core JS assets/tests and enforce `npm run lint` with `--max-warnings=0`.
+- refactor(db): consolidate MSSQL data type conversions into `ColumnSchema` absorb `(NULL)` and `CURRENT_TIMESTAMP` default handling into `defaultPhpTypecast()`, move OUTPUT clause type declarations into new `getOutputColumnDeclaration()`, and simplify `Schema::loadColumnSchema()` and `QueryBuilder::insert()`.

@@ -1753,9 +1753,9 @@ parameters:
 			path: src/db/mssql/QueryBuilder.php
 
 		-
-			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
-			identifier: function.strict
-			count: 2
+			message: '#^Call to an undefined method yii\\db\\ColumnSchema\:\:getOutputColumnDeclaration\(\)\.$#'
+			identifier: method.notFound
+			count: 1
 			path: src/db/mssql/QueryBuilder.php
 
 		-

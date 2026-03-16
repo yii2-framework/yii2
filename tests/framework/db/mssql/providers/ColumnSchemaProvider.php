@@ -1,0 +1,178 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @link https://www.yiiframework.com/
+ * @copyright Copyright (c) 2008 Yii Software LLC
+ * @license https://www.yiiframework.com/license/
+ */
+
+namespace yiiunit\framework\db\mssql\providers;
+
+use yii\db\Expression;
+use yii\db\mssql\Schema;
+
+/**
+ * Data provider for {@see \yiiunit\framework\db\mssql\ColumnSchemaTest} test cases.
+ *
+ * Provides representative input/output pairs for MSSQL `ColumnSchema` methods: `dbTypecast()`, `defaultPhpTypecast()`,
+ * and `getOutputColumnDeclaration()`.
+ *
+ * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 2.2
+ */
+final class ColumnSchemaProvider
+{
+    /**
+     * @phpstan-return array{string, array{string, string, bool, mixed, mixed}}
+     */
+    public static function dbTypecast(): array
+    {
+        return [
+            'non-varbinary string falls through to parent' => [
+                Schema::TYPE_STRING,
+                'varchar',
+                true,
+                'test',
+                'test',
+            ],
+            'varbinary integer value falls through to parent' => [
+                Schema::TYPE_BINARY,
+                'varbinary',
+                true,
+                123,
+                123,
+            ],
+            'varbinary null when not nullable' => [
+                Schema::TYPE_BINARY,
+                'varbinary',
+                false,
+                null,
+                null,
+            ],
+            'varbinary null when nullable' => [
+                Schema::TYPE_BINARY,
+                'varbinary',
+                true,
+                null,
+                new Expression('CAST(NULL AS VARBINARY(MAX))'),
+            ],
+            'varbinary string value' => [
+                Schema::TYPE_BINARY,
+                'varbinary',
+                true,
+                'binary data',
+                new Expression('CONVERT(VARBINARY(MAX), 0x' . bin2hex('binary data') . ')'),
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array{string, array{string, mixed, mixed}}
+     */
+    public static function defaultPhpTypecast(): array
+    {
+        return [
+            'CURRENT_TIMESTAMP on non-timestamp column unwraps normally' => [
+                Schema::TYPE_STRING,
+                'CURRENT_TIMESTAMP',
+                'RRENT_TIMESTA',
+            ],
+            'CURRENT_TIMESTAMP on timestamp column returns null' => [
+                Schema::TYPE_TIMESTAMP,
+                'CURRENT_TIMESTAMP',
+                null,
+            ],
+            'integer default value unwrapped' => [
+                Schema::TYPE_INTEGER,
+                '((0))',
+                0,
+            ],
+            'null string returns null' => [
+                Schema::TYPE_STRING,
+                '(NULL)',
+                null,
+            ],
+            'null value returns null' => [
+                Schema::TYPE_STRING,
+                null,
+                null,
+            ],
+            'string default value unwrapped' => [
+                Schema::TYPE_STRING,
+                "('hello')",
+                'hello',
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array{string, array{string, bool, int|null, string}}
+     */
+    public static function getOutputColumnDeclaration(): array
+    {
+        return [
+            'bigint returns as-is' => [
+                'bigint',
+                false,
+                null,
+                'bigint',
+            ],
+            'binary appends MAX' => [
+                'binary',
+                false,
+                null,
+                'binary(MAX)',
+            ],
+            'char appends size' => [
+                'char',
+                false,
+                10,
+                'char(10)',
+            ],
+            'int returns as-is' => [
+                'int',
+                false,
+                null,
+                'int',
+            ],
+            'nchar appends size' => [
+                'nchar',
+                false,
+                20,
+                'nchar(20)',
+            ],
+            'nvarchar appends MAX' => [
+                'nvarchar',
+                false,
+                null,
+                'nvarchar(MAX)',
+            ],
+            'timestamp not nullable' => [
+                Schema::TYPE_TIMESTAMP,
+                false,
+                null,
+                'binary(8)',
+            ],
+            'timestamp nullable' => [
+                Schema::TYPE_TIMESTAMP,
+                true,
+                null,
+                'varbinary(8)',
+            ],
+            'varbinary appends MAX' => [
+                'varbinary',
+                false,
+                null,
+                'varbinary(MAX)',
+            ],
+            'varchar appends MAX' => [
+                'varchar',
+                false,
+                null,
+                'varchar(MAX)',
+            ],
+        ];
+    }
+}

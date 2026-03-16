@@ -411,10 +411,7 @@ SQL;
 
         $column->phpType = $this->getColumnPhpType($column);
 
-        if ($info['column_default'] === '(NULL)') {
-            $info['column_default'] = null;
-        }
-        if (!$column->isPrimaryKey && ($column->type !== 'timestamp' || $info['column_default'] !== 'CURRENT_TIMESTAMP')) {
+        if (!$column->isPrimaryKey) {
             $column->defaultValue = $column->defaultPhpTypecast($info['column_default']);
         }
 
