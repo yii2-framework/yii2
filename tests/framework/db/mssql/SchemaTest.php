@@ -176,7 +176,7 @@ class SchemaTest extends BaseSchema
         array_walk(
             $columns,
             static function (&$item, $name) {
-                if (!in_array($name, ['char_col', 'char_col2', 'char_col3', 'float_col', 'numeric_col'])) {
+                if (!in_array($name, ['char_col', 'char_col2', 'float_col', 'numeric_col'])) {
                     $item['size'] = null;
                 }
             },
@@ -185,7 +185,7 @@ class SchemaTest extends BaseSchema
         array_walk(
             $columns,
             static function (&$item, $name) {
-                if (!in_array($name, ['char_col', 'char_col2', 'char_col3', 'float_col', 'numeric_col'])) {
+                if (!in_array($name, ['char_col', 'char_col2', 'float_col', 'numeric_col'])) {
                     $item['precision'] = null;
                 }
             },
