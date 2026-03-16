@@ -46,7 +46,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
      */
     public function dbTypecast($value)
     {
-        if ($this->type === Schema::TYPE_BINARY && $this->dbType === 'varbinary') {
+        if ($this->type === Schema::TYPE_BINARY && strpos($this->dbType, 'varbinary') === 0) {
             if (is_string($value)) {
                 return new Expression('CONVERT(VARBINARY(MAX), 0x' . bin2hex($value) . ')');
             }
@@ -119,9 +119,7 @@ class ColumnSchema extends \yii\db\ColumnSchema
 
         $dbType = $this->dbType;
 
-        if (in_array($dbType, ['varchar', 'nvarchar', 'varbinary'], true)) {
-            $dbType .= '(MAX)';
-        } elseif (in_array($dbType, ['char', 'nchar', 'binary'], true)) {
+        if (in_array($dbType, ['char', 'nchar', 'binary'], true)) {
             $dbType .= "($this->size)";
         }
 
