@@ -194,6 +194,40 @@ class SchemaTest extends BaseSchema
         return $columns;
     }
 
+    public function testFindColumnsWithCatalogName(): void
+    {
+        $db = $this->getConnection(false);
+        $dbName = $db->createCommand('SELECT DB_NAME()')->queryScalar();
+        $tableSchema = $db->getSchema()->getTableSchema("{$dbName}.dbo.profile");
+
+        self::assertNotNull(
+            $tableSchema,
+            'Table schema with catalog prefix should be resolved.',
+        );
+        self::assertSame(
+            'profile',
+            $tableSchema->name,
+            'Table name should be resolved without catalog prefix.',
+        );
+        self::assertArrayHasKey(
+            'id',
+            $tableSchema->columns,
+            'Column "id" should exist in the resolved table schema.',
+        );
+    }
+
+    public function testFindColumnsReturnsNullForNonExistentTable(): void
+    {
+        $db = $this->getConnection(false);
+
+        $tableSchema = $db->getSchema()->getTableSchema('non_existent_table_xyz');
+
+        self::assertNull(
+            $tableSchema,
+            'Non-existent table should return null.',
+        );
+    }
+
     public function testGetPrimaryKey(): void
     {
         $db = $this->getConnection();

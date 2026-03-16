@@ -480,6 +480,7 @@ SQL;
         } catch (Exception $e) {
             return false;
         }
+
         foreach ($columns as $column) {
             $column = $this->loadColumnSchema($column);
 
