@@ -8,7 +8,6 @@
 
 namespace yii\db\mssql;
 
-use Exception;
 use Yii;
 use yii\db\CheckConstraint;
 use yii\db\Constraint;
@@ -471,13 +470,11 @@ SQL;
         ORDER BY [c].[column_id]
         SQL;
 
-        try {
-            $columns = $this->db->createCommand($sql, [':fullName' => $fullName])->queryAll();
+        // No try/catch needed: OBJECT_ID(:fullName) returns NULL for non-existent tables (0 rows, no exception),
+        // and loadTableSchema() calls findPrimaryKeys() before this method, which validates the connection first.
+        $columns = $this->db->createCommand($sql, [':fullName' => $fullName])->queryAll();
 
-            if (empty($columns)) {
-                return false;
-            }
-        } catch (Exception $e) {
+        if (empty($columns)) {
             return false;
         }
 
