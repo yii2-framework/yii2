@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -272,19 +274,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     protected function loadTableIndexes($tableName)
     {
         $resolvedName = $this->resolveTableName($tableName);
-
-        $fullName = $this->quoteSimpleTableName($resolvedName->name);
-
-        if ($resolvedName->schemaName !== null) {
-            $fullName = $this->quoteSimpleTableName($resolvedName->schemaName) . '.' . $fullName;
-        }
-
-        $catalogPrefix = '';
-
-        if ($resolvedName->catalogName !== null) {
-            $catalogPrefix = $this->quoteSimpleTableName($resolvedName->catalogName) . '.';
-            $fullName = $catalogPrefix . $fullName;
-        }
+        [$fullName, $catalogPrefix] = $this->buildQuotedTableParts($resolvedName);
 
         $sql = <<<SQL
         SELECT
@@ -432,10 +422,11 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         $column->isComputed = (bool)$info['is_computed'];
         $column->unsigned = stripos($column->dbType, 'unsigned') !== false;
         $column->comment = $info['comment'] === null ? '' : $info['comment'];
-
         $column->type = self::TYPE_STRING;
+
         if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $column->dbType, $matches)) {
             $type = $matches[1];
+
             if (isset($this->typeMap[$type])) {
                 $column->type = $this->typeMap[$type];
             }
@@ -465,18 +456,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected function findColumns($table)
     {
-        $fullName = $this->quoteSimpleTableName($table->name);
-
-        if ($table->schemaName !== null) {
-            $fullName = $this->quoteSimpleTableName($table->schemaName) . '.' . $fullName;
-        }
-
-        $catalogPrefix = '';
-
-        if ($table->catalogName !== null) {
-            $catalogPrefix = $this->quoteSimpleTableName($table->catalogName) . '.';
-            $fullName = "{$catalogPrefix}{$fullName}";
-        }
+        [$fullName, $catalogPrefix] = $this->buildQuotedTableParts($table);
 
         $sql = <<<SQL
         SELECT
@@ -559,18 +539,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected function findTableConstraints($table, $type)
     {
-        $fullName = $this->quoteSimpleTableName($table->name);
-
-        if ($table->schemaName !== null) {
-            $fullName = $this->quoteSimpleTableName($table->schemaName) . '.' . $fullName;
-        }
-
-        $catalogPrefix = '';
-
-        if ($table->catalogName !== null) {
-            $catalogPrefix = $this->quoteSimpleTableName($table->catalogName) . '.';
-            $fullName = "{$catalogPrefix}{$fullName}";
-        }
+        [$fullName, $catalogPrefix] = $this->buildQuotedTableParts($table);
 
         $sql = <<<SQL
         SELECT
@@ -612,18 +581,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected function findForeignKeys($table)
     {
-        $fullName = $this->quoteSimpleTableName($table->name);
-
-        if ($table->schemaName !== null) {
-            $fullName = $this->quoteSimpleTableName($table->schemaName) . '.' . $fullName;
-        }
-
-        $catalogPrefix = '';
-
-        if ($table->catalogName !== null) {
-            $catalogPrefix = $this->quoteSimpleTableName($table->catalogName) . '.';
-            $fullName = $catalogPrefix . $fullName;
-        }
+        [$fullName, $catalogPrefix] = $this->buildQuotedTableParts($table);
 
         $sql = <<<SQL
         SELECT
@@ -705,6 +663,31 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     }
 
     /**
+     * Builds a bracket-quoted fully-qualified table name and a catalog prefix for cross-database `sys.*` view queries.
+     *
+     * @param TableSchema $resolvedName object with name, schemaName, catalogName properties.
+     *
+     * @return array{0: string, 1: string} [fullName, catalogPrefix]
+     */
+    private function buildQuotedTableParts($resolvedName): array
+    {
+        $fullName = $this->quoteSimpleTableName($resolvedName->name);
+
+        if ($resolvedName->schemaName !== null) {
+            $fullName = $this->quoteSimpleTableName($resolvedName->schemaName) . '.' . $fullName;
+        }
+
+        $catalogPrefix = '';
+
+        if ($resolvedName->catalogName !== null) {
+            $catalogPrefix = $this->quoteSimpleTableName($resolvedName->catalogName) . '.';
+            $fullName = $catalogPrefix . $fullName;
+        }
+
+        return [$fullName, $catalogPrefix];
+    }
+
+    /**
      * Loads multiple types of constraints and returns the specified ones.
      * @param string $tableName table name.
      * @param string $returnType return type:
@@ -718,19 +701,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     private function loadTableConstraints($tableName, $returnType)
     {
         $resolvedName = $this->resolveTableName($tableName);
-
-        $fullName = $this->quoteSimpleTableName($resolvedName->name);
-
-        if ($resolvedName->schemaName !== null) {
-            $fullName = $this->quoteSimpleTableName($resolvedName->schemaName) . '.' . $fullName;
-        }
-
-        $catalogPrefix = '';
-
-        if ($resolvedName->catalogName !== null) {
-            $catalogPrefix = $this->quoteSimpleTableName($resolvedName->catalogName) . '.';
-            $fullName = $catalogPrefix . $fullName;
-        }
+        [$fullName, $catalogPrefix] = $this->buildQuotedTableParts($resolvedName);
 
         $sql = <<<SQL
         SELECT
