@@ -580,13 +580,13 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected function findForeignKeys($table)
     {
-        [$fullName, $catalogPrefix] = $this->buildQuotedTableParts($table);
+        [$fullName, $catalogPrefix, $dbIdExpr] = $this->buildQuotedTableParts($table);
 
         $sql = <<<SQL
         SELECT
             [fk].[name] AS [fk_name],
             [cp].[name] AS [fk_column_name],
-            OBJECT_NAME([fk].[referenced_object_id]) AS [uq_table_name],
+            OBJECT_NAME([fk].[referenced_object_id], {$dbIdExpr}) AS [uq_table_name],
             [cr].[name] AS [uq_column_name]
         FROM {$catalogPrefix}[sys].[foreign_keys] AS [fk]
         INNER JOIN {$catalogPrefix}[sys].[foreign_key_columns] AS [fkc]
@@ -662,11 +662,12 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     }
 
     /**
-     * Builds a bracket-quoted fully-qualified table name and a catalog prefix for cross-database `sys.*` view queries.
+     * Builds a bracket-quoted fully-qualified table name, a catalog prefix for cross-database `sys.*` view queries,
+     * and a `DB_ID()` expression for `OBJECT_NAME()`/`OBJECT_SCHEMA_NAME()` calls.
      *
      * @param TableSchema $resolvedName object with name, schemaName, catalogName properties.
      *
-     * @return array{0: string, 1: string} [fullName, catalogPrefix]
+     * @return array{0: string, 1: string, 2: string} [fullName, catalogPrefix, dbIdExpr]
      */
     private function buildQuotedTableParts($resolvedName): array
     {
@@ -677,13 +678,15 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         }
 
         $catalogPrefix = '';
+        $dbIdExpr = 'DB_ID()';
 
         if ($resolvedName->catalogName !== null) {
             $catalogPrefix = $this->quoteSimpleTableName($resolvedName->catalogName) . '.';
             $fullName = $catalogPrefix . $fullName;
+            $dbIdExpr = 'DB_ID(' . $this->db->quoteValue($resolvedName->catalogName) . ')';
         }
 
-        return [$fullName, $catalogPrefix];
+        return [$fullName, $catalogPrefix, $dbIdExpr];
     }
 
     /**
@@ -700,15 +703,15 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     private function loadTableConstraints($tableName, $returnType)
     {
         $resolvedName = $this->resolveTableName($tableName);
-        [$fullName, $catalogPrefix] = $this->buildQuotedTableParts($resolvedName);
+        [$fullName, $catalogPrefix, $dbIdExpr] = $this->buildQuotedTableParts($resolvedName);
 
         $sql = <<<SQL
         SELECT
             [o].[name] AS [name],
             COALESCE([ccol].[name], [dcol].[name], [fccol].[name], [kiccol].[name]) AS [column_name],
             RTRIM([o].[type]) AS [type],
-            OBJECT_SCHEMA_NAME([f].[referenced_object_id]) AS [foreign_table_schema],
-            OBJECT_NAME([f].[referenced_object_id]) AS [foreign_table_name],
+            OBJECT_SCHEMA_NAME([f].[referenced_object_id], {$dbIdExpr}) AS [foreign_table_schema],
+            OBJECT_NAME([f].[referenced_object_id], {$dbIdExpr}) AS [foreign_table_name],
             [ffccol].[name] AS [foreign_column_name],
             [f].[update_referential_action_desc] AS [on_update],
             [f].[delete_referential_action_desc] AS [on_delete],
