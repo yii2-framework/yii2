@@ -289,12 +289,7 @@ SQL;
             $column->type = $this->typeMap[$type];
         }
 
-        // enum: `extractSizeFromDbType()` incorrectly parses quoted values as size; reset and extract properly.
         if ($type === 'enum') {
-            $column->size = null;
-            $column->precision = null;
-            $column->scale = null;
-
             if (preg_match('/\(([^\)]+)\)/', $column->dbType, $enumMatch)) {
                 preg_match_all("/'[^']*'/", $enumMatch[1], $values);
 

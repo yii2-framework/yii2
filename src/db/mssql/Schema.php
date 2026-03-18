@@ -377,7 +377,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
         $column->enumValues = [];
         $column->isComputed = (bool) $info['is_computed'];
         // primary key will be determined in `findColumns()` method
-        $column->isPrimaryKey = null;
+        $column->isPrimaryKey = false;
         $column->name = $info['column_name'];
         $column->type = self::TYPE_STRING;
         $column->unsigned = stripos($column->dbType, 'unsigned') !== false;

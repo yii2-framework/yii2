@@ -120,6 +120,10 @@ class ColumnSchema extends BaseObject
      */
     public function extractSizeFromDbType(): string
     {
+        $this->size = null;
+        $this->precision = null;
+        $this->scale = null;
+
         if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $this->dbType, $matches)) {
             if (isset($matches[2]) && $matches[2] !== '') {
                 $values = explode(',', $matches[2]);
