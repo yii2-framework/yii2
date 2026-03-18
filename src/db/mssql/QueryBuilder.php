@@ -159,7 +159,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
             $checkValue = $type->getCheckValue();
 
             if ($checkValue !== null) {
-                $check = $defaultValue instanceof Expression ? $checkValue : new Expression($checkValue);
+                $check = $checkValue instanceof Expression ? $checkValue : new Expression($checkValue);
                 $sqlAfter[] = <<<SQL
                 ALTER TABLE {{{$table}}} ADD CONSTRAINT [[CK_{$constraintBase}]] CHECK ({$check})
                 SQL;

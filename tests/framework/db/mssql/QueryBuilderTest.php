@@ -103,7 +103,7 @@ class QueryBuilderTest extends BaseQueryBuilder
         );
     }
 
-    protected function getCommmentsFromTable($table)
+    protected function getCommentsFromTable($table)
     {
         $db = $this->getConnection(false, false);
 
@@ -194,7 +194,7 @@ class QueryBuilderTest extends BaseQueryBuilder
 
         $this->runAddCommentOnTable($tableComment, $table);
 
-        $resultTable = $this->getCommmentsFromTable($table);
+        $resultTable = $this->getCommentsFromTable($table);
 
         self::assertSame(
             [
@@ -229,7 +229,7 @@ class QueryBuilderTest extends BaseQueryBuilder
 
         $this->runAddCommentOnTable($tableComment2, $table);
 
-        $result = $this->getCommmentsFromTable($table);
+        $result = $this->getCommentsFromTable($table);
 
         self::assertSame(
             [
@@ -267,7 +267,7 @@ class QueryBuilderTest extends BaseQueryBuilder
 
         $this->runAddCommentOnTable($tableComment, $table);
 
-        $resultTable = $this->getCommmentsFromTable($table);
+        $resultTable = $this->getCommentsFromTable($table);
 
         self::assertSame(
             [
@@ -307,7 +307,7 @@ class QueryBuilderTest extends BaseQueryBuilder
         $this->runDropCommentFromTable($table);
 
         self::assertEmpty(
-            $this->getCommmentsFromTable($table),
+            $this->getCommentsFromTable($table),
             'Dropping a table comment should remove the extended property completely.',
         );
 
@@ -330,7 +330,7 @@ class QueryBuilderTest extends BaseQueryBuilder
         $this->runDropCommentFromTable($table);
 
         self::assertEmpty(
-            $this->getCommmentsFromTable($table),
+            $this->getCommentsFromTable($table),
             'Dropping a table comment with special characters should remove the extended property completely.',
         );
 
@@ -1098,22 +1098,16 @@ class QueryBuilderTest extends BaseQueryBuilder
 
         $db->createCommand($sql)->execute();
 
-        $sql = <<<SQL
-        INSERT INTO [foo1]([bar]) values('abcde')
-        SQL;
-
-        self::assertSame(
-            1,
-            $db->createCommand($sql)->execute(),
-            'First INSERT with UNIQUE constraint should succeed.',
-        );
-
         self::expectException(
             IntegrityException::class,
         );
         self::expectExceptionMessageMatches(
             '/conflicted with the CHECK constraint "CK_foo1_bar"/',
         );
+
+        $sql = <<<SQL
+        INSERT INTO [foo1]([bar]) values('abcde')
+        SQL;
 
         $db->createCommand($sql)->execute();
     }
