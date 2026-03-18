@@ -386,27 +386,32 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      * Sequence name of table.
      *
      * @param string $tableName
-     * @internal param \yii\db\TableSchema $table->name the table schema
+     * @param string $schemaName
      * @return string|null whether the sequence exists
      *
-     * @see https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/USER_DEPENDENCIES.html
-     * @see https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/USER_TRIGGERS.html
+     * @see https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/ALL_DEPENDENCIES.html
+     * @see https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/ALL_TRIGGERS.html
      */
-    protected function getTableSequenceName($tableName)
+    protected function getTableSequenceName($tableName, $schemaName)
     {
         $sequenceNameSql = <<<SQL
-            SELECT "ud"."REFERENCED_NAME" AS "SEQUENCE_NAME"
-            FROM "USER_DEPENDENCIES" "ud"
-            INNER JOIN "USER_TRIGGERS" "ut"
-                ON "ut"."TRIGGER_NAME" = "ud"."NAME"
-            WHERE "ut"."TABLE_NAME" = :tableName
-                AND "ud"."TYPE" = 'TRIGGER'
-                AND "ud"."REFERENCED_TYPE" = 'SEQUENCE'
+            SELECT "ad"."REFERENCED_NAME" AS "SEQUENCE_NAME"
+            FROM "ALL_DEPENDENCIES" "ad"
+            INNER JOIN "ALL_TRIGGERS" "at"
+                ON "at"."OWNER" = "ad"."OWNER"
+                AND "at"."TRIGGER_NAME" = "ad"."NAME"
+            WHERE "at"."TABLE_OWNER" = :schemaName
+                AND "at"."TABLE_NAME" = :tableName
+                AND "ad"."TYPE" = 'TRIGGER'
+                AND "ad"."REFERENCED_TYPE" = 'SEQUENCE'
             SQL;
 
         $sequenceName = $this->db->createCommand(
             $sequenceNameSql,
-            [':tableName' => $tableName],
+            [
+                ':schemaName' => $schemaName,
+                ':tableName' => $tableName,
+            ],
         )->queryScalar();
 
         return $sequenceName === false ? null : $sequenceName;
@@ -533,7 +538,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
                 $table->primaryKey[] = $row['COLUMN_NAME'];
 
                 if (empty($table->sequenceName)) {
-                    $table->sequenceName = $this->getTableSequenceName($table->name);
+                    $table->sequenceName = $this->getTableSequenceName($table->name, $table->schemaName);
                 }
             }
 
@@ -589,11 +594,13 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
                 "dic"."COLUMN_NAME"
             FROM "ALL_INDEXES" "di"
             INNER JOIN "ALL_IND_COLUMNS" "dic"
-                ON "di"."TABLE_NAME" = "dic"."TABLE_NAME"
-                AND "di"."INDEX_NAME" = "dic"."INDEX_NAME"
+                ON "dic"."INDEX_OWNER" = "di"."OWNER"
+                AND "dic"."TABLE_OWNER" = "di"."TABLE_OWNER"
+                AND "dic"."TABLE_NAME" = "di"."TABLE_NAME"
+                AND "dic"."INDEX_NAME" = "di"."INDEX_NAME"
             WHERE "di"."UNIQUENESS" = 'UNIQUE'
-                AND "dic"."TABLE_OWNER" = :schemaName
-                AND "dic"."TABLE_NAME" = :tableName
+                AND "di"."TABLE_OWNER" = :schemaName
+                AND "di"."TABLE_NAME" = :tableName
             ORDER BY "dic"."TABLE_NAME", "dic"."INDEX_NAME", "dic"."COLUMN_POSITION"
             SQL;
 
