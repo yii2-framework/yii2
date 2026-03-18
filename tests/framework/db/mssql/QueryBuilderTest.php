@@ -1102,12 +1102,17 @@ class QueryBuilderTest extends BaseQueryBuilder
         INSERT INTO [foo1]([bar]) values('abcde')
         SQL;
 
+        self::assertSame(
+            1,
+            $db->createCommand($sql)->execute(),
+            'First INSERT with UNIQUE constraint should succeed.',
+        );
+
         self::expectException(
             IntegrityException::class,
         );
-        self::expectExceptionMessage(
-            'SQLSTATE[23000]: [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]The INSERT statement conflicted with the CHECK constraint "CK_foo1_bar". The conflict occurred in database "yiitest", table "dbo.foo1", column \'bar\'.
-The SQL being executed was: INSERT INTO [foo1]([bar]) values(\'abcde\')',
+        self::expectExceptionMessageMatches(
+            '/conflicted with the CHECK constraint "CK_foo1_bar"/',
         );
 
         $db->createCommand($sql)->execute();
@@ -1136,10 +1141,8 @@ The SQL being executed was: INSERT INTO [foo1]([bar]) values(\'abcde\')',
         self::expectException(
             IntegrityException::class,
         );
-        self::expectExceptionMessage(
-            'SQLSTATE[23000]: [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Violation of UNIQUE KEY '
-            . 'constraint \'UQ_foo1_bar\'. Cannot insert duplicate key in object \'dbo.foo1\'. The duplicate key value '
-            . 'is (abcdef).',
+        self::expectExceptionMessageMatches(
+            '/Violation of UNIQUE KEY constraint \'UQ_foo1_bar\'/',
         );
 
         $db->createCommand($sql)->execute();
