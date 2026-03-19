@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -10,10 +12,14 @@ namespace yii\db\sqlite;
 
 use yii\base\InvalidArgumentException;
 use yii\base\NotSupportedException;
+use yii\db\conditions\InCondition;
+use yii\db\conditions\LikeCondition;
 use yii\db\Connection;
 use yii\db\Expression;
 use yii\db\ExpressionInterface;
 use yii\db\Query;
+
+use function count;
 
 /**
  * QueryBuilder is the query builder for SQLite databases.
@@ -56,59 +62,56 @@ class QueryBuilder extends \yii\db\QueryBuilder
      */
     protected function defaultExpressionBuilders()
     {
-        return array_merge(parent::defaultExpressionBuilders(), [
-            'yii\db\conditions\LikeCondition' => 'yii\db\sqlite\conditions\LikeConditionBuilder',
-            'yii\db\conditions\InCondition' => 'yii\db\sqlite\conditions\InConditionBuilder',
-        ]);
+        return [
+            ...parent::defaultExpressionBuilders(),
+            LikeCondition::class => conditions\LikeConditionBuilder::class,
+            InCondition::class => conditions\InConditionBuilder::class,
+        ];
     }
 
     /**
      * {@inheritdoc}
-     * @see https://stackoverflow.com/questions/15277373/sqlite-upsert-update-or-insert/15277374#15277374
+     *
+     * @see https://www.sqlite.org/lang_upsert.html
      */
     public function upsert($table, $insertColumns, $updateColumns, &$params)
     {
-        list($uniqueNames, $insertNames, $updateNames) = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns, $constraints);
+        $insertSql = $this->insert($table, $insertColumns, $params);
+        [$uniqueNames, , $updateNames] = $this->prepareUpsertColumns(
+            $table,
+            $insertColumns,
+            $updateColumns,
+        );
+
         if (empty($uniqueNames)) {
-            return $this->insert($table, $insertColumns, $params);
+            return $insertSql;
         }
+
         if ($updateNames === []) {
             // there are no columns to update
             $updateColumns = false;
         }
 
-        list(, $placeholders, $values, $params) = $this->prepareInsertValues($table, $insertColumns, $params);
-        $insertSql = 'INSERT OR IGNORE INTO ' . $this->db->quoteTableName($table)
-            . (!empty($insertNames) ? ' (' . implode(', ', $insertNames) . ')' : '')
-            . (!empty($placeholders) ? ' VALUES (' . implode(', ', $placeholders) . ')' : $values);
         if ($updateColumns === false) {
-            return $insertSql;
+            return "$insertSql ON CONFLICT DO NOTHING";
         }
 
-        $updateCondition = ['or'];
-        $quotedTableName = $this->db->quoteTableName($table);
-        foreach ($constraints as $constraint) {
-            $constraintCondition = ['and'];
-            foreach ($constraint->columnNames as $name) {
-                $quotedName = $this->db->quoteColumnName($name);
-                $constraintCondition[] = "$quotedTableName.$quotedName=(SELECT $quotedName FROM `EXCLUDED`)";
-            }
-            $updateCondition[] = $constraintCondition;
-        }
         if ($updateColumns === true) {
             $updateColumns = [];
+
             foreach ($updateNames as $name) {
-                $quotedName = $this->db->quoteColumnName($name);
-                if (strrpos($quotedName, '.') === false) {
-                    $quotedName = "(SELECT $quotedName FROM `EXCLUDED`)";
-                }
-                $updateColumns[$name] = new Expression($quotedName);
+                $updateColumns[$name] = new Expression('EXCLUDED.' . $this->db->quoteColumnName($name));
             }
         }
-        $updateSql = 'WITH "EXCLUDED" (' . implode(', ', $insertNames)
-            . ') AS (' . (!empty($placeholders) ? 'VALUES (' . implode(', ', $placeholders) . ')' : ltrim($values, ' ')) . ') '
-            . $this->update($table, $updateColumns, $updateCondition, $params);
-        return "$updateSql; $insertSql;";
+
+        [$updates, $params] = $this->prepareUpdateSets($table, $updateColumns, $params);
+
+        $uniqueColumns = implode(', ', $uniqueNames);
+        $updateSets = implode(', ', $updates);
+
+        return <<<SQL
+        {$insertSql} ON CONFLICT ({$uniqueColumns}) DO UPDATE SET {$updateSets}
+        SQL;
     }
 
     /**
@@ -120,28 +123,40 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * the next new row's primary key will have a value 1.
      * @return string the SQL statement for resetting sequence
      * @throws InvalidArgumentException if the table does not exist or there is no sequence associated with the table.
+     *
+     * @see https://www.sqlite.org/autoinc.html
      */
     public function resetSequence($tableName, $value = null)
     {
-        $db = $this->db;
-        $table = $db->getTableSchema($tableName);
-        if ($table !== null && $table->sequenceName !== null) {
-            $tableName = $db->quoteTableName($tableName);
-            if ($value === null) {
-                $key = $this->db->quoteColumnName(reset($table->primaryKey));
-                $value = $this->db->useMaster(function (Connection $db) use ($key, $tableName) {
-                    return $db->createCommand("SELECT MAX($key) FROM $tableName")->queryScalar();
-                });
-            } else {
-                $value = (int) $value - 1;
-            }
+        $table = $this->db->getTableSchema($tableName);
 
-            return "UPDATE sqlite_sequence SET seq='$value' WHERE name='{$table->name}'";
-        } elseif ($table === null) {
+        if ($table === null) {
             throw new InvalidArgumentException("Table not found: $tableName");
         }
 
-        throw new InvalidArgumentException("There is not sequence associated with table '$tableName'.'");
+        if ($table->sequenceName === null) {
+            throw new InvalidArgumentException("There is not sequence associated with table '$tableName'.'");
+        }
+
+        if ($value === null) {
+            $quotedTableName = $this->db->quoteTableName($tableName);
+            $key = $this->db->quoteColumnName(reset($table->primaryKey));
+            $value = $this->db->useMaster(
+                static fn(Connection $db) => $db->createCommand(
+                    <<<SQL
+                    SELECT MAX($key) FROM $quotedTableName
+                    SQL,
+                )->queryScalar(),
+            );
+        } else {
+            $value = (int) $value - 1;
+        }
+
+        $quotedName = $this->db->quoteValue($table->name);
+
+        return <<<SQL
+        UPDATE sqlite_sequence SET seq='$value' WHERE name=$quotedName
+        SQL;
     }
 
     /**
@@ -150,21 +165,32 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string $schema the schema of the tables. Meaningless for SQLite.
      * @param string $table the table name. Meaningless for SQLite.
      * @return string the SQL statement for checking integrity
-     * @throws NotSupportedException this is not supported by SQLite
+     *
+     * @see https://www.sqlite.org/pragma.html#pragma_foreign_keys
      */
     public function checkIntegrity($check = true, $schema = '', $table = '')
     {
-        return 'PRAGMA foreign_keys=' . (int) $check;
+        $enabled = (int) $check;
+
+        return <<<SQL
+        pragma foreign_keys=$enabled
+        SQL;
     }
 
     /**
      * Builds a SQL statement for truncating a DB table.
      * @param string $table the table to be truncated. The name will be properly quoted by the method.
      * @return string the SQL statement for truncating a DB table.
+     *
+     * @see https://www.sqlite.org/lang_delete.html
      */
     public function truncateTable($table)
     {
-        return 'DELETE FROM ' . $this->db->quoteTableName($table);
+        $quotedTable = $this->db->quoteTableName($table);
+
+        return <<<SQL
+        DELETE FROM $quotedTable
+        SQL;
     }
 
     /**
@@ -172,10 +198,16 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string $name the name of the index to be dropped. The name will be properly quoted by the method.
      * @param string $table the table whose index is to be dropped. The name will be properly quoted by the method.
      * @return string the SQL statement for dropping an index.
+     *
+     * @see https://www.sqlite.org/lang_dropindex.html
      */
     public function dropIndex($name, $table)
     {
-        return 'DROP INDEX ' . $this->db->quoteTableName($name);
+        $quotedName = $this->db->quoteTableName($name);
+
+        return <<<SQL
+        DROP INDEX $quotedName
+        SQL;
     }
 
     /**
@@ -184,6 +216,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string $column the name of the column to be dropped. The name will be properly quoted by the method.
      * @return string the SQL statement for dropping a DB column.
      * @throws NotSupportedException this is not supported by SQLite
+     *
+     * @see https://www.sqlite.org/lang_altertable.html
      */
     public function dropColumn($table, $column)
     {
@@ -197,6 +231,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string $newName the new name of the column. The name will be properly quoted by the method.
      * @return string the SQL statement for renaming a DB column.
      * @throws NotSupportedException this is not supported by SQLite
+     *
+     * @see https://www.sqlite.org/lang_altertable.html
      */
     public function renameColumn($table, $oldName, $newName)
     {
@@ -217,6 +253,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string|null $update the ON UPDATE option. Most DBMS support these options: RESTRICT, CASCADE, NO ACTION, SET DEFAULT, SET NULL
      * @return string the SQL statement for adding a foreign key constraint to an existing table.
      * @throws NotSupportedException this is not supported by SQLite
+     *
+     * @see https://www.sqlite.org/lang_altertable.html
      */
     public function addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete = null, $update = null)
     {
@@ -229,6 +267,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string $table the table whose foreign is to be dropped. The name will be properly quoted by the method.
      * @return string the SQL statement for dropping a foreign key constraint.
      * @throws NotSupportedException this is not supported by SQLite
+     *
+     * @see https://www.sqlite.org/lang_altertable.html
      */
     public function dropForeignKey($name, $table)
     {
@@ -241,10 +281,17 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string $table the table to be renamed. The name will be properly quoted by the method.
      * @param string $newName the new table name. The name will be properly quoted by the method.
      * @return string the SQL statement for renaming a DB table.
+     *
+     * @see https://www.sqlite.org/lang_altertable.html
      */
     public function renameTable($table, $newName)
     {
-        return 'ALTER TABLE ' . $this->db->quoteTableName($table) . ' RENAME TO ' . $this->db->quoteTableName($newName);
+        $quotedTable = $this->db->quoteTableName($table);
+        $quotedNewName = $this->db->quoteTableName($newName);
+
+        return <<<SQL
+        ALTER TABLE $quotedTable RENAME TO $quotedNewName
+        SQL;
     }
 
     /**
@@ -257,6 +304,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * will become 'varchar(255) not null'.
      * @return string the SQL statement for changing the definition of a column.
      * @throws NotSupportedException this is not supported by SQLite
+     *
+     * @see https://www.sqlite.org/lang_altertable.html
      */
     public function alterColumn($table, $column, $type)
     {
@@ -270,6 +319,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string|array $columns comma separated string or array of columns that the primary key will consist of.
      * @return string the SQL statement for adding a primary key constraint to an existing table.
      * @throws NotSupportedException this is not supported by SQLite
+     *
+     * @see https://www.sqlite.org/lang_altertable.html
      */
     public function addPrimaryKey($name, $table, $columns)
     {
@@ -282,6 +333,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @param string $table the table that the primary key constraint will be removed from.
      * @return string the SQL statement for removing a primary key constraint from an existing table.
      * @throws NotSupportedException this is not supported by SQLite
+     *
+     * @see https://www.sqlite.org/lang_altertable.html
      */
     public function dropPrimaryKey($name, $table)
     {
@@ -384,6 +437,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * {@inheritdoc}
+     *
+     * @see https://www.sqlite.org/syntaxdiagrams.html#select-stmt
      */
     public function buildLimit($limit, $offset)
     {
@@ -395,7 +450,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
             }
         } elseif ($this->hasOffset($offset)) {
             // limit is not optional in SQLite
-            // https://www.sqlite.org/syntaxdiagrams.html#select-stmt
             $sql = "LIMIT 9223372036854775807 OFFSET $offset"; // 2^63-1
         }
 
@@ -465,7 +519,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
         foreach ($unions as $i => $union) {
             $query = $union['query'];
             if ($query instanceof Query) {
-                list($unions[$i]['query'], $params) = $this->build($query, $params);
+                [$unions[$i]['query'], $params] = $this->build($query, $params);
             }
 
             $result .= ' UNION ' . ($union['all'] ? 'ALL ' : '') . ' ' . $unions[$i]['query'];
@@ -476,6 +530,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
     /**
      * {@inheritdoc}
+     *
+     * @see https://www.sqlite.org/lang_createindex.html
      */
     public function createIndex($name, $table, $columns, $unique = false)
     {
@@ -483,12 +539,16 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
         $schema = null;
         if (count($tableParts) === 2) {
-            list ($schema, $table) = $tableParts;
+            [$schema, $table] = $tableParts;
         }
 
-        return ($unique ? 'CREATE UNIQUE INDEX ' : 'CREATE INDEX ')
-            . $this->db->quoteTableName(($schema ? $schema . '.' : '') . $name) . ' ON '
-            . $this->db->quoteTableName($table)
-            . ' (' . $this->buildColumns($columns) . ')';
+        $quotedIndex = $this->db->quoteTableName(($schema ? $schema . '.' : '') . $name);
+        $quotedTable = $this->db->quoteTableName($table);
+        $buildColumns = $this->buildColumns($columns);
+        $keyword = $unique ? 'CREATE UNIQUE INDEX' : 'CREATE INDEX';
+
+        return <<<SQL
+        $keyword $quotedIndex ON $quotedTable ($buildColumns)
+        SQL;
     }
 }
