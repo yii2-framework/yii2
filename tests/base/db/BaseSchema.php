@@ -291,7 +291,7 @@ abstract class BaseSchema extends BaseDatabase
         // Compare
         $db->schema->db->tablePrefix = $testTablePrefix;
 
-        $db->schema->refreshTableSchema($testTablePrefix);
+        $db->schema->refreshTableSchema($testTableName);
         $testRefreshedTable = $db->schema->getTableSchema($testTableName, false);
 
         self::assertInstanceOf(
@@ -299,7 +299,7 @@ abstract class BaseSchema extends BaseDatabase
             $testRefreshedTable,
             'Test refreshed table schema should be a TableSchema instance.',
         );
-        self::assertSame(
+        self::assertEquals(
             $refreshedTable,
             $testRefreshedTable,
             'Refreshed table schemas should be equal.',

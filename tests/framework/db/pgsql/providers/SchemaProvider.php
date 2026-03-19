@@ -29,8 +29,7 @@ final class SchemaProvider extends \yiiunit\base\db\providers\SchemaProvider
         unset($columns['enum_col']);
 
         $columns['bigint_col'] = [
-            'type' =>
-            'bigint',
+            'type' => 'bigint',
             'dbType' => 'int8',
             'phpType' => 'integer',
             'allowNull' => true,

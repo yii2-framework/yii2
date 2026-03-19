@@ -52,24 +52,11 @@ final class SchemaProvider extends \yiiunit\base\db\providers\SchemaProvider
 
         array_walk(
             $columns,
-            static function (&$item) {
-                $item['enumValues'] = [];
-            },
-        );
-
-        array_walk(
-            $columns,
             static function (&$item, $name) {
+                $item['enumValues'] = [];
+
                 if (!in_array($name, ['char_col', 'char_col2', 'float_col', 'numeric_col'])) {
                     $item['size'] = null;
-                }
-            },
-        );
-
-        array_walk(
-            $columns,
-            static function (&$item, $name) {
-                if (!in_array($name, ['char_col', 'char_col2', 'float_col', 'numeric_col'])) {
                     $item['precision'] = null;
                 }
             },
