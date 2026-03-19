@@ -61,3 +61,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(db): modernize PostgreSQL `Schema` SQL queries remove `static $sql`, parameterize queries, replace `generate_subscripts()` with `unnest() WITH ORDINALITY`, replace undocumented `information_schema._pg_*` functions, add `declare(strict_types=1)`, `@see` doc links.
 - refactor(db): modernize PostgreSQL `QueryBuilder` add `declare(strict_types=1)`, heredoc SQL, `::class` constants, spread operator, `str_contains()`, fix `resetSequence()` error message typo, `@see` doc links.
 - refactor(db): modernize SQLite `Schema` add `declare(strict_types=1)`, `sqlite_schema`, `::class`, `match`, `str_contains()`, `??`, lowercase PRAGMAs, `@see` doc links.
+- refactor(db): modernize SQLite `QueryBuilder` native `ON CONFLICT` upsert, fix `resetSequence()` SQL injection, `declare(strict_types=1)`, heredoc SQL, `::class`, spread operator, `@see` doc links.

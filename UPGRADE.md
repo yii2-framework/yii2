@@ -353,3 +353,45 @@ Additionally:
   `fn_listextendedproperty`, and the property name is `MS_Description` (capital D) instead of `MS_description`.
 - `dropConstraintsForColumn()` (private) now uses `sys.default_constraints` + `sys.check_constraints` instead of
   the deprecated `sys.sysconstraints` compatibility view.
+
+### SQLite `QueryBuilder::upsert()` uses native `ON CONFLICT` syntax
+
+The SQLite `upsert()` method now generates native `ON CONFLICT` SQL (available since SQLite 3.24.0, 2018) instead of the
+legacy CTE-based workaround (`WITH "EXCLUDED" ... UPDATE ...; INSERT OR IGNORE ...`). This produces cleaner,
+single-statement SQL that matches the PostgreSQL `QueryBuilder` pattern.
+
+**Before:**
+
+```sql
+WITH "EXCLUDED" (`email`, `address`) AS (VALUES (:qp0, :qp1))
+UPDATE `T_upsert` SET `address`=(SELECT `address` FROM `EXCLUDED`)
+WHERE `T_upsert`.`email`=(SELECT `email` FROM `EXCLUDED`);
+INSERT OR IGNORE INTO `T_upsert` (`email`, `address`) VALUES (:qp0, :qp1);
+```
+
+**After:**
+
+```sql
+INSERT INTO `T_upsert` (`email`, `address`) VALUES (:qp0, :qp1)
+ON CONFLICT (`email`) DO UPDATE SET `address`=EXCLUDED.`address`
+```
+
+When `$updateColumns` is `false`, the output changes from `INSERT OR IGNORE INTO ...` to
+`INSERT INTO ... ON CONFLICT DO NOTHING`.
+
+**No action required** for normal usage through `Command::upsert()` or `ActiveRecord`. If your application extends
+`\yii\db\sqlite\QueryBuilder` and overrides `upsert()`, or compares raw SQL output strings, update accordingly.
+
+The minimum SQLite version requirement (3.40.0) already exceeds the 3.24.0 threshold for `ON CONFLICT` support.
+
+### SQLite `QueryBuilder::resetSequence()` uses parameterized table name
+
+`resetSequence()` now uses `$this->db->quoteValue()` for the table name in the `WHERE` clause instead of direct string
+interpolation. The generated SQL is functionally identical for standard table names, but special characters are now
+properly escaped. **No action required.**
+
+### SQLite `QueryBuilder::checkIntegrity()` uses lowercase `pragma`
+
+`checkIntegrity()` now generates `pragma foreign_keys=...` (lowercase) instead of `PRAGMA foreign_keys=...` (uppercase).
+SQLite PRAGMAs are case-insensitive, so this is a cosmetic change only. If your application compares the raw SQL output
+string, update the expected value.
