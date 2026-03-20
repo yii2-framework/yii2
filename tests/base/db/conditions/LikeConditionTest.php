@@ -21,7 +21,6 @@ use yii\db\conditions\LikeCondition;
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
  * @since 2.2
  */
-#[Group('db')]
 #[Group('condition')]
 final class LikeConditionTest extends TestCase
 {
