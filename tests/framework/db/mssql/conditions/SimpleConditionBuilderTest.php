@@ -14,24 +14,24 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Group;
 use yii\db\Query;
 use yiiunit\base\db\BaseDatabase;
-use yiiunit\base\db\conditions\providers\BetweenConditionBuilderProvider;
+use yiiunit\base\db\conditions\providers\SimpleConditionBuilderProvider;
 
 /**
- * Unit test for {@see \yii\db\conditions\BetweenConditionBuilder} with MSSQL driver.
+ * Unit test for {@see \yii\db\conditions\SimpleConditionBuilder} with MSSQL driver.
  *
- * {@see BetweenConditionBuilderProvider} for test case data providers.
+ * {@see SimpleConditionBuilderProvider} for test case data providers.
  *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
  * @since 2.2
  */
 #[Group('db')]
-#[Group('mssql')]
 #[Group('condition')]
-final class BetweenConditionBuilderTest extends BaseDatabase
+#[Group('mssql')]
+final class SimpleConditionBuilderTest extends BaseDatabase
 {
     protected $driverName = 'sqlsrv';
 
-    #[DataProviderExternal(BetweenConditionBuilderProvider::class, 'buildCondition')]
+    #[DataProviderExternal(SimpleConditionBuilderProvider::class, 'buildCondition')]
     public function testBuildCondition(array|object $condition, string $expected, array $expectedParams): void
     {
         $query = (new Query())->where($condition);

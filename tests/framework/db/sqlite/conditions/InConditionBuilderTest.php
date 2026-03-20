@@ -41,7 +41,8 @@ final class InConditionBuilderTest extends BaseDatabase
         $query = (new Query())->where($condition);
 
         $db = $this->getConnection(false, false);
-        $queryBuilder = $db->getQueryBuilder();
+
+        $queryBuilder = $db->queryBuilder;
 
         [$sql, $params] = $queryBuilder->build($query);
 
@@ -59,10 +60,10 @@ final class InConditionBuilderTest extends BaseDatabase
 
     public function testThrowNotSupportedExceptionWhenBuildSubqueryInConditionIsCompositeColumns(): void
     {
-        $query = new Query();
-
         $db = $this->getConnection(false, false);
-        $inConditionBuilder = new InConditionBuilder($db->getQueryBuilder());
+
+        $query = new Query();
+        $inConditionBuilder = new InConditionBuilder($db->queryBuilder);
 
         $inCondition = new InCondition(
             ['id'],

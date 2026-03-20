@@ -42,7 +42,7 @@ final class InConditionBuilderTest extends BaseDatabase
 
         $query = (new Query())->where($condition);
 
-        [$sql, $params] = $db->getQueryBuilder()->build($query);
+        [$sql, $params] = $db->queryBuilder->build($query);
 
         self::assertSame(
             'SELECT *' . ($expected === '' ? '' : ' WHERE ' . $this->replaceQuotes($expected)),
@@ -60,7 +60,7 @@ final class InConditionBuilderTest extends BaseDatabase
     {
         $db = $this->getConnection(false, false);
 
-        $inConditionBuilder = new InConditionBuilder($db->getQueryBuilder());
+        $inConditionBuilder = new InConditionBuilder($db->queryBuilder);
 
         $inCondition = new InCondition(
             [
