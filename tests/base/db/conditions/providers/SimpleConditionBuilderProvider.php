@@ -97,6 +97,13 @@ class SimpleConditionBuilderProvider
                 SQL,
                 [':qp0' => 3],
             ],
+            'null value' => [
+                ['=', 'a', null],
+                <<<SQL
+                [[a]] = NULL
+                SQL,
+                [],
+            ],
             'subquery column' => [
                 ['=', (new Query())->select('COUNT(*)')->from('test')->where(['id' => 6]), 0],
                 <<<SQL
