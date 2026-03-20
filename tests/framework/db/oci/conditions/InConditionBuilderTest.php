@@ -40,7 +40,7 @@ final class InConditionBuilderTest extends BaseDatabase
 
         $db = $this->getConnection(false, false);
 
-        [$sql, $params] = $db->getQueryBuilder()->build($query);
+        [$sql, $params] = $db->queryBuilder->build($query);
 
         self::assertSame(
             'SELECT *' . ($expected === '' ? '' : ' WHERE ' . $this->replaceQuotes($expected)),

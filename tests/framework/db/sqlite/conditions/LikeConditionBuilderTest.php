@@ -40,7 +40,7 @@ final class LikeConditionBuilderTest extends BaseDatabase
 
         $db = $this->getConnection(false, false);
 
-        [$sql, $params] = $db->getQueryBuilder()->build($query);
+        [$sql, $params] = $db->queryBuilder->build($query);
 
         self::assertSame(
             'SELECT *' . ($expected === '' ? '' : ' WHERE ' . $this->replaceQuotes($expected)),
@@ -64,12 +64,13 @@ final class LikeConditionBuilderTest extends BaseDatabase
 
     public function testThrowInvalidArgumentExceptionWhenParseOperatorReceivesInvalidOperator(): void
     {
+        $db = $this->getConnection(false, false);
+
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Invalid operator 'INVALID'.");
 
         $condition = new LikeCondition('name', 'INVALID', 'value');
 
-        $db = $this->getConnection(false, false);
-        $db->getQueryBuilder()->buildExpression($condition);
+        $db->queryBuilder->buildExpression($condition);
     }
 }

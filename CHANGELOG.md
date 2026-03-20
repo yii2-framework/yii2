@@ -65,3 +65,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test(db): normalize Schema tests with external providers, PHPUnit 10 attributes, `self::assert*()`, explicit exception tests, `final` driver classes; fix Oracle/MSSQL skipped tests.
 - test(db): extract `LikeConditionBuilder` tests into dedicated classes with external providers and driver-specific escape transformations.
 - test(db): extract `BetweenConditionBuilder` tests into dedicated classes with external providers.
+- test(db): extract `SimpleConditionBuilder` and `HashConditionBuilder` tests into dedicated classes with external providers.

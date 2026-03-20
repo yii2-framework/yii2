@@ -8,30 +8,30 @@ declare(strict_types=1);
  * @license https://www.yiiframework.com/license/
  */
 
-namespace yiiunit\framework\db\mssql\conditions;
+namespace yiiunit\framework\db\mysql\conditions;
 
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Group;
 use yii\db\Query;
 use yiiunit\base\db\BaseDatabase;
-use yiiunit\base\db\conditions\providers\BetweenConditionBuilderProvider;
+use yiiunit\base\db\conditions\providers\SimpleConditionBuilderProvider;
 
 /**
- * Unit test for {@see \yii\db\conditions\BetweenConditionBuilder} with MSSQL driver.
+ * Unit test for {@see \yii\db\conditions\SimpleConditionBuilder} with MySQL driver.
  *
- * {@see BetweenConditionBuilderProvider} for test case data providers.
+ * {@see SimpleConditionBuilderProvider} for test case data providers.
  *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
  * @since 2.2
  */
 #[Group('db')]
-#[Group('mssql')]
 #[Group('condition')]
-final class BetweenConditionBuilderTest extends BaseDatabase
+#[Group('mysql')]
+final class SimpleConditionBuilderTest extends BaseDatabase
 {
-    protected $driverName = 'sqlsrv';
+    protected $driverName = 'mysql';
 
-    #[DataProviderExternal(BetweenConditionBuilderProvider::class, 'buildCondition')]
+    #[DataProviderExternal(SimpleConditionBuilderProvider::class, 'buildCondition')]
     public function testBuildCondition(array|object $condition, string $expected, array $expectedParams): void
     {
         $query = (new Query())->where($condition);
