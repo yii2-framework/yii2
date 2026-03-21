@@ -22,14 +22,14 @@ use yiiunit\base\db\BaseQueryBuilderUnion;
  */
 #[Group('db')]
 #[Group('sqlite')]
-#[Group('querybuilder')]
-class QueryBuilderUnionTest extends BaseQueryBuilderUnion
+#[Group('query-builder')]
+final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
 {
     protected $driverName = 'sqlite';
 
     public function testBuildUnion(): void
     {
-        $db = $this->getConnection(true, false);
+        $db = $this->getConnection(false, false);
 
         $expectedQuerySql = $this->replaceQuotes(
             <<<SQL
@@ -54,7 +54,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             ->union($secondQuery)
             ->union($thirdQuery, true);
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -69,7 +69,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
 
     public function testBuildUnionSubqueryInFrom(): void
     {
-        $db = $this->getConnection(true, false);
+        $db = $this->getConnection(false, false);
 
         $union = (new Query())
             ->select('id, name')
@@ -86,7 +86,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -101,7 +101,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
 
     public function testBuildUnionAllSubqueryInFrom(): void
     {
-        $db = $this->getConnection(true, false);
+        $db = $this->getConnection(false, false);
 
         $union = (new Query())
             ->select('id, name')
@@ -118,7 +118,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -133,7 +133,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
 
     public function testBuildUnionSubqueryInJoin(): void
     {
-        $db = $this->getConnection(true, false);
+        $db = $this->getConnection(false, false);
 
         $union = (new Query())
             ->select('id, name')
@@ -152,7 +152,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -167,7 +167,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
 
     public function testBuildUnionSubqueryInCondition(): void
     {
-        $db = $this->getConnection(true, false);
+        $db = $this->getConnection(false, false);
 
         $union = (new Query())
             ->select('id')
@@ -185,7 +185,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -200,7 +200,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
 
     public function testBuildWithQuery(): void
     {
-        $db = $this->getConnection(true, false);
+        $db = $this->getConnection(false, false);
 
         $with1Query = (new Query())
             ->select('id')
@@ -229,7 +229,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),

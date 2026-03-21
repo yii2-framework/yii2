@@ -22,8 +22,8 @@ use yiiunit\base\db\BaseQueryBuilderUnion;
  */
 #[Group('db')]
 #[Group('oci')]
-#[Group('querybuilder')]
-class QueryBuilderUnionTest extends BaseQueryBuilderUnion
+#[Group('query-builder')]
+final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
 {
     protected $driverName = 'oci';
 
@@ -48,7 +48,7 @@ class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             $expectedQuerySql,
