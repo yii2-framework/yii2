@@ -395,3 +395,43 @@ properly escaped. **No action required.**
 `checkIntegrity()` now generates `pragma foreign_keys=...` (lowercase) instead of `PRAGMA foreign_keys=...` (uppercase).
 SQLite PRAGMAs are case-insensitive, so this is a cosmetic change only. If your application compares the raw SQL output
 string, update the expected value.
+
+### RBAC `DbManager` cascade logic extracted into `CascadeStrategyInterface`
+
+Driver-specific cascade logic (update/delete referencing rows) has been extracted from `DbManager` into a strategy
+pattern. The following `protected` methods have been removed from `DbManager`:
+
+- `supportsCascadeUpdate()`
+
+The new `CascadeStrategyInterface` is resolved automatically based on the database driver via the public
+`$cascadeStrategyMap` property. **No action required** unless you override `supportsCascadeUpdate()` in a subclass.
+
+If you have a custom `DbManager` subclass that overrides `supportsCascadeUpdate()`, replace it by registering a custom
+strategy:
+
+```php
+'authManager' => [
+    'class' => 'yii\rbac\DbManager',
+    'cascadeStrategyMap' => [
+        'mydriver' => 'app\rbac\MyCascadeStrategy',
+    ],
+],
+```
+
+### MSSQL RBAC INSTEAD OF triggers removed
+
+The MSSQL INSTEAD OF triggers on `auth_item` and `auth_rule` tables have been removed. Cascade operations are now
+handled in PHP by `SoftCascadeStrategy`. The following migrations are no longer included:
+
+- `m200409_110543_rbac_update_mssql_trigger`
+- `m260314_000000_rbac_fix_mssql_cascade`
+
+**No action required** for new installations. For existing MSSQL installations, the old triggers will remain in the
+database but are harmless since `DbManager` no longer relies on them. You may drop them manually:
+
+```sql
+DROP TRIGGER IF EXISTS dbo.trigger_delete_auth_item_child;
+DROP TRIGGER IF EXISTS dbo.trigger_update_auth_item_child;
+DROP TRIGGER IF EXISTS dbo.trigger_delete_auth_rule;
+DROP TRIGGER IF EXISTS dbo.trigger_update_auth_rule;
+```
