@@ -265,7 +265,7 @@ final class QueryBuilderProvider extends \yiiunit\base\db\providers\QueryBuilder
                         '42',
                     ],
                     "(jsoncol->>'$.someKey') = :qp0",
-                    [':qp0' => 42],
+                    [':qp0' => '42'],
                 ],
                 'with object as value' => [
                     [

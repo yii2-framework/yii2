@@ -66,7 +66,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testAlterColumn(): void
     {
-        $qb = $this->getConnection()->getQueryBuilder();
+        $qb = $this->getConnection()->queryBuilder;
 
         $expected = <<<SQL
         ALTER TABLE "foo1" ALTER COLUMN "bar" TYPE varchar(255), ALTER COLUMN "bar" DROP DEFAULT, ALTER COLUMN "bar" DROP NOT NULL
@@ -203,7 +203,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testCommentColumn(): void
     {
-        $qb = $this->getDb()->getQueryBuilder();
+        $qb = $this->getDb()->queryBuilder;
 
         $expected = <<<SQL
         COMMENT ON COLUMN [[comment]].[[text]] IS 'This is my column.'
@@ -232,7 +232,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testCommentTable(): void
     {
-        $qb = $this->getDb()->getQueryBuilder();
+        $qb = $this->getDb()->queryBuilder;
 
         $expected = <<<SQL
         COMMENT ON TABLE [[comment]] IS 'This is my table.'
@@ -261,7 +261,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testResetSequence(): void
     {
-        $qb = $this->getDb()->getQueryBuilder();
+        $qb = $this->getDb()->queryBuilder;
 
         $expected = <<<SQL
         SELECT SETVAL('"item_id_seq"',(SELECT COALESCE(MAX("id"),0) FROM "item")+1,false)
@@ -296,7 +296,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
         $db = $this->prepareDatabase($config, realpath(__DIR__ . '/../../../data') . '/postgres12.sql');
 
-        $qb = $db->getQueryBuilder();
+        $qb = $db->queryBuilder;
 
         $expected = <<<SQL
         SELECT SETVAL('"item_12_id_seq"',(SELECT COALESCE(MAX("id"),0) FROM "item_12")+1,false)
@@ -325,7 +325,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testDropIndex(): void
     {
-        $qb = $this->getDb()->getQueryBuilder();
+        $qb = $this->getDb()->queryBuilder;
 
         $expected = <<<SQL
         DROP INDEX "index"

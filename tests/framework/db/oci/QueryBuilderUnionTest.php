@@ -48,7 +48,7 @@ final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             $expectedQuerySql,

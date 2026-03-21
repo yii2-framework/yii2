@@ -54,7 +54,7 @@ final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             ->union($secondQuery)
             ->union($thirdQuery, true);
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -86,7 +86,7 @@ final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -118,7 +118,7 @@ final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -152,7 +152,7 @@ final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -185,7 +185,7 @@ final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),
@@ -229,7 +229,7 @@ final class QueryBuilderUnionTest extends BaseQueryBuilderUnion
             SQL
         );
 
-        [$actualQuerySql, $queryParams] = $db->getQueryBuilder()->build($query);
+        [$actualQuerySql, $queryParams] = $db->queryBuilder->build($query);
 
         self::assertSame(
             str_replace("\n", ' ', $expectedQuerySql),

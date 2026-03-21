@@ -59,7 +59,7 @@ final class QueryBuilderProvider extends \yiiunit\base\db\providers\QueryBuilder
                 <<<SQL
                 ALTER TABLE {{{$tableName}}} DROP CONSTRAINT [[$name]]
                 SQL,
-                static fn(QueryBuilder $qb) => $qb->dropForeignKey(
+                static fn(QueryBuilder $qb): string => $qb->dropForeignKey(
                     $name,
                     $tableName,
                 ),

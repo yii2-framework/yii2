@@ -69,3 +69,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test(db): extract `NotConditionBuilder` and `ConjunctionConditionBuilder` tests into dedicated classes with external providers.
 - test(db): extract `ExistsConditionBuilder` tests into dedicated classes with external providers.
 - test(db): extract column type tests into dedicated `ColumnTypeTest` classes with `ColumnTypeProvider`.
+- test(db): normalize `QueryBuilder` tests with external providers, PHPUnit 10 attributes, heredoc SQL, and `final` driver classes.

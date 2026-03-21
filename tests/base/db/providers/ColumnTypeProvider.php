@@ -26,7 +26,10 @@ use yii\db\Schema;
 class ColumnTypeProvider
 {
     /**
-     * @phpstan-return array<string, array{string, Closure, array<string, string>}>
+     * @phpstan-return array<
+     *   string,
+     *   array{0: string, 1: Closure, 2: array<string, string>, 3?: array<string, string>|string}
+     * >
      */
     public static function columnTypes(): array
     {

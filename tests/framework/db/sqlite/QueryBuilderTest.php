@@ -74,7 +74,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testRenameTable(): void
     {
-        $sql = $this->getDb()->getQueryBuilder()->renameTable('table_from', 'table_to');
+        $sql = $this->getDb()->queryBuilder->renameTable('table_from', 'table_to');
 
         self::assertSame(
             <<<SQL
@@ -87,7 +87,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testResetSequence(): void
     {
-        $qb = $this->getConnection()->getQueryBuilder();
+        $qb = $this->getConnection()->queryBuilder;
 
         $expected = <<<SQL
         UPDATE sqlite_sequence SET seq='5' WHERE name='item'

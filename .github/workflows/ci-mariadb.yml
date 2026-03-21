@@ -45,7 +45,7 @@ jobs:
       database-health-cmd: mariadb-admin ping
       database-image: mariadb
       database-port: "3306"
-      database-type: mysql
+      database-type: mariadb
       database-versions: '["10.5","latest"]'
       extensions: curl, intl, pdo, pdo_mysql
       os: '["ubuntu-22.04"]'
@@ -64,7 +64,7 @@ jobs:
       database-health-cmd: mariadb-admin ping
       database-image: mariadb
       database-port: "3306"
-      database-type: mysql
+      database-type: mariadb
       database-versions: '["latest"]'
       extensions: curl, intl, pdo, pdo_mysql
       os: '["ubuntu-22.04"]'

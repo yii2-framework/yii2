@@ -52,7 +52,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
         $query->select('id')->from('example')->limit(10)->offset(5);
 
-        [$actualQuerySql, $actualQueryParams] = $this->getDb()->getQueryBuilder()->build($query);
+        [$actualQuerySql, $actualQueryParams] = $this->getDb()->queryBuilder->build($query);
 
         self::assertSame(
             <<<SQL
@@ -73,7 +73,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
         $query->select('id')->from('example')->limit(10);
 
-        [$actualQuerySql, $actualQueryParams] = $this->getDb()->getQueryBuilder()->build($query);
+        [$actualQuerySql, $actualQueryParams] = $this->getDb()->queryBuilder->build($query);
 
         self::assertSame(
             <<<SQL
@@ -94,7 +94,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
         $query->select('id')->from('example')->offset(10);
 
-        [$actualQuerySql, $actualQueryParams] = $this->getDb()->getQueryBuilder()->build($query);
+        [$actualQuerySql, $actualQueryParams] = $this->getDb()->queryBuilder->build($query);
 
         self::assertSame(
             <<<SQL
@@ -115,7 +115,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
         $query->select('id')->from('example');
 
-        [$actualQuerySql, $actualQueryParams] = $this->getDb()->getQueryBuilder()->build($query);
+        [$actualQuerySql, $actualQueryParams] = $this->getDb()->queryBuilder->build($query);
 
         self::assertSame(
             <<<SQL
@@ -136,7 +136,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
         $query->select('id')->from('example')->orderBy('id')->limit(10)->offset(5);
 
-        [$actualQuerySql, $actualQueryParams] = $this->getDb()->getQueryBuilder()->build($query);
+        [$actualQuerySql, $actualQueryParams] = $this->getDb()->queryBuilder->build($query);
 
         self::assertSame(
             <<<SQL
@@ -157,7 +157,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
         $query->select('id')->from('example')->orderBy('id');
 
-        [$actualQuerySql, $actualQueryParams] = $this->getDb()->getQueryBuilder()->build($query);
+        [$actualQuerySql, $actualQueryParams] = $this->getDb()->queryBuilder->build($query);
 
         self::assertSame(
             <<<SQL
@@ -174,7 +174,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testCommentColumn(): void
     {
-        $qb = $this->getDb()->getQueryBuilder();
+        $qb = $this->getDb()->queryBuilder;
 
         $expected = <<<SQL
         COMMENT ON COLUMN [[comment]].[[text]] IS 'This is my column.'
@@ -203,7 +203,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testCommentTable(): void
     {
-        $qb = $this->getDb()->getQueryBuilder();
+        $qb = $this->getDb()->queryBuilder;
 
         $expected = <<<SQL
         COMMENT ON TABLE [[comment]] IS 'This is my table.'
@@ -234,7 +234,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
     {
         $db = $this->getDb();
 
-        $qb = $db->getQueryBuilder();
+        $qb = $db->queryBuilder;
 
         $sqlResult = <<<SQL
         SELECT last_number FROM user_sequences WHERE sequence_name = 'item_SEQ'
@@ -270,7 +270,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
      */
     public function testInitFixtures(): void
     {
-        self::assertInstanceOf('yii\db\QueryBuilder', $this->getConnection(true, true)->getQueryBuilder());
+        self::assertInstanceOf('yii\db\QueryBuilder', $this->getConnection(true, true)->queryBuilder);
     }
 
     #[Depends('testInitFixtures')]

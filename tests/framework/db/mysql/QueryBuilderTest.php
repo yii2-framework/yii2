@@ -78,7 +78,7 @@ final class QueryBuilderTest extends BaseQueryBuilder
 
     public function testResetSequence(): void
     {
-        $qb = $this->getDb()->getQueryBuilder();
+        $qb = $this->getDb()->queryBuilder;
 
         $expected = <<<SQL
         ALTER TABLE `item` AUTO_INCREMENT=6

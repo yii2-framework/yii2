@@ -466,7 +466,7 @@ class QueryBuilderProvider
                 <<<SQL
                 ALTER TABLE {{{$tableName}}} DROP CONSTRAINT [[$name]]
                 SQL,
-                static fn(QueryBuilder $qb) => $qb->dropDefaultValue(
+                static fn(QueryBuilder $qb): string => $qb->dropDefaultValue(
                     $name,
                     $tableName,
                 ),
