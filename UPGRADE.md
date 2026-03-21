@@ -430,8 +430,8 @@ handled in PHP by `SoftCascadeStrategy`. The following migrations are no longer 
 database but are harmless since `DbManager` no longer relies on them. You may drop them manually (replace `dbo` with the schema that owns your RBAC tables):
 
 ```sql
-DROP TRIGGER IF EXISTS dbo.trigger_delete_auth_item_child;
-DROP TRIGGER IF EXISTS dbo.trigger_update_auth_item_child;
-DROP TRIGGER IF EXISTS dbo.trigger_delete_auth_rule;
-DROP TRIGGER IF EXISTS dbo.trigger_update_auth_rule;
+DROP TRIGGER IF EXISTS <schema>.trigger_delete_auth_item_child;
+DROP TRIGGER IF EXISTS <schema>.trigger_update_auth_item_child;
+DROP TRIGGER IF EXISTS <schema>.trigger_delete_auth_rule;
+DROP TRIGGER IF EXISTS <schema>.trigger_update_auth_rule;
 ```
