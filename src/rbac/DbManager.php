@@ -93,6 +93,23 @@ class DbManager extends BaseManager
      * @since 2.0.48
      */
     public $rolesCacheSuffix = 'roles';
+    /**
+     * @var array mapping between PDO driver names and [[CascadeStrategyInterface]] classes.
+     *
+     * Databases with native `ON UPDATE CASCADE` / `ON DELETE CASCADE` use the default no-op strategy.
+     * Override this property to register a custom strategy for an unsupported driver.
+     *
+     * @since 2.2
+     */
+    public $cascadeStrategyMap = [
+        'dblib' => SoftCascadeStrategy::class,
+        'mssql' => SoftCascadeStrategy::class,
+        'oci' => SoftCascadeStrategy::class,
+        'oci8' => SoftCascadeStrategy::class,
+        'sqlite' => SqliteCascadeStrategy::class,
+        'sqlite2' => SqliteCascadeStrategy::class,
+        'sqlsrv' => SoftCascadeStrategy::class,
+    ];
 
     /**
      * @var Item[]|null all auth items (name => Item)
@@ -112,6 +129,10 @@ class DbManager extends BaseManager
      */
     protected $checkAccessAssignments = [];
 
+    /**
+     * @var CascadeStrategyInterface the resolved cascade strategy for the current database driver.
+     */
+    private $cascadeStrategy;
 
     /**
      * Initializes the application component.
@@ -124,6 +145,10 @@ class DbManager extends BaseManager
         if ($this->cache !== null) {
             $this->cache = Instance::ensure($this->cache, 'yii\caching\CacheInterface');
         }
+
+        $driver = $this->db->getDriverName();
+        $class = $this->cascadeStrategyMap[$driver] ?? DefaultCascadeStrategy::class;
+        $this->cascadeStrategy = new $class();
     }
 
     /**
@@ -259,16 +284,6 @@ class DbManager extends BaseManager
     }
 
     /**
-     * Returns a value indicating whether the database supports cascading update and delete.
-     * The default implementation will return false for SQLite database and true for all other databases.
-     * @return bool whether the database supports cascading update and delete.
-     */
-    protected function supportsCascadeUpdate()
-    {
-        return strncmp($this->db->getDriverName(), 'sqlite', 6) !== 0;
-    }
-
-    /**
      * {@inheritdoc}
      */
     protected function addItem($item)
@@ -301,18 +316,23 @@ class DbManager extends BaseManager
      */
     protected function removeItem($item)
     {
-        if (!$this->supportsCascadeUpdate()) {
-            $this->db->createCommand()
-                ->delete($this->itemChildTable, ['or', '[[parent]]=:parent', '[[child]]=:child'], [':parent' => $item->name, ':child' => $item->name])
-                ->execute();
-            $this->db->createCommand()
-                ->delete($this->assignmentTable, ['item_name' => $item->name])
-                ->execute();
-        }
+        $this->db->transaction(
+            function () use ($item): void {
+                $this->cascadeStrategy->removeItem(
+                    $this->db,
+                    $item->name,
+                    $this->itemChildTable,
+                    $this->assignmentTable,
+                );
 
-        $this->db->createCommand()
-            ->delete($this->itemTable, ['name' => $item->name])
-            ->execute();
+                $this->db->createCommand()
+                    ->delete(
+                        $this->itemTable,
+                        ['name' => $item->name],
+                    )
+                    ->execute();
+            }
+        );
 
         $this->invalidateCache();
 
@@ -324,30 +344,42 @@ class DbManager extends BaseManager
      */
     protected function updateItem($name, $item)
     {
-        if ($item->name !== $name && !$this->supportsCascadeUpdate()) {
-            $this->db->createCommand()
-                ->update($this->itemChildTable, ['parent' => $item->name], ['parent' => $name])
-                ->execute();
-            $this->db->createCommand()
-                ->update($this->itemChildTable, ['child' => $item->name], ['child' => $name])
-                ->execute();
-            $this->db->createCommand()
-                ->update($this->assignmentTable, ['item_name' => $item->name], ['item_name' => $name])
-                ->execute();
-        }
+        $this->db->transaction(
+            function () use ($name, $item): void {
+                $postUpdate = null;
 
-        $item->updatedAt = time();
+                if ($item->name !== $name) {
+                    $postUpdate = $this->cascadeStrategy->updateItem(
+                        $this->db,
+                        $name,
+                        $item->name,
+                        $this->itemTable,
+                        $this->itemChildTable,
+                        $this->assignmentTable,
+                    );
+                }
 
-        $this->db->createCommand()
-            ->update($this->itemTable, [
-                'name' => $item->name,
-                'description' => $item->description,
-                'rule_name' => $item->ruleName,
-                'data' => $item->data === null ? null : serialize($item->data),
-                'updated_at' => $item->updatedAt,
-            ], [
-                'name' => $name,
-            ])->execute();
+                $item->updatedAt = time();
+
+                $this->db->createCommand()
+                    ->update(
+                        $this->itemTable,
+                        [
+                            'name' => $item->name,
+                            'description' => $item->description,
+                            'rule_name' => $item->ruleName,
+                            'data' => $item->data === null ? null : serialize($item->data),
+                            'updated_at' => $item->updatedAt,
+                        ],
+                        ['name' => $name],
+                    )
+                    ->execute();
+
+                if ($postUpdate !== null) {
+                    $postUpdate();
+                }
+            }
+        );
 
         $this->invalidateCache();
 
@@ -384,22 +416,38 @@ class DbManager extends BaseManager
      */
     protected function updateRule($name, $rule)
     {
-        if ($rule->name !== $name && !$this->supportsCascadeUpdate()) {
-            $this->db->createCommand()
-                ->update($this->itemTable, ['rule_name' => $rule->name], ['rule_name' => $name])
-                ->execute();
-        }
+        $this->db->transaction(
+            function () use ($name, $rule): void {
+                $postUpdate = null;
 
-        $rule->updatedAt = time();
+                if ($rule->name !== $name) {
+                    $postUpdate = $this->cascadeStrategy->updateRule(
+                        $this->db,
+                        $name,
+                        $rule->name,
+                        $this->itemTable,
+                    );
+                }
 
-        $this->db->createCommand()
-            ->update($this->ruleTable, [
-                'name' => $rule->name,
-                'data' => serialize($rule),
-                'updated_at' => $rule->updatedAt,
-            ], [
-                'name' => $name,
-            ])->execute();
+                $rule->updatedAt = time();
+
+                $this->db->createCommand()
+                    ->update(
+                        $this->ruleTable,
+                        [
+                            'name' => $rule->name,
+                            'data' => serialize($rule),
+                            'updated_at' => $rule->updatedAt,
+                        ],
+                        ['name' => $name]
+                    )
+                    ->execute();
+
+                if ($postUpdate !== null) {
+                    $postUpdate();
+                }
+            }
+        );
 
         $this->invalidateCache();
 
@@ -411,15 +459,22 @@ class DbManager extends BaseManager
      */
     protected function removeRule($rule)
     {
-        if (!$this->supportsCascadeUpdate()) {
-            $this->db->createCommand()
-                ->update($this->itemTable, ['rule_name' => null], ['rule_name' => $rule->name])
-                ->execute();
-        }
+        $this->db->transaction(
+            function () use ($rule): void {
+                $this->cascadeStrategy->removeRule(
+                    $this->db,
+                    $rule->name,
+                    $this->itemTable,
+                );
 
-        $this->db->createCommand()
-            ->delete($this->ruleTable, ['name' => $rule->name])
-            ->execute();
+                $this->db->createCommand()
+                    ->delete(
+                        $this->ruleTable,
+                        ['name' => $rule->name],
+                    )
+                    ->execute();
+            }
+        );
 
         $this->invalidateCache();
 
@@ -971,26 +1026,24 @@ class DbManager extends BaseManager
      */
     protected function removeAllItems($type)
     {
-        if (!$this->supportsCascadeUpdate()) {
-            $names = (new Query())
-                ->select(['name'])
-                ->from($this->itemTable)
-                ->where(['type' => $type])
-                ->column($this->db);
-            if (empty($names)) {
-                return;
+        $this->db->transaction(
+            function () use ($type): void {
+                $this->cascadeStrategy->removeAllItems(
+                    $this->db,
+                    $type,
+                    $this->itemTable,
+                    $this->itemChildTable,
+                    $this->assignmentTable,
+                );
+
+                $this->db->createCommand()
+                    ->delete(
+                        $this->itemTable,
+                        ['type' => $type],
+                    )
+                    ->execute();
             }
-            $key = $type == Item::TYPE_PERMISSION ? 'child' : 'parent';
-            $this->db->createCommand()
-                ->delete($this->itemChildTable, [$key => $names])
-                ->execute();
-            $this->db->createCommand()
-                ->delete($this->assignmentTable, ['item_name' => $names])
-                ->execute();
-        }
-        $this->db->createCommand()
-            ->delete($this->itemTable, ['type' => $type])
-            ->execute();
+        );
 
         $this->invalidateCache();
     }
@@ -1000,13 +1053,18 @@ class DbManager extends BaseManager
      */
     public function removeAllRules()
     {
-        if (!$this->supportsCascadeUpdate()) {
-            $this->db->createCommand()
-                ->update($this->itemTable, ['rule_name' => null])
-                ->execute();
-        }
+        $this->db->transaction(
+            function (): void {
+                $this->cascadeStrategy->removeAllRules(
+                    $this->db,
+                    $this->itemTable,
+                );
 
-        $this->db->createCommand()->delete($this->ruleTable)->execute();
+                $this->db->createCommand()
+                    ->delete($this->ruleTable)
+                    ->execute();
+            }
+        );
 
         $this->invalidateCache();
     }
