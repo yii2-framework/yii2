@@ -217,33 +217,6 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
     /**
      * {@inheritdoc}
      */
-    protected function getSchemaMetadata(string $schema, MetadataType $type, bool $refresh)
-    {
-        $metadata = [];
-
-        $tableNames = array_map(
-            $this->quoteSimpleTableName(...),
-            $this->getTableNames($schema, $refresh),
-        );
-
-        foreach ($tableNames as $name) {
-            if ($schema !== '') {
-                $name = "{$schema}.{$name}";
-            }
-
-            $tableMetadata = $this->getTableMetadata($name, $type, $refresh);
-
-            if ($tableMetadata !== null) {
-                $metadata[] = $tableMetadata;
-            }
-        }
-
-        return $metadata;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     protected function loadTablePrimaryKey($tableName)
     {
         return $this->loadTableConstraints($tableName, MetadataType::PrimaryKey);

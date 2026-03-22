@@ -443,6 +443,11 @@ has changed from `string` to the new `yii\db\MetadataType` enum. The dynamic met
 `$this->{'loadTable' . ucfirst($type)}` has been replaced with an explicit `match` expression in the new
 `Schema::loadTableTypeMetadata()` method.
 
+The `mssql\Schema::getSchemaMetadata()` override has been removed. It applied `quoteSimpleTableName()` to table names
+before passing them to `getTableMetadata()`, which produced bracket-quoted cache keys (`[table]`) that did not match
+the unquoted keys used by `refreshTableSchema()` and `schemaCacheExclude`. The base implementation now handles all
+drivers correctly.
+
 The `MetadataType` enum cases are:
 
 | Case | Value | Resolves to |
@@ -455,7 +460,8 @@ The `MetadataType` enum cases are:
 | `MetadataType::Checks` | `'checks'` | `CheckConstraint[]` |
 | `MetadataType::DefaultValues` | `'defaultValues'` | `DefaultValueConstraint[]` |
 
-**Action required** if your application extends `Schema` and overrides any of these methods:
+**Action required** if your application extends `Schema` and either overrides these methods or calls
+`getTableMetadata()` / `getSchemaMetadata()` / `setTableMetadata()` from subclass code:
 
 ```php
 // before
@@ -471,10 +477,16 @@ protected function getSchemaMetadata(string $schema, MetadataType $type, bool $r
 protected function setTableMetadata(string $name, MetadataType $type, mixed $data): void { ... }
 ```
 
+Any subclass code that passes string literals (e.g., `$this->getTableMetadata($name, 'primaryKey', $refresh)`) must be
+updated to pass the corresponding `MetadataType` enum case (e.g., `MetadataType::PrimaryKey`).
+
+Custom metadata types that previously relied on string-based dynamic dispatch (`'loadTable' . ucfirst($type)`) are no
+longer supported. `MetadataType` is a closed enum — additional cases cannot be added externally.
+
 New protected methods available for subclasses:
 
 - `Schema::loadTableTypeMetadata(MetadataType $type, string $name)` — dispatches to the appropriate `loadTable*()`
-  method via `match`. Override to add custom metadata types.
+  method via `match`. Override to customize handling for the existing `MetadataType` cases.
 - `Schema::cacheAndReturnConstraints(string $tableName, array $result, MetadataType $returnType)` — caches all
   constraint entries from a result array and returns the requested type. Use in driver `loadTableConstraints()` methods.
 
