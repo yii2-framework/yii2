@@ -216,6 +216,34 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 
     /**
      * {@inheritdoc}
+     *
+     * Overridden to bracket-quote table names returned by {@see getTableNames()}, preventing
+     * {@see resolveTableName()} from splitting dot-containing names (e.g., `with.special.characters`)
+     * into catalog/schema/table parts.
+     */
+    protected function getSchemaMetadata(string $schema, MetadataType $type, bool $refresh)
+    {
+        $metadata = [];
+
+        foreach ($this->getTableNames($schema, $refresh) as $name) {
+            $quotedName = $this->quoteSimpleTableName($name);
+
+            if ($schema !== '') {
+                $quotedName = "{$schema}.{$quotedName}";
+            }
+
+            $tableMetadata = $this->getTableMetadata($quotedName, $type, $refresh);
+
+            if ($tableMetadata !== null) {
+                $metadata[] = $tableMetadata;
+            }
+        }
+
+        return $metadata;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     protected function loadTablePrimaryKey($tableName)
     {
