@@ -435,3 +435,26 @@ DROP TRIGGER IF EXISTS <schema>.trigger_update_auth_item_child;
 DROP TRIGGER IF EXISTS <schema>.trigger_delete_auth_rule;
 DROP TRIGGER IF EXISTS <schema>.trigger_update_auth_rule;
 ```
+
+### Base `QueryBuilder` deprecated API removal
+
+The following deprecated members of `yii\db\QueryBuilder` have been removed (all deprecated since 2.0.14):
+
+- **Property `$conditionBuilders`** — was unused; condition building is handled by `conditionClasses` and
+  `expressionBuilders`.
+- **Methods:**
+  - `buildHashCondition()`
+  - `buildAndCondition()`
+  - `buildNotCondition()`
+  - `buildBetweenCondition()`
+  - `buildInCondition()`
+  - `buildLikeCondition()`
+  - `buildExistsCondition()`
+  - `buildSimpleCondition()`
+
+All of these were replaced by `buildCondition()` in 2.0.14, which delegates to dedicated
+`ConditionBuilder` classes registered in `expressionBuilders`.
+
+**Action required:** If your code calls any of the removed methods directly, replace those calls with
+`$queryBuilder->buildCondition($condition, $params)`. If your code accesses `$conditionBuilders`, remove that reference
+— use `setConditionClasses()` or `setExpressionBuilders()` instead.
