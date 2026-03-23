@@ -53,6 +53,8 @@ class ColumnSchema extends \yii\db\ColumnSchema
      */
     public function extractSizeFromDbType(): string
     {
+        $this->enumValues = null;
+
         $type = parent::extractSizeFromDbType();
 
         if (strtolower($type) === 'enum') {
