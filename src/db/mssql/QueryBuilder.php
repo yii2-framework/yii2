@@ -693,7 +693,13 @@ class QueryBuilder extends \yii\db\QueryBuilder
                     FROM [sys].[check_constraints] AS [cc]
                     INNER JOIN [sys].[columns] AS [c]
                         ON [c].[object_id] = [cc].[parent_object_id]
-                        AND [c].[column_id] = [cc].[parent_column_id]
+                        AND (
+                            [c].[column_id] = [cc].[parent_column_id]
+                            OR (
+                                [cc].[parent_column_id] = 0
+                                AND CHARINDEX(CONCAT(N'[', @columnName, N']'), [cc].[definition]) > 0
+                            )
+                        )
                         AND [c].[name] = @columnName
                     WHERE [cc].[parent_object_id] = OBJECT_ID(@tableName)
                     UNION
