@@ -697,7 +697,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
                             [c].[column_id] = [cc].[parent_column_id]
                             OR (
                                 [cc].[parent_column_id] = 0
-                                AND CHARINDEX(CONCAT(N'[', @columnName, N']'), [cc].[definition]) > 0
+                                AND CHARINDEX(QUOTENAME(@columnName), [cc].[definition]) > 0
                             )
                         )
                         AND [c].[name] = @columnName
