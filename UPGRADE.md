@@ -591,11 +591,14 @@ protected function getColumnPhpType($column)
     // custom logic
 }
 
-// after (in a custom ColumnSchema subclass)
+// after (1. create a custom ColumnSchema subclass)
 public function resolvePhpType(): string
 {
     // custom logic using $this->type, $this->unsigned
 }
+
+// after (2. wire the custom ColumnSchema into your Schema subclass)
+public $columnSchemaClass = \app\db\MyColumnSchema::class;
 ```
 
 ### Base `QueryBuilder` deprecated API removal
