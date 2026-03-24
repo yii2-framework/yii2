@@ -1933,12 +1933,6 @@ parameters:
 			path: src/db/pgsql/Schema.php
 
 		-
-			message: '#^Only booleans are allowed in an elseif condition, mixed given\.$#'
-			identifier: elseif.condNotBoolean
-			count: 1
-			path: src/db/pgsql/Schema.php
-
-		-
 			message: '#^PHPDoc tag @var with type yii\\db\\pgsql\\ColumnSchema is not subtype of type T of yii\\db\\pgsql\\ColumnSchema \= yii\\db\\pgsql\\ColumnSchema\.$#'
 			identifier: varTag.type
 			count: 1
