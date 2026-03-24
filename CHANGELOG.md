@@ -90,3 +90,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor(db)!: move savepoint and isolation-level operations from `Schema` to `Transaction`; replace constants with `TransactionIsolationLevel` enum.
 - chore(db): standardize PHPDoc and code style across `Schema` base class and all driver subclasses.
 - fix(db): `loadDefaultValues()` ignores default values for non-autoincrement composite primary key columns; check `autoIncrement` before nullifying defaults in all five drivers.
+- fix(widgets): clear stale AJAX validation errors for dependent fields when later responses omit previously invalid attributes.

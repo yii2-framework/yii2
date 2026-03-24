@@ -185,11 +185,74 @@ describe('yii.activeForm', function () {
                     ajaxStub.restore();
                 });
             });
+
+            describe('with dependent fields', function () {
+                it('should clear stale errors when an ajax response no longer contains a previously invalid field', function () {
+                    $activeForm = $('#w4');
+                    $activeForm.yiiActiveForm('destroy');
+                    $activeForm.yiiActiveForm([{
+                        id: 'test-att1',
+                        input: '#test-att1',
+                        container: '.field-test-att1',
+                        enableAjaxValidation: true
+                    }, {
+                        id: 'test-att2',
+                        input: '#test-att2',
+                        container: '.field-test-att2',
+                        enableAjaxValidation: true
+                    }], {
+                        validationUrl: ''
+                    });
+
+                    var requests = [];
+                    function fakeAjax(object) {
+                        var request = {
+                            jqXHR: {
+                                abort: function () {
+                                    request.aborted = true;
+                                },
+                                getResponseHeader: function () {
+                                    return null;
+                                }
+                            },
+                            aborted: false,
+                            respond: function (response) {
+                                if (this.aborted) {
+                                    return;
+                                }
+                                object.success(response);
+                                object.complete(this.jqXHR, '');
+                            }
+                        };
+                        requests.push(request);
+                        object.beforeSend(request.jqXHR, '');
+                    }
+
+                    var ajaxStub = sinon.stub($, 'ajax', fakeAjax);
+                    var $dependentField = $activeForm.find('.field-test-att1');
+
+                    $('#test-att1').val('');
+                    $activeForm.yiiActiveForm('validateAttribute', 'test-att1');
+                    assert.strictEqual(requests.length, 1);
+                    requests[0].respond({'test-att1': ['Att1 cannot be blank.']});
+                    assert.isTrue($dependentField.hasClass('has-error'));
+
+                    $('#test-att2').val('1');
+                    $activeForm.yiiActiveForm('validateAttribute', 'test-att2');
+                    assert.strictEqual(requests.length, 2);
+                    requests[1].respond({});
+
+                    assert.isFalse($dependentField.hasClass('has-error'));
+                    assert.equal('', $dependentField.find('.help-block').text());
+                    ajaxStub.restore();
+                });
+            });
         });
 
         describe('with conditional validation', function () {
             it('should clear stale errors for conditional attributes when related input changes', function () {
                 $activeForm = $('#w4');
+                $activeForm.yiiActiveForm('destroy');
                 $activeForm.yiiActiveForm([{
                     id: 'test-att1',
                     input: '#test-att1',
