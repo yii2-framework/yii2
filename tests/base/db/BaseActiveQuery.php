@@ -178,6 +178,77 @@ abstract class BaseActiveQuery extends BaseDatabase
         $this->assertEquals(['customer', 'alias'], $result);
     }
 
+    /**
+     * @see https://github.com/yiisoft/yii2/issues/8358
+     */
+    public function testGetQueryTableNameFromMultipleTables(): void
+    {
+        $options = [
+            'from' => [
+                'other_table',
+                'another_table',
+                'customer',
+            ],
+        ];
+
+        $query = new ActiveQuery(Customer::class, $options);
+
+        $result = $this->invokeMethod($query, 'getTableNameAndAlias');
+
+        self::assertSame(
+            ['customer', 'customer'],
+            $result,
+            'Should return the primary table even when it is not the first entry in from.',
+        );
+    }
+
+    /**
+     * @see https://github.com/yiisoft/yii2/issues/8358
+     */
+    public function testGetQueryTableNameFromMultipleTablesWithAlias(): void
+    {
+        $options = [
+            'from' => [
+                'other_table',
+                'c' => 'customer',
+                'another_table',
+            ],
+        ];
+
+        $query = new ActiveQuery(Customer::class, $options);
+
+        $result = $this->invokeMethod($query, 'getTableNameAndAlias');
+
+        self::assertSame(
+            ['customer', 'c'],
+            $result,
+            'Should return the aliased primary table from a multi-table from clause.',
+        );
+    }
+
+    /**
+     * @see https://github.com/yiisoft/yii2/issues/8358
+     */
+    public function testGetQueryTableNameFromMultipleTablesWithPrimaryNotPresent(): void
+    {
+        $options = [
+            'from' => [
+                'other_table',
+                'another_table',
+            ],
+        ];
+
+        $query = new ActiveQuery(Customer::class, $options);
+
+        $result = $this->invokeMethod($query, 'getTableNameAndAlias');
+
+        self::assertSame(
+            ['other_table', 'other_table'],
+            $result,
+            'Should fall back to the first table when the primary table is not in from.',
+        );
+    }
+
     public function testOnCondition(): void
     {
         $query = new ActiveQuery(Customer::class);
