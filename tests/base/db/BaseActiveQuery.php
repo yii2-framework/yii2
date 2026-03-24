@@ -181,71 +181,81 @@ abstract class BaseActiveQuery extends BaseDatabase
     /**
      * @see https://github.com/yiisoft/yii2/issues/8358
      */
-    public function testGetQueryTableNameFromMultipleTables(): void
+    public function testJoinWithUsesCorrectTableFromMultipleFromTables(): void
     {
-        $options = [
-            'from' => [
-                'other_table',
-                'another_table',
-                'customer',
-            ],
-        ];
+        $orders = Order::find()
+            ->from(['profile', 'order'])
+            ->joinWith('customer')
+            ->orderBy('customer.id DESC, order.id')
+            ->all();
 
-        $query = new ActiveQuery(Customer::class, $options);
-
-        $result = $this->invokeMethod($query, 'getTableNameAndAlias');
-
+        self::assertCount(
+            3,
+            $orders,
+            "'joinWith' should use the primary table 'order' for the ON clause, not 'profile'.",
+        );
         self::assertSame(
-            ['customer', 'customer'],
-            $result,
-            'Should return the primary table even when it is not the first entry in from.',
+            2,
+            $orders[0]->id,
+            "First order should belong to customer with highest 'id'.",
+        );
+        self::assertTrue(
+            $orders[0]->isRelationPopulated('customer'),
+            "Customer relation should be eagerly loaded via 'joinWith'.",
         );
     }
 
     /**
      * @see https://github.com/yiisoft/yii2/issues/8358
      */
-    public function testGetQueryTableNameFromMultipleTablesWithAlias(): void
+    public function testJoinWithUsesCorrectAliasedTableFromMultipleFromTables(): void
     {
-        $options = [
-            'from' => [
-                'other_table',
-                'c' => 'customer',
-                'another_table',
-            ],
-        ];
+        $orders = Order::find()
+            ->from(['profile', 'o' => 'order'])
+            ->joinWith('customer')
+            ->orderBy('customer.id DESC, o.id')
+            ->all();
 
-        $query = new ActiveQuery(Customer::class, $options);
-
-        $result = $this->invokeMethod($query, 'getTableNameAndAlias');
-
+        self::assertCount(
+            3,
+            $orders,
+            "'joinWith' should use the aliased primary table 'o' for the ON clause, not 'profile'.",
+        );
         self::assertSame(
-            ['customer', 'c'],
-            $result,
-            'Should return the aliased primary table from a multi-table from clause.',
+            2,
+            $orders[0]->id,
+            "First order should belong to customer with highest 'id'.",
+        );
+        self::assertTrue(
+            $orders[0]->isRelationPopulated('customer'),
+            "Customer relation should be eagerly loaded via 'joinWith'.",
         );
     }
 
     /**
      * @see https://github.com/yiisoft/yii2/issues/8358
      */
-    public function testGetQueryTableNameFromMultipleTablesWithPrimaryNotPresent(): void
+    public function testJoinWithUsesCorrectInlineAliasedTableFromMultipleFromTables(): void
     {
-        $options = [
-            'from' => [
-                'other_table',
-                'another_table',
-            ],
-        ];
+        $orders = Order::find()
+            ->from(['profile', 'order o'])
+            ->joinWith('customer')
+            ->orderBy('customer.id DESC, o.id')
+            ->all();
 
-        $query = new ActiveQuery(Customer::class, $options);
-
-        $result = $this->invokeMethod($query, 'getTableNameAndAlias');
-
+        self::assertCount(
+            3,
+            $orders,
+            "'joinWith' should use the inline alias 'o' for the ON clause, not 'profile'.",
+        );
         self::assertSame(
-            ['other_table', 'other_table'],
-            $result,
-            'Should fall back to the first table when the primary table is not in from.',
+            2,
+            $orders[0]->id,
+            "First order should belong to customer with highest 'id'.",
+        );
+        self::assertTrue(
+            $orders[0]->isRelationPopulated('customer'),
+            "Customer relation should be eagerly loaded via 'joinWith'.",
         );
     }
 

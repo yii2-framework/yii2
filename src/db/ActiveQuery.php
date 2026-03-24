@@ -615,7 +615,13 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 
             // if multiple tables in "from", prioritize the model's primary table
             foreach ($this->from as $alias => $table) {
-                if ($table === $primaryTableName) {
+                $fromTableName = $table;
+
+                if (is_string($table) && preg_match('/^(.*?)\s+({{\w+}}|\w+)$/', $table, $matches)) {
+                    $fromTableName = $matches[1];
+                }
+
+                if ($fromTableName === $primaryTableName) {
                     if (is_string($alias)) {
                         return [$table, $alias];
                     }
