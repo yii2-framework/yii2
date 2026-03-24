@@ -651,7 +651,7 @@
         });
         if (hasValueChanges) {
             $.each(data.attributes, function () {
-                if (!this.hasWhenClient || this.status === 2 || this.status === 3) {
+                if ((!this.hasWhenClient && !this.enableAjaxValidation) || this.status === 2 || this.status === 3) {
                     return;
                 }
                 if (hasValidationError($form, this, data)) {
