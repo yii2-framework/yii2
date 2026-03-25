@@ -101,7 +101,7 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
      */
     protected function resolveTableName($name)
     {
-        $parts = explode('.', str_replace('`', '', $name));
+        $parts = $this->splitQuotedName($name, '`', '`');
 
         $tableName = $parts[1] ?? $parts[0];
 
@@ -435,60 +435,31 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             AND `kcu`.`TABLE_NAME` = :tableName1
         SQL;
 
-        try {
-            $rows = $this->db->createCommand(
-                $sql,
-                [
-                    ':schemaName' => $table->schemaName,
-                    ':schemaName1' => $table->schemaName,
-                    ':tableName' => $table->name,
-                    ':tableName1' => $table->name,
-                ],
-            )->queryAll();
-            $rows = $this->normalizePdoRowKeyCase($rows, true);
+        $rows = $this->db->createCommand(
+            $sql,
+            [
+                ':schemaName' => $table->schemaName,
+                ':schemaName1' => $table->schemaName,
+                ':tableName' => $table->name,
+                ':tableName1' => $table->name,
+            ],
+        )->queryAll();
+        $rows = $this->normalizePdoRowKeyCase($rows, true);
 
-            $constraints = [];
+        $constraints = [];
 
-            foreach ($rows as $row) {
-                $constraints[$row['constraint_name']]['referenced_table_name'] = $row['referenced_table_name'];
-                $constraints[$row['constraint_name']]['columns'][$row['column_name']] = $row['referenced_column_name'];
-            }
+        foreach ($rows as $row) {
+            $constraints[$row['constraint_name']]['referenced_table_name'] = $row['referenced_table_name'];
+            $constraints[$row['constraint_name']]['columns'][$row['column_name']] = $row['referenced_column_name'];
+        }
 
-            $table->foreignKeys = [];
+        $table->foreignKeys = [];
 
-            foreach ($constraints as $name => $constraint) {
-                $table->foreignKeys[$name] = [
-                    $constraint['referenced_table_name'],
-                    ...$constraint['columns']
-                ];
-            }
-        } catch (Exception $e) {
-            $previous = $e->getPrevious();
-
-            if (!$previous instanceof PDOException || strpos($previous->getMessage(), 'SQLSTATE[42S02') === false) {
-                throw $e;
-            }
-
-            // table does not exist, try to determine the foreign keys using the table creation sql
-            $sql = $this->getCreateTableSql($table);
-
-            $regexp = '/FOREIGN KEY\s+\(([^\)]+)\)\s+REFERENCES\s+([^\(^\s]+)\s*\(([^\)]+)\)/mi';
-
-            if (preg_match_all($regexp, $sql, $matches, PREG_SET_ORDER)) {
-                foreach ($matches as $match) {
-                    $fks = array_map('trim', explode(',', str_replace(['`', '"'], '', $match[1])));
-                    $pks = array_map('trim', explode(',', str_replace(['`', '"'], '', $match[3])));
-                    $constraint = [str_replace(['`', '"'], '', $match[2])];
-
-                    foreach ($fks as $k => $name) {
-                        $constraint[$name] = $pks[$k];
-                    }
-
-                    $table->foreignKeys[md5(serialize($constraint))] = $constraint;
-                }
-
-                $table->foreignKeys = array_values($table->foreignKeys);
-            }
+        foreach ($constraints as $name => $constraint) {
+            $table->foreignKeys[$name] = [
+                $constraint['referenced_table_name'],
+                ...$constraint['columns']
+            ];
         }
     }
 
@@ -629,26 +600,32 @@ class Schema extends \yii\db\Schema implements ConstraintFinderInterface
             foreach ($names as $name => $constraint) {
                 switch ($type) {
                     case 'PRIMARY KEY':
-                        $result[MetadataType::PRIMARY_KEY->value] = new Constraint([
-                            'columnNames' => ArrayHelper::getColumn($constraint, 'column_name'),
-                        ]);
+                        $result[MetadataType::PRIMARY_KEY->value] = new Constraint(
+                            [
+                                'columnNames' => ArrayHelper::getColumn($constraint, 'column_name'),
+                            ],
+                        );
                         break;
                     case 'FOREIGN KEY':
-                        $result[MetadataType::FOREIGN_KEYS->value][] = new ForeignKeyConstraint([
-                            'name' => $name,
-                            'columnNames' => ArrayHelper::getColumn($constraint, 'column_name'),
-                            'foreignSchemaName' => $constraint[0]['foreign_table_schema'],
-                            'foreignTableName' => $constraint[0]['foreign_table_name'],
-                            'foreignColumnNames' => ArrayHelper::getColumn($constraint, 'foreign_column_name'),
-                            'onDelete' => $constraint[0]['on_delete'],
-                            'onUpdate' => $constraint[0]['on_update'],
-                        ]);
+                        $result[MetadataType::FOREIGN_KEYS->value][] = new ForeignKeyConstraint(
+                            [
+                                'name' => $name,
+                                'columnNames' => ArrayHelper::getColumn($constraint, 'column_name'),
+                                'foreignSchemaName' => $constraint[0]['foreign_table_schema'],
+                                'foreignTableName' => $constraint[0]['foreign_table_name'],
+                                'foreignColumnNames' => ArrayHelper::getColumn($constraint, 'foreign_column_name'),
+                                'onDelete' => $constraint[0]['on_delete'],
+                                'onUpdate' => $constraint[0]['on_update'],
+                            ],
+                        );
                         break;
                     case 'UNIQUE':
-                        $result[MetadataType::UNIQUES->value][] = new Constraint([
-                            'name' => $name,
-                            'columnNames' => ArrayHelper::getColumn($constraint, 'column_name'),
-                        ]);
+                        $result[MetadataType::UNIQUES->value][] = new Constraint(
+                            [
+                                'name' => $name,
+                                'columnNames' => ArrayHelper::getColumn($constraint, 'column_name'),
+                            ],
+                        );
                         break;
                 }
             }
