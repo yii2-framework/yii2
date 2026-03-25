@@ -84,6 +84,8 @@ final class QuoterProvider
             // Backtick-quoted (MySQL/SQLite).
             'backtick dot inside quotes' => ['`a.b`', '`', '`', ['a.b']],
             'backtick embedded quote' => ['`a``b`', '`', '`', ['a`b']],
+            'backtick multiple escaped quotes' => ['``````', '`', '`', ['``']],
+            'backtick only escaped quote' => ['````', '`', '`', ['`']],
             'backtick schema with embedded' => ['`s``ch`.`ta``b`', '`', '`', ['s`ch', 'ta`b']],
             'backtick schema.table' => ['`schema`.`table`', '`', '`', ['schema', 'table']],
             'backtick single' => ['`myTable`', '`', '`', ['myTable']],
@@ -91,6 +93,8 @@ final class QuoterProvider
             // Bracket-quoted (MSSQL).
             'bracket dot inside quotes' => ['[a.b]', '[', ']', ['a.b']],
             'bracket embedded closing' => ['[a]]b]', '[', ']', ['a]b']],
+            'bracket only escaped closing' => ['[]]]]', '[', ']', [']]']],
+            'bracket schema with embedded' => ['[s]]ch].[ta]]b]', '[', ']', ['s]ch', 'ta]b']],
             'bracket schema.table' => ['[schema].[table]', '[', ']', ['schema', 'table']],
             'bracket single' => ['[myTable]', '[', ']', ['myTable']],
             'bracket three parts' => ['[cat].[schema].[table]', '[', ']', ['cat', 'schema', 'table']],
@@ -98,6 +102,7 @@ final class QuoterProvider
             // Double-quote (PostgreSQL/Oracle).
             'dquote dot inside quotes' => ['"a.b"', '"', '"', ['a.b']],
             'dquote embedded quote' => ['"a""b"', '"', '"', ['a"b']],
+            'dquote only escaped quote' => ['""""', '"', '"', ['"']],
             'dquote schema.table' => ['"schema"."table"', '"', '"', ['schema', 'table']],
             'dquote single' => ['"myTable"', '"', '"', ['myTable']],
 
