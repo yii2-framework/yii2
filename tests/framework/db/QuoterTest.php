@@ -24,7 +24,6 @@ use yiiunit\framework\db\providers\QuoterProvider;
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
  * @since 2.2
  */
-#[Group('db')]
 #[Group('quoter')]
 final class QuoterTest extends TestCase
 {
