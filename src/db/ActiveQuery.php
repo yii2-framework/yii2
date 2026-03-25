@@ -10,6 +10,9 @@ namespace yii\db;
 
 use yii\base\InvalidConfigException;
 
+use function count;
+use function is_array;
+use function is_int;
 use function is_string;
 
 /**
@@ -154,17 +157,19 @@ class ActiveQuery extends Query implements ActiveQueryInterface
         // (e.g. by ActiveDataProvider, one for count query, the other for row data query,
         // it is important to make sure the same ActiveQuery can be used to build SQL statements
         // multiple times.
-        if (!empty($this->joinWith)) {
+        if ($this->joinWith !== null) {
             $this->buildJoinWith();
+
             $this->joinWith = null;    // clean it up to avoid issue https://github.com/yiisoft/yii2/issues/2687
         }
 
-        if (empty($this->from)) {
+        if ($this->from === null) {
             $this->from = [$this->getPrimaryTableName()];
         }
 
-        if (empty($this->select) && !empty($this->join)) {
-            list(, $alias) = $this->getTableNameAndAlias();
+        if ($this->select === null && $this->join !== null) {
+            [, $alias] = $this->getTableNameAndAlias();
+
             $this->select = ["$alias.*"];
         }
 
@@ -182,7 +187,8 @@ class ActiveQuery extends Query implements ActiveQueryInterface
             } elseif (is_array($this->via)) {
                 // via relation
                 /** @var self<ActiveRecord|array<string, mixed>> $viaQuery */
-                list($viaName, $viaQuery, $viaCallableUsed) = $this->via;
+                [$viaName, $viaQuery, $viaCallableUsed] = $this->via;
+
                 if ($viaQuery->multiple) {
                     if ($viaCallableUsed) {
                         $viaModels = $viaQuery->all();
@@ -201,22 +207,168 @@ class ActiveQuery extends Query implements ActiveQueryInterface
                         $model = $viaQuery->one();
                         $this->primaryModel->populateRelation($viaName, $model);
                     }
+
                     $viaModels = $model === null ? [] : [$model];
                 }
+
                 $this->filterByModels($viaModels);
             } else {
                 $this->filterByModels([$this->primaryModel]);
             }
 
             $query = Query::create($this);
+
             $this->where = $where;
         }
 
-        if (!empty($this->on)) {
-            $query->andWhere($this->on);
+        if ($this->on !== null) {
+            if ($query->join === null) {
+                [$relatedTable, $relatedAlias] = $this->getTableNameAndAlias();
+
+                $filteredOn = $this->filterOnConditionForRelatedTable(
+                    $this->on,
+                    Quoter::stripExpressionQuotes($relatedTable),
+                    Quoter::stripExpressionQuotes($relatedAlias),
+                );
+                if ($filteredOn !== null) {
+                    $query->andWhere($filteredOn);
+                }
+            } else {
+                $query->andWhere($this->on);
+            }
         }
 
         return $query;
+    }
+
+    /**
+     * Filters an ON condition to remove sub-conditions that reference tables other than the related table.
+     *
+     * Used when building a query without JOINs (lazy loading or eager loading via `with()`), where only the related
+     * table is available in the FROM clause. Conditions referencing foreign tables would cause SQL errors.
+     *
+     * @param array|string|\yii\db\ExpressionInterface $condition the ON condition to filter.
+     * @param string $tableName the related table name.
+     * @param string $alias the related table alias.
+     * @return array|string|\yii\db\ExpressionInterface|null the filtered condition, or `null` if fully removed.
+     */
+    private function filterOnConditionForRelatedTable($condition, string $tableName, string $alias)
+    {
+        if (!is_array($condition)) {
+            return $condition;
+        }
+
+        if ($condition === []) {
+            return null;
+        }
+
+        $operator = reset($condition);
+
+        if (is_string($operator)) {
+            $upperOp = strtoupper($operator);
+
+            if ($upperOp === 'AND' || $upperOp === 'OR') {
+                $childCount = count($condition) - 1;
+                $filtered = [$operator];
+
+                for ($i = 1, $count = count($condition); $i < $count; $i++) {
+                    $sub = $this->filterOnConditionForRelatedTable($condition[$i], $tableName, $alias);
+
+                    if ($sub !== null) {
+                        $filtered[] = $sub;
+                    }
+                }
+
+                $keptCount = count($filtered) - 1;
+
+                if ($upperOp === 'OR' && $keptCount < $childCount) {
+                    return null;
+                }
+
+                if ($keptCount === 0) {
+                    return null;
+                }
+
+                if ($keptCount === 1) {
+                    return $filtered[1];
+                }
+
+                return $filtered;
+            }
+
+            if ($upperOp === 'NOT') {
+                $sub = $this->filterOnConditionForRelatedTable($condition[1] ?? null, $tableName, $alias);
+
+                return $sub === null ? null : ['not', $sub];
+            }
+
+            if ($upperOp === 'EXISTS' || $upperOp === 'NOT EXISTS') {
+                return $condition;
+            }
+
+            if (isset($condition[1]) && is_string($condition[1])) {
+                return $this->isColumnSafeForRelatedTable($condition[1], $tableName, $alias)
+                    ? $condition
+                    : null;
+            }
+
+            return $condition;
+        }
+
+        $indexed = [];
+        $keyed = [];
+
+        foreach ($condition as $key => $value) {
+            if (is_int($key)) {
+                $sub = $this->filterOnConditionForRelatedTable($value, $tableName, $alias);
+
+                if ($sub !== null) {
+                    $indexed[] = $sub;
+                }
+            } elseif ($this->isColumnSafeForRelatedTable($key, $tableName, $alias)) {
+                $keyed[$key] = $value;
+            }
+        }
+
+        if ($indexed === [] && $keyed === []) {
+            return null;
+        }
+
+        if ($indexed === []) {
+            return $keyed;
+        }
+
+        if ($keyed === []) {
+            return count($indexed) === 1 ? $indexed[0] : $indexed;
+        }
+
+        return [...$indexed, ...$keyed];
+    }
+
+    /**
+     * Checks whether a column reference is safe to use in a WHERE clause for the related table.
+     *
+     * Unqualified columns are considered safe (they implicitly reference the related table). Qualified columns are safe
+     * only if the table prefix matches the related table name or alias.
+     *
+     * @param string $column the column reference (e.g., `category_id`, `item.id`, `{{schema}}.{{item}}.[[id]]`).
+     * @param string $tableName the related table name (pre-trimmed of `{}`).
+     * @param string $alias the related table alias (pre-trimmed of `{}`).
+     * @return bool whether the column is safe for the related table.
+     */
+    private function isColumnSafeForRelatedTable(string $column, string $tableName, string $alias): bool
+    {
+        $clean = Quoter::stripExpressionQuotes($column);
+
+        $lastDotPos = strrpos($clean, '.');
+
+        if ($lastDotPos === false) {
+            return true;
+        }
+
+        $qualifier = substr($clean, 0, $lastDotPos);
+
+        return $qualifier === $tableName || $qualifier === $alias;
     }
 
     /**

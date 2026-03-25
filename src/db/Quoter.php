@@ -122,6 +122,21 @@ final class Quoter
     }
 
     /**
+     * Strips Yii expression markers (`{{`, `}}`, `[[`, `]]`) from a string.
+     *
+     * These markers are Yii-specific placeholders resolved before SQL is sent to the driver. They are distinct from SQL
+     * quote characters handled by {@see unquoteIdentifier()} and {@see unquoteAny()}.
+     *
+     * @param string $name The string potentially containing expression markers.
+     *
+     * @return string The string with all expression markers removed.
+     */
+    public static function stripExpressionQuotes(string $name): string
+    {
+        return str_replace(['[[', ']]', '{{', '}}'], '', $name);
+    }
+
+    /**
      * Strips outer quotes from an identifier using any known SQL quote pair, then unescapes doubled end-quotes.
      *
      * Returns the name unchanged if it is not wrapped in a recognized quote pair.
