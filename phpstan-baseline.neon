@@ -1005,7 +1005,7 @@ parameters:
 		-
 			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
 			identifier: empty.notAllowed
-			count: 42
+			count: 37
 			path: src/db/ActiveQuery.php
 
 		-
@@ -4831,6 +4831,12 @@ parameters:
 			path: tests/base/db/BaseActiveRecord.php
 
 		-
+			message: '#^Casting to int something that''s already int\.$#'
+			identifier: cast.useless
+			count: 1
+			path: tests/base/db/BaseActiveRecord.php
+
+		-
 			message: '#^Casting to string something that''s already string\.$#'
 			identifier: cast.useless
 			count: 2
@@ -4969,19 +4975,19 @@ parameters:
 			path: tests/base/db/BaseActiveRecord.php
 
 		-
-			message: '#^Offset ''books'' does not exist on array\{id\: int, customer_id\: int, created_at\: int, total\: string, expensiveItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, cheapItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, itemsFor8\: array\<yiiunit\\data\\ar\\Item\>\}\.$#'
+			message: '#^Offset ''books'' does not exist on array\{id\: int, customer_id\: int, created_at\: int, total\: string, expensiveItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, cheapItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, itemsFor8\: array\<yiiunit\\data\\ar\\Item\>, orderItemsWithPrimaryTableCondition\: array\<yiiunit\\data\\ar\\OrderItem\>\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 3
 			path: tests/base/db/BaseActiveRecord.php
 
 		-
-			message: '#^Offset ''customer2'' does not exist on array\{id\: int, customer_id\: int, created_at\: int, total\: string, expensiveItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, cheapItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, itemsFor8\: array\<yiiunit\\data\\ar\\Item\>\}\.$#'
+			message: '#^Offset ''customer2'' does not exist on array\{id\: int, customer_id\: int, created_at\: int, total\: string, expensiveItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, cheapItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, itemsFor8\: array\<yiiunit\\data\\ar\\Item\>, orderItemsWithPrimaryTableCondition\: array\<yiiunit\\data\\ar\\OrderItem\>\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 6
 			path: tests/base/db/BaseActiveRecord.php
 
 		-
-			message: '#^Offset ''orderItems'' does not exist on array\{id\: int, customer_id\: int, created_at\: int, total\: string, expensiveItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, cheapItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, itemsFor8\: array\<yiiunit\\data\\ar\\Item\>\}\.$#'
+			message: '#^Offset ''orderItems'' does not exist on array\{id\: int, customer_id\: int, created_at\: int, total\: string, expensiveItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, cheapItemsUsingViaWithCallable\: array\<yiiunit\\data\\ar\\Item\>, itemsFor8\: array\<yiiunit\\data\\ar\\Item\>, orderItemsWithPrimaryTableCondition\: array\<yiiunit\\data\\ar\\OrderItem\>\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: tests/base/db/BaseActiveRecord.php

@@ -21,6 +21,7 @@ use yii\db\ActiveQuery;
  * @property-read Item[] $expensiveItemsUsingViaWithCallable
  * @property-read Item[] $cheapItemsUsingViaWithCallable
  * @property-read Item[] $itemsFor8
+ * @property-read OrderItem[] $orderItemsWithPrimaryTableCondition
  */
 class Order extends ActiveRecord
 {
@@ -245,5 +246,18 @@ class Order extends ActiveRecord
     public function getVirtualCustomer()
     {
         return $this->hasOne(Customer::class, ['id' => 'virtualCustomerId']);
+    }
+
+    /**
+     * Relation with onCondition referencing the primary table column.
+     *
+     * Used to test that foreign-table conditions in onCondition are filtered out during lazy/eager loading without
+     * joins, preventing SQL errors from referencing tables not present in the query.
+     *
+     * @see https://github.com/yiisoft/yii2/issues/9168
+     */
+    public function getOrderItemsWithPrimaryTableCondition(): ActiveQuery
+    {
+        return $this->hasMany(OrderItem::class, ['order_id' => 'id'])->onCondition(['order.customer_id' => 1]);
     }
 }

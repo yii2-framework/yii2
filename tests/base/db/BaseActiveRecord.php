@@ -568,6 +568,72 @@ abstract class BaseActiveRecord extends BaseDatabase
     }
 
     /**
+     * Verifies that `onCondition` referencing a foreign table column does not cause SQL errors during lazy and eager
+     * loading without joins.
+     *
+     * Foreign-table conditions are filtered out when no JOINs are present, and correctly applied to the ON clause when
+     * JOINs are used.
+     *
+     * @see https://github.com/yiisoft/yii2/issues/9168
+     */
+    public function testOnConditionWithForeignTableColumnInLazyLoading(): void
+    {
+        // without the foreign-table filter, this would throw: "Column not found: order.customer_id in WHERE clause"
+        $order = Order::findOne(1);
+
+        $items = $order->orderItemsWithPrimaryTableCondition;
+
+        self::assertIsArray(
+            $items,
+            'Lazy loading with foreign-table onCondition should return an array.',
+        );
+        self::assertNotEmpty(
+            $items,
+            'Lazy loading should return order items when foreign-table condition is filtered out.',
+        );
+
+        $orders = Order::find()->with('orderItemsWithPrimaryTableCondition')->all();
+
+        self::assertCount(
+            3,
+            $orders,
+            'Eager loading should return all orders regardless of foreign-table onCondition.',
+        );
+
+        foreach ($orders as $o) {
+            self::assertTrue(
+                $o->isRelationPopulated('orderItemsWithPrimaryTableCondition'),
+                "Eager loading should populate 'orderItemsWithPrimaryTableCondition' relation for order '#{$o->id}'.",
+            );
+        }
+
+        self::assertNotEmpty(
+            $orders[0]->orderItemsWithPrimaryTableCondition,
+            'First order should have order items populated via eager loading.',
+        );
+
+        // joinWith: the foreign-table condition is applied to the JOIN ON clause.
+        $orders = Order::find()
+            ->joinWith('orderItemsWithPrimaryTableCondition')
+            ->orderBy('order.id')
+            ->all();
+
+        self::assertNotEmpty(
+            $orders,
+            'Should return orders when foreign-table onCondition is in the ON clause.',
+        );
+
+        foreach ($orders as $o) {
+            if ((int) $o->customer_id === 1) {
+                self::assertNotEmpty(
+                    $o->orderItemsWithPrimaryTableCondition,
+                    "Order '#{$o->id}' with 'customer_id=1' should have matching order items via JOIN ON condition.",
+                );
+            }
+        }
+    }
+
+    /**
      * @depends testJoinWith
      */
     public function testJoinWithDuplicateSimple(): void
