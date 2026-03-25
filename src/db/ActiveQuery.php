@@ -10,6 +10,8 @@ namespace yii\db;
 
 use yii\base\InvalidConfigException;
 
+use function is_string;
+
 /**
  * ActiveQuery represents a DB query associated with an Active Record class.
  *
@@ -598,7 +600,9 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 
     /**
      * Returns the table name and the table alias for [[modelClass]].
+     *
      * @return array the table name and the table alias.
+     *
      * @since 2.0.16
      */
     protected function getTableNameAndAlias()
@@ -607,20 +611,42 @@ class ActiveQuery extends Query implements ActiveQueryInterface
             $tableName = $this->getPrimaryTableName();
         } else {
             $tableName = '';
-            // if the first entry in "from" is an alias-tablename-pair return it directly
-            foreach ($this->from as $alias => $tableName) {
-                if (is_string($alias)) {
-                    return [$tableName, $alias];
+            $primaryTableName = $this->getPrimaryTableName();
+
+            // if multiple tables in "from", prioritize the model's primary table
+            foreach ($this->from as $alias => $table) {
+                $fromTableName = $table;
+
+                if (is_string($table) && preg_match('/^(.*?)(?:\s+AS\s+|\s+)({{\w+}}|\w+)$/i', $table, $matches)) {
+                    $fromTableName = $matches[1];
                 }
-                break;
+
+                if ($fromTableName === $primaryTableName) {
+                    if (is_string($alias)) {
+                        return [$table, $alias];
+                    }
+
+                    $tableName = $table;
+
+                    break;
+                }
+            }
+
+            // if the primary table was not found in "from", fall back to the first entry
+            if ($tableName === '') {
+                foreach ($this->from as $alias => $tableName) {
+                    if (is_string($alias)) {
+                        return [$tableName, $alias];
+                    }
+
+                    break;
+                }
             }
         }
 
-        if (preg_match('/^(.*?)\s+({{\w+}}|\w+)$/', $tableName, $matches)) {
-            $alias = $matches[2];
-        } else {
-            $alias = $tableName;
-        }
+        $alias = (preg_match('/^(.*?)(?:\s+AS\s+|\s+)({{\w+}}|\w+)$/i', $tableName, $matches))
+            ? $matches[2]
+            : $tableName;
 
         return [$tableName, $alias];
     }
