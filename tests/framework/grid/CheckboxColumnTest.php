@@ -54,6 +54,102 @@ class CheckboxColumnTest extends TestCase
         $this->assertStringContainsString('name="MyForm[grid1][key_all]"', $column->renderHeaderCell());
     }
 
+    public function testUnselectHiddenInput(): void
+    {
+        $column = new CheckboxColumn(['grid' => $this->getGrid()]);
+        $headerCell = $column->renderHeaderCell();
+
+        self::assertStringContainsString(
+            'type="hidden"',
+            $headerCell,
+            'Header cell should render hidden unselect input by default.',
+        );
+        self::assertStringContainsString(
+            'name="selection" value=""',
+            $headerCell,
+            'Hidden unselect input should use checkbox name without [] suffix.',
+        );
+
+        $column = new CheckboxColumn(['name' => 'MyForm[grid1][]', 'grid' => $this->getGrid()]);
+        $headerCell = $column->renderHeaderCell();
+
+        self::assertStringContainsString(
+            'name="MyForm[grid1]" value=""',
+            $headerCell,
+            'Hidden unselect input should preserve nested input names.',
+        );
+    }
+
+    public function testUnselectCanBeDisabled(): void
+    {
+        $column = new CheckboxColumn(['unselect' => null, 'grid' => $this->getGrid()]);
+        $headerCell = $column->renderHeaderCell();
+
+        self::assertStringNotContainsString(
+            'type="hidden"',
+            $headerCell,
+            'Hidden unselect input should not be rendered when unselect is null.',
+        );
+    }
+
+    public function testUnselectHiddenInputPropagatesCheckboxAttributes(): void
+    {
+        $column = new CheckboxColumn([
+            'checkboxOptions' => [
+                'disabled' => true,
+                'form' => 'bulk-form',
+            ],
+            'grid' => $this->getGrid(),
+        ]);
+        $headerCell = $column->renderHeaderCell();
+
+        self::assertStringContainsString(
+            'type="hidden"',
+            $headerCell,
+            'Header cell should include hidden unselect input.',
+        );
+        self::assertStringContainsString(
+            'name="selection" value=""',
+            $headerCell,
+            'Hidden unselect input should target the base checkbox name.',
+        );
+        self::assertStringContainsString(
+            'disabled',
+            $headerCell,
+            'Hidden unselect input should propagate disabled attribute from checkboxOptions.',
+        );
+        self::assertStringContainsString(
+            'form="bulk-form"',
+            $headerCell,
+            'Hidden unselect input should propagate form attribute from checkboxOptions.',
+        );
+    }
+
+    public function testUnselectWithoutHeaderIsRenderedOnce(): void
+    {
+        $grid = $this->getGrid([
+            'showHeader' => false,
+            'dataProvider' => new ArrayDataProvider([
+                'allModels' => [['id' => 1], ['id' => 2]],
+                'key' => 'id',
+            ]),
+        ]);
+        $column = new CheckboxColumn(['grid' => $grid]);
+
+        $content = $column->renderDataCell(['id' => 1], 1, 0) . $column->renderDataCell(['id' => 2], 2, 1);
+
+        self::assertSame(
+            1,
+            substr_count($content, 'type="hidden"'),
+            'Hidden unselect input should be rendered only once when header is disabled.',
+        );
+        self::assertStringContainsString(
+            'name="selection" value=""',
+            $content,
+            'Hidden unselect input should still be rendered when showHeader is false.',
+        );
+    }
+
     public function testInputValue(): void
     {
         $column = new CheckboxColumn(['grid' => $this->getGrid()]);
@@ -107,10 +203,10 @@ class CheckboxColumnTest extends TestCase
     /**
      * @return GridView a mock gridview
      */
-    protected function getGrid()
+    protected function getGrid(array $config = [])
     {
-        return new GridView([
+        return new GridView(array_merge([
             'dataProvider' => new ArrayDataProvider(['allModels' => [], 'totalCount' => 0]),
-        ]);
+        ], $config));
     }
 }

@@ -242,7 +242,7 @@ final class HtmlAttributeTest extends TestCase
         self::assertSame(
             $expected,
             Html::getAttributeName($name),
-            "Attribute name '$name' was normalized incorrectly.",
+            "Attribute name '$name' does not match.",
         );
     }
 
@@ -316,6 +316,16 @@ final class HtmlAttributeTest extends TestCase
             $inputIdExpected,
             Html::getInputIdByName($inputNameActual),
             "Input ID by name for attribute '$attributeName' does not match.",
+        );
+    }
+
+    #[DataProviderExternal(HtmlAttributeProvider::class, 'getInputNameWithoutBrackets')]
+    public function testGetInputNameWithoutBrackets(string $name, string $expectedName): void
+    {
+        self::assertSame(
+            $expectedName,
+            Html::getInputNameWithoutBrackets($name),
+            "Input name '$name' does not match.",
         );
     }
 

@@ -54,6 +54,11 @@ class CheckboxColumn extends Column
      */
     public $name = 'selection';
     /**
+     * @var string|null the value that should be submitted when none of the checkboxes is selected.
+     * By default, this is an empty string. Set this property to `null` to disable hidden input generation.
+     */
+    public $unselect = '';
+    /**
      * @var array|\Closure the HTML attributes for checkboxes. This can either be an array of
      * attributes or an anonymous function ([[Closure]]) that returns such an array.
      * The signature of the function should be the following: `function ($model, $key, $index, $column)`.
@@ -89,6 +94,11 @@ class CheckboxColumn extends Column
     public $clientScript = null;
 
     /**
+     * @var bool whether unselect hidden input is already rendered.
+     */
+    private bool $_unselectRendered = false;
+
+    /**
      * {@inheritdoc}
      * @throws \yii\base\InvalidConfigException if [[name]] is not set.
      */
@@ -119,15 +129,18 @@ class CheckboxColumn extends Column
      * Renders the header cell content.
      * The default implementation simply renders [[header]].
      * This method may be overridden to customize the rendering of the header cell.
-     * @return string the rendering result
+     *
+     * @return string The rendering result.
      */
     protected function renderHeaderCellContent()
     {
+        $hiddenInput = $this->renderUnselectHiddenInput();
+
         if ($this->header !== null || !$this->multiple) {
-            return parent::renderHeaderCellContent();
+            return $hiddenInput . parent::renderHeaderCellContent();
         }
 
-        return Html::checkbox(
+        return $hiddenInput . Html::checkbox(
             $this->getHeaderCheckBoxName(),
             false,
             ['class' => 'select-on-check-all'],
@@ -157,7 +170,13 @@ class CheckboxColumn extends Column
             Html::addCssClass($options, $this->cssClass);
         }
 
-        return Html::checkbox($this->name, !empty($options['checked']), $options);
+        $checkbox = Html::checkbox($this->name, !empty($options['checked']), $options);
+
+        if (!$this->grid->showHeader) {
+            return $this->renderUnselectHiddenInput($options) . $checkbox;
+        }
+
+        return $checkbox;
     }
 
     /**
@@ -167,10 +186,7 @@ class CheckboxColumn extends Column
      */
     protected function getHeaderCheckBoxName()
     {
-        $name = $this->name;
-        if (substr_compare($name, '[]', -2, 2) === 0) {
-            $name = substr($name, 0, -2);
-        }
+        $name = Html::getInputNameWithoutBrackets($this->name);
         if (substr_compare($name, ']', -1, 1) === 0) {
             $name = substr($name, 0, -1) . '_all]';
         } else {
@@ -178,6 +194,44 @@ class CheckboxColumn extends Column
         }
 
         return $name;
+    }
+
+    /**
+     * Renders hidden input used for unselect value.
+     */
+    protected function renderUnselectHiddenInput(array $checkboxOptions = []): string
+    {
+        if ($this->_unselectRendered || $this->unselect === null) {
+            return '';
+        }
+
+        $this->_unselectRendered = true;
+
+        return Html::hiddenInput(
+            Html::getInputNameWithoutBrackets($this->name),
+            $this->unselect,
+            $this->getUnselectHiddenInputOptions($checkboxOptions),
+        );
+    }
+
+    /**
+     * Returns hidden input attributes for unselect value.
+     */
+    protected function getUnselectHiddenInputOptions(array $checkboxOptions = []): array
+    {
+        if ($checkboxOptions === [] && is_array($this->checkboxOptions)) {
+            $checkboxOptions = $this->checkboxOptions;
+        }
+
+        $hiddenOptions = [];
+        if (isset($checkboxOptions['form'])) {
+            $hiddenOptions['form'] = $checkboxOptions['form'];
+        }
+        if (!empty($checkboxOptions['disabled'])) {
+            $hiddenOptions['disabled'] = $checkboxOptions['disabled'];
+        }
+
+        return $hiddenOptions;
     }
 
     /**
