@@ -340,7 +340,6 @@ final class HtmlAttributeProvider
             'simple name with index' => ['a[0]', 'a'],
             'simple name' => ['a', 'a'],
             'single umlaut duplicate' => ['ä', 'ä'],
-            'single umlaut' => ['ä', 'ä'],
             'unicode with double dots' => ['asdf]öáöio..[asdfasdf', 'öáöio..'],
             'unicode without brackets' => ['öáöio', 'öáöio'],
         ];
@@ -363,22 +362,21 @@ final class HtmlAttributeProvider
      */
     public static function getInputId(): array
     {
-        return [
-            'bracket name' => ['foo[]', 'dynamicmodel-foo'],
-            'camel case' => ['FooBar', 'dynamicmodel-foobar'],
-            'cyrillic name' => ['ФуБарБаз', 'dynamicmodel-фубарбаз'],
-            'dotted name' => ['foo.bar', 'dynamicmodel-foo-bar'],
-            'german umlaut in name' => ['bild_groß_dateiname', 'dynamicmodel-bild_groß_dateiname'],
-            'nested brackets' => ['foo[bar][baz]', 'dynamicmodel-foo-bar-baz'],
-            'simple name' => ['foo', 'dynamicmodel-foo'],
-            'underscore mixed case' => ['Foo_Bar', 'dynamicmodel-foo_bar'],
-        ];
+        return self::inputIdDataset();
     }
 
     /**
      * @phpstan-return array<string, array{string, string}>
      */
     public static function getInputIdByName(): array
+    {
+        return self::inputIdDataset();
+    }
+
+    /**
+     * @phpstan-return array<string, array{string, string}>
+     */
+    private static function inputIdDataset(): array
     {
         return [
             'bracket name' => ['foo[]', 'dynamicmodel-foo'],

@@ -586,7 +586,4 @@ final class HtmlListTest extends TestCase
             'value2' => 'text2',
         ];
     }
-
-
-
 }

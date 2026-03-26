@@ -247,8 +247,21 @@ final class HtmlActiveTest extends TestCase
      */
     public function testCsrfDisable(): void
     {
-        Yii::$app->request->enableCsrfValidation = true;
-        Yii::$app->request->cookieValidationKey = 'foobar';
+        $this->mockApplication(
+            [
+                'components' => [
+                    'request' => [
+                        'class' => Request::class,
+                        'url' => '/test',
+                        'scriptUrl' => '/index.php',
+                        'hostInfo' => 'http://www.example.com',
+                        'enableCsrfValidation' => true,
+                        'cookieValidationKey' => 'foobar',
+                    ],
+                    'response' => ['class' => Response::class],
+                ],
+            ],
+        );
 
         $token = Yii::$app->request->getCsrfToken();
 
