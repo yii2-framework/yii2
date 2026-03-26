@@ -349,7 +349,7 @@ class CheckboxColumnTest extends TestCase
         );
     }
 
-    public function testClosureCheckboxOptionsInheritsFromFirstRowWhenNoHeader(): void
+    public function testClosureCheckboxOptionsDoesNotAffectHiddenInputWhenNoHeader(): void
     {
         $grid = $this->getGrid(
             [
@@ -378,10 +378,10 @@ class CheckboxColumnTest extends TestCase
 
         self::assertSame(
             <<<HTML
-            <td><input type="hidden" name="selection" value="" form="my-form" disabled><input type="checkbox" name="selection[]" value="1" form="my-form" disabled></td>
+            <td><input type="hidden" name="selection" value=""><input type="checkbox" name="selection[]" value="1" form="my-form" disabled></td>
             HTML,
             $firstRow,
-            'First row hidden input should inherit attributes from closure result.',
+            'Hidden input should not inherit closure attributes; checkbox should.',
         );
         self::assertSame(
             <<<HTML
@@ -389,6 +389,42 @@ class CheckboxColumnTest extends TestCase
             HTML,
             $secondRow,
             'Second row should not contain hidden input.',
+        );
+    }
+
+    public function testUnselectOptionsWithClosureWhenNoHeader(): void
+    {
+        $grid = $this->getGrid(
+            [
+                'showHeader' => false,
+                'dataProvider' => new ArrayDataProvider(
+                    [
+                        'allModels' => [['id' => 1], ['id' => 2]],
+                        'key' => 'id',
+                    ],
+                ),
+            ],
+        );
+
+        $column = new CheckboxColumn(
+            [
+                'checkboxOptions' => static fn($model, $key, $index, $column): array => [
+                    'form' => 'my-form',
+                    'disabled' => $index === 0,
+                ],
+                'unselectOptions' => ['form' => 'my-form', 'disabled' => true],
+                'grid' => $grid,
+            ],
+        );
+
+        $firstRow = $column->renderDataCell(['id' => 1], 1, 0);
+
+        self::assertSame(
+            <<<HTML
+            <td><input type="hidden" name="selection" value="" form="my-form" disabled><input type="checkbox" name="selection[]" value="1" form="my-form" disabled></td>
+            HTML,
+            $firstRow,
+            "Hidden input should use 'unselectOptions' even in no-header mode.",
         );
     }
 

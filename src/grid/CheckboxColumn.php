@@ -158,8 +158,10 @@ class CheckboxColumn extends Column
      */
     protected function renderDataCellContent($model, $key, $index)
     {
+        $hiddenInput = !$this->grid->showHeader ? $this->renderUnselectHiddenInput() : '';
+
         if ($this->content !== null) {
-            return parent::renderDataCellContent($model, $key, $index);
+            return $hiddenInput . parent::renderDataCellContent($model, $key, $index);
         }
 
         if ($this->checkboxOptions instanceof Closure) {
@@ -176,13 +178,7 @@ class CheckboxColumn extends Column
             Html::addCssClass($options, $this->cssClass);
         }
 
-        $checkbox = Html::checkbox($this->name, !empty($options['checked']), $options);
-
-        if (!$this->grid->showHeader) {
-            return $this->renderUnselectHiddenInput($options) . $checkbox;
-        }
-
-        return $checkbox;
+        return $hiddenInput . Html::checkbox($this->name, !empty($options['checked']), $options);
     }
 
     /**
