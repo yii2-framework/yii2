@@ -75,6 +75,8 @@ final class HtmlAttributeTest extends TestCase
             Html::renderTagAttributes(['class' => ['first second', 'first']]),
             'Normalized class attribute does not match.',
         );
+
+        Html::$normalizeClassAttribute = false;
     }
 
     /**

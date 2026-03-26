@@ -250,7 +250,7 @@ final class HtmlAttributeProvider
                 'test2',
                 ['class' => ['test', 2 => 'test3']],
             ],
-            'remove all from array class leaves empty' => [
+            'remove one from sparse array class' => [
                 ['class' => ['test', 2 => 'test3']],
                 'test',
                 ['class' => [2 => 'test3']],
@@ -339,7 +339,7 @@ final class HtmlAttributeProvider
             'reversed brackets with cyrillic' => [']ИІК[', 'ИІК'],
             'simple name with index' => ['a[0]', 'a'],
             'simple name' => ['a', 'a'],
-            'single umlaut duplicate' => ['ä', 'ä'],
+            'single umlaut' => ['ä', 'ä'],
             'unicode with double dots' => ['asdf]öáöio..[asdfasdf', 'öáöio..'],
             'unicode without brackets' => ['öáöio', 'öáöio'],
         ];
