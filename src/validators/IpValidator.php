@@ -13,7 +13,6 @@ use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use yii\helpers\IpHelper;
 use yii\helpers\Json;
-use yii\jquery\validators\IpValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 use yii\web\JsExpression;
 
@@ -255,7 +254,7 @@ class IpValidator extends Validator
         );
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => IpValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\IpValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

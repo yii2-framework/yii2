@@ -10,9 +10,8 @@ namespace yii\captcha;
 
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\helpers\Json;
-use yii\validators\ValidationAsset;
 use yii\validators\Validator;
+use yii\validators\client\ClientValidatorScriptInterface;
 use yii\web\Controller;
 
 /**
@@ -41,6 +40,13 @@ class CaptchaValidator extends Validator
      * @var string the route of the controller action that renders the CAPTCHA image.
      */
     public $captchaAction = 'site/captcha';
+    /**
+     * @var array|ClientValidatorScriptInterface|null the client-side script implementation.
+     * When [[Application::$useJquery]] is `true`, defaults to
+     * `yii\jquery\captcha\CaptchaValidatorJqueryClientScript`. Set to `null` to disable
+     * client-side script registration.
+     */
+    public $clientScript = null;
 
 
     /**
@@ -51,6 +57,14 @@ class CaptchaValidator extends Validator
         parent::init();
         if ($this->message === null) {
             $this->message = Yii::t('yii', 'The verification code is incorrect.');
+        }
+
+        if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
+            $this->clientScript = ['class' => 'yii\jquery\captcha\CaptchaValidatorJqueryClientScript'];
+        }
+
+        if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {
+            $this->clientScript = Yii::createObject($this->clientScript);
         }
     }
 
@@ -90,10 +104,11 @@ class CaptchaValidator extends Validator
      */
     public function clientValidateAttribute($model, $attribute, $view)
     {
-        ValidationAsset::register($view);
-        $options = $this->getClientOptions($model, $attribute);
+        if ($this->clientScript instanceof ClientValidatorScriptInterface) {
+            return $this->clientScript->register($this, $model, $attribute, $view);
+        }
 
-        return 'yii.validation.captcha(value, messages, ' . Json::htmlEncode($options) . ');';
+        return null;
     }
 
     /**

@@ -22,7 +22,6 @@ use yii\web\View;
 use yii\widgets\ActiveField;
 use yii\widgets\ActiveForm;
 use yii\widgets\InputWidget;
-use yii\widgets\MaskedInput;
 use yiiunit\framework\widgets\provider\ActiveFieldProvider;
 use yiiunit\TestCase;
 
@@ -970,12 +969,16 @@ class TestInputWidget extends InputWidget
     }
 }
 
-class TestMaskedInput extends MaskedInput
+class TestMaskedInput extends InputWidget
 {
     /**
      * @var static
      */
     public static $lastInstance;
+
+    public $mask;
+    public $clientOptions = [];
+    public $type = 'text';
 
     public function init(): void
     {

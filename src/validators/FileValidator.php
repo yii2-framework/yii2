@@ -13,7 +13,6 @@ use yii\helpers\FileHelper;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\helpers\StringHelper;
-use yii\jquery\validators\FileValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 use yii\web\JsExpression;
 use yii\web\UploadedFile;
@@ -225,7 +224,7 @@ class FileValidator extends Validator
         $this->mimeTypes = array_map('strtolower', (array) $this->mimeTypes);
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => FileValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\FileValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

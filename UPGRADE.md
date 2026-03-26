@@ -74,6 +74,29 @@ All HHVM-specific code has been removed from the framework. The framework target
 If you referenced `\yii\base\ErrorException::E_HHVM_FATAL_ERROR` or `\yii\base\ErrorHandler::handleHhvmError()` in your application code,
 remove those references.
 
+### jQuery extracted to `yii2-framework/jquery`
+
+The jQuery integration layer has been moved to the separate package [`yii2-framework/jquery`](https://github.com/yii2-framework/jquery).
+`JqueryAsset`, all validator and widget jQuery client scripts (`*JqueryClientScript`), and the associated asset bundles
+(`ValidationAsset`, `ActiveFormAsset`, `GridViewAsset`, `PjaxAsset`, `MaskedInputAsset`, `CaptchaAsset`) are no longer
+shipped with core.
+
+**Action required** for applications that use jQuery-backed client validation, `ActiveForm`, `GridView`, `Pjax`,
+`MaskedInput`, or `Captcha` widgets:
+
+```bash
+composer require yii2-framework/jquery
+```
+
+Register the bootstrap class in `config/web.php`:
+
+```php
+'bootstrap' => [\yii\jquery\Bootstrap::class],
+```
+
+No other changes are required. The `Application::$useJquery` flag and all `$clientScript` extension points remain in
+core and continue to work as before.
+
 ### jQuery is now optional (strategy pattern)
 
 jQuery is no longer hardcoded in validators and widgets. A new `Application::$useJquery` property (default: `true`)

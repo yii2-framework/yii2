@@ -10,7 +10,6 @@ namespace yii\validators;
 
 use Yii;
 use yii\helpers\Json;
-use yii\jquery\validators\StringValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 
 use function is_array;
@@ -130,7 +129,7 @@ class StringValidator extends Validator
         }
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => StringValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\StringValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

@@ -12,7 +12,6 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use yii\helpers\Json;
-use yii\jquery\validators\RegularExpressionValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 use yii\web\JsExpression;
 
@@ -59,7 +58,7 @@ class RegularExpressionValidator extends Validator
         );
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => RegularExpressionValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\RegularExpressionValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

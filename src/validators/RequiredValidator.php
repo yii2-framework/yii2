@@ -10,7 +10,6 @@ namespace yii\validators;
 
 use Yii;
 use yii\helpers\Json;
-use yii\jquery\validators\RequiredValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 
 use function is_string;
@@ -73,7 +72,7 @@ class RequiredValidator extends Validator
             : Yii::t('yii', '{attribute} must be "{requiredValue}".');
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => RequiredValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\RequiredValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

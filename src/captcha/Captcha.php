@@ -8,10 +8,11 @@
 
 namespace yii\captcha;
 
+use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\helpers\Url;
+use yii\web\client\ClientScriptInterface;
 use yii\widgets\InputWidget;
 
 /**
@@ -72,6 +73,13 @@ class Captcha extends InputWidget
      */
     public $imageOptions = [];
     /**
+     * @var array|ClientScriptInterface|null the client-side script implementation.
+     * When [[Application::$useJquery]] is `true`, defaults to
+     * `yii\jquery\captcha\CaptchaJqueryClientScript`. Set to `null` to disable
+     * client-side script registration for this widget.
+     */
+    public $clientScript = null;
+    /**
      * @var string the template for arranging the CAPTCHA image tag and the text input tag.
      * In this template, the token `{image}` will be replaced with the actual image tag,
      * while `{input}` will be replaced with the text input tag.
@@ -95,6 +103,14 @@ class Captcha extends InputWidget
 
         if (!isset($this->imageOptions['id'])) {
             $this->imageOptions['id'] = $this->options['id'] . '-image';
+        }
+
+        if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
+            $this->clientScript = ['class' => 'yii\jquery\captcha\CaptchaJqueryClientScript'];
+        }
+
+        if ($this->clientScript !== null && !$this->clientScript instanceof ClientScriptInterface) {
+            $this->clientScript = Yii::createObject($this->clientScript);
         }
     }
 
@@ -120,22 +136,21 @@ class Captcha extends InputWidget
 
     /**
      * Registers the needed JavaScript.
+     *
+     * Delegates to [[clientScript]] when set.
      */
     public function registerClientScript()
     {
-        $options = $this->getClientOptions();
-        $options = empty($options) ? '' : Json::htmlEncode($options);
-        $id = $this->imageOptions['id'];
-        $view = $this->getView();
-        CaptchaAsset::register($view);
-        $view->registerJs("jQuery('#$id').yiiCaptcha($options);");
+        if ($this->clientScript instanceof ClientScriptInterface) {
+            $this->clientScript->register($this, $this->getView());
+        }
     }
 
     /**
      * Returns the options for the captcha JS widget.
      * @return array the options
      */
-    protected function getClientOptions()
+    public function getClientOptions()
     {
         $route = $this->captchaAction;
         if (is_array($route)) {

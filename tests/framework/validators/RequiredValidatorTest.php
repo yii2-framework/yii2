@@ -8,9 +8,7 @@
 
 namespace yiiunit\framework\validators;
 
-use yii\base\Model;
 use yii\validators\RequiredValidator;
-use yii\web\View;
 use yiiunit\data\validators\models\FakedValidationModel;
 use yiiunit\TestCase;
 
@@ -70,19 +68,6 @@ class RequiredValidatorTest extends TestCase
         $this->assertFalse($m->hasErrors('attr_val'));
     }
 
-    public function testErrorClientMessage(): void
-    {
-        $this->mockApplication();
-        $validator = new RequiredValidator(['message' => '<strong>error</strong> for {attribute}']);
-
-        $obj = new ModelForReqValidator();
-
-        $this->assertEquals(
-            'yii.validation.required(value, messages, {"message":"\u003Cstrong\u003Eerror\u003C\/strong\u003E for \u003Cb\u003EAttr\u003C\/b\u003E"});',
-            $validator->clientValidateAttribute($obj, 'attr', new RequiredViewStub())
-        );
-    }
-
     public function testValidateStrictWithNull(): void
     {
         $val = new RequiredValidator(['strict' => true]);
@@ -128,41 +113,6 @@ class RequiredValidatorTest extends TestCase
         $this->assertFalse($val->skipOnEmpty);
     }
 
-    public function testGetClientOptionsWithoutRequiredValue(): void
-    {
-        $this->mockApplication();
-        $model = new ModelForReqValidator();
-        $val = new RequiredValidator();
-        $options = $val->getClientOptions($model, 'attr');
-
-        $this->assertArrayHasKey('message', $options);
-        $this->assertArrayNotHasKey('requiredValue', $options);
-        $this->assertArrayNotHasKey('strict', $options);
-    }
-
-    public function testGetClientOptionsWithRequiredValue(): void
-    {
-        $this->mockApplication();
-        $model = new ModelForReqValidator();
-        $val = new RequiredValidator(['requiredValue' => 'yes']);
-        $options = $val->getClientOptions($model, 'attr');
-
-        $this->assertArrayHasKey('message', $options);
-        $this->assertArrayHasKey('requiredValue', $options);
-        $this->assertSame('yes', $options['requiredValue']);
-    }
-
-    public function testGetClientOptionsWithStrict(): void
-    {
-        $this->mockApplication();
-        $model = new ModelForReqValidator();
-        $val = new RequiredValidator(['strict' => true]);
-        $options = $val->getClientOptions($model, 'attr');
-
-        $this->assertArrayHasKey('strict', $options);
-        $this->assertSame(1, $options['strict']);
-    }
-
     public function testValidateAttributeWithWhitespace(): void
     {
         $val = new RequiredValidator();
@@ -192,36 +142,4 @@ class RequiredValidatorTest extends TestCase
         $this->assertStringNotContainsString('{requiredValue}', $errors[0]);
     }
 
-    public function testGetClientOptionsMessageContainsRequiredValue(): void
-    {
-        $this->mockApplication();
-        $model = new ModelForReqValidator();
-        $val = new RequiredValidator(['requiredValue' => 'confirm']);
-        $options = $val->getClientOptions($model, 'attr');
-        $this->assertStringContainsString('confirm', $options['message']);
-    }
-}
-
-class ModelForReqValidator extends Model
-{
-    public $attr;
-
-    public function rules()
-    {
-        return [
-            [['attr'], 'required'],
-        ];
-    }
-
-    public function attributeLabels()
-    {
-        return ['attr' => '<b>Attr</b>'];
-    }
-}
-
-class RequiredViewStub extends View
-{
-    public function registerAssetBundle($name, $position = null)
-    {
-    }
 }

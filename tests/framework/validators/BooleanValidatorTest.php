@@ -68,47 +68,6 @@ class BooleanValidatorTest extends TestCase
         $this->assertTrue($obj->hasErrors('attrD'));
     }
 
-    public function testErrorMessage(): void
-    {
-        $validator = new BooleanValidator(
-            [
-                'trueValue' => true,
-                'falseValue' => false,
-                'strict' => true,
-            ],
-        );
-        $validator->validate('someIncorrectValue', $errorMessage);
-
-        self::assertSame(
-            'the input value must be either "true" or "false".',
-            $errorMessage,
-            'Should be default error message if message property is not set.',
-        );
-
-        // clientValidateAttribute requires Yii::$app->useJquery to be true
-        $this->mockApplication();
-
-        $validator = new BooleanValidator(
-            [
-                'trueValue' => true,
-                'falseValue' => false,
-                'strict' => true,
-            ],
-        );
-        $obj = new FakedValidationModel();
-
-        $obj->attrA = true;
-        $obj->attrB = '1';
-        $obj->attrC = '0';
-        $obj->attrD = [];
-
-        self::assertSame(
-            'yii.validation.boolean(value, messages, {"trueValue":true,"falseValue":false,"message":"attrB must be either \u0022true\u0022 or \u0022false\u0022.","skipOnEmpty":1,"strict":1});',
-            $validator->clientValidateAttribute($obj, 'attrB', new ViewStub()),
-            "Should be correct JavaScript code returned by 'clientValidateAttribute()'.",
-        );
-    }
-
     public function testClientValidateAttributeReturnsNullWithoutJquery(): void
     {
         // Without Yii::$app (no application context), no client script is initialized

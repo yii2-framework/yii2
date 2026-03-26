@@ -13,7 +13,6 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
-use yii\jquery\validators\RangeValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 
 use function call_user_func;
@@ -82,7 +81,7 @@ class RangeValidator extends Validator
         );
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => RangeValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\RangeValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

@@ -13,7 +13,6 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use yii\helpers\Json;
-use yii\jquery\validators\CompareValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 
 use function call_user_func;
@@ -168,7 +167,7 @@ class CompareValidator extends Validator
         }
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => CompareValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\CompareValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

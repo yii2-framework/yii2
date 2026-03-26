@@ -71,14 +71,6 @@ class FilterValidatorTest extends TestCase
         return 'not null';
     }
 
-    public function testClientValidateAttributeWithTrimFilter(): void
-    {
-        $val = new FilterValidator(['filter' => 'trim']);
-        $m = FakedValidationModel::createWithAttributes(['attr_one' => 'test']);
-        $js = $val->clientValidateAttribute($m, 'attr_one', new FilterViewStub());
-        $this->assertStringContainsString('yii.validation.trim', $js);
-    }
-
     public function testClientValidateAttributeWithNonTrimFilter(): void
     {
         $val = new FilterValidator(['filter' => 'strtolower']);

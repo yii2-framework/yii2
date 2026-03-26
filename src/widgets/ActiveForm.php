@@ -17,7 +17,6 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\helpers\Url;
-use yii\jquery\widgets\ActiveFormJqueryClientScript;
 use yii\web\client\ClientScriptInterface;
 use function call_user_func;
 
@@ -217,7 +216,7 @@ class ActiveForm extends Widget
 
         if ($this->enableClientScript) {
             if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-                $this->clientScript = ['class' => ActiveFormJqueryClientScript::class];
+                $this->clientScript = ['class' => 'yii\jquery\widgets\ActiveFormJqueryClientScript'];
             }
 
             if ($this->clientScript !== null && !$this->clientScript instanceof ClientScriptInterface) {

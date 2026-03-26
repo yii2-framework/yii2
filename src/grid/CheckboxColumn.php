@@ -13,7 +13,6 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use yii\helpers\Json;
-use yii\jquery\grid\CheckboxColumnJqueryClientScript;
 use yii\web\client\ClientScriptInterface;
 
 use function call_user_func;
@@ -123,7 +122,7 @@ class CheckboxColumn extends Column
         }
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => CheckboxColumnJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\grid\CheckboxColumnJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientScriptInterface) {

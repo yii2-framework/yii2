@@ -11,7 +11,6 @@ namespace yii\validators;
 use Yii;
 use yii\helpers\Json;
 use yii\helpers\StringHelper;
-use yii\jquery\validators\NumberValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 use yii\web\JsExpression;
 
@@ -93,7 +92,7 @@ class NumberValidator extends Validator
         }
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => NumberValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\NumberValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

@@ -11,7 +11,6 @@ namespace yii\validators;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
-use yii\jquery\validators\UrlValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 use yii\web\JsExpression;
 
@@ -75,7 +74,7 @@ class UrlValidator extends Validator
         );
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => UrlValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\UrlValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

@@ -12,7 +12,6 @@ use Yii;
 use yii\base\ErrorException;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
-use yii\jquery\validators\EmailValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 use yii\web\JsExpression;
 
@@ -99,7 +98,7 @@ class EmailValidator extends Validator
         );
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => EmailValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\EmailValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {

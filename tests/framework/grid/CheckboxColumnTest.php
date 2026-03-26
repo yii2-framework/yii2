@@ -18,7 +18,6 @@ use yii\grid\CheckboxColumn;
 use yii\grid\GridView;
 use yii\helpers\FileHelper;
 use yii\helpers\Html;
-use yii\web\JqueryAsset;
 use yiiunit\framework\i18n\IntlTestHelper;
 use yiiunit\TestCase;
 
@@ -39,7 +38,7 @@ class CheckboxColumnTest extends TestCase
 
         FileHelper::createDirectory(Yii::getAlias('@webroot/assets'));
 
-        Yii::$app->assetManager->bundles[JqueryAsset::class] = false;
+        Yii::$app->assetManager->bundles['yii\web\JqueryAsset'] = false;
     }
 
     public function testInputName(): void

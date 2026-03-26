@@ -16,7 +16,6 @@ use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\i18n\Formatter;
-use yii\jquery\grid\GridViewJqueryClientScript;
 use yii\web\client\ClientScriptInterface;
 use yii\widgets\BaseListView;
 
@@ -315,7 +314,7 @@ class GridView extends BaseListView
         $this->initColumns();
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => GridViewJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\grid\GridViewJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientScriptInterface) {

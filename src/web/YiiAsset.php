@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -9,18 +11,17 @@
 namespace yii\web;
 
 /**
- * This asset bundle provides the base JavaScript files for the Yii Framework.
+ * Provides the base asset registration target for the Yii Framework JavaScript layer.
  *
- * @author Qiang Xue <qiang.xue@gmail.com>
+ * This class is intentionally empty. Install `yii2-framework/jquery` and register
+ * {@see \yii\jquery\Bootstrap} to activate jQuery support, which overrides this bundle
+ * via `AssetManager::$bundles` to load `yii.js` with a jQuery dependency.
+ *
  * @since 2.0
  */
 class YiiAsset extends AssetBundle
 {
-    public $sourcePath = '@yii/assets';
-    public $js = [
-        'yii.js',
-    ];
-    public $depends = [
-        'yii\web\JqueryAsset',
-    ];
+    public $sourcePath = null;
+    public $js = [];
+    public $depends = [];
 }

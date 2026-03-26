@@ -10,7 +10,6 @@ namespace yii\validators;
 
 use Yii;
 use yii\helpers\Json;
-use yii\jquery\validators\TrimValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 
 use function is_array;
@@ -49,7 +48,7 @@ class TrimValidator extends Validator
         parent::init();
 
         if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => TrimValidatorJqueryClientScript::class];
+            $this->clientScript = ['class' => 'yii\jquery\validators\TrimValidatorJqueryClientScript'];
         }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {
