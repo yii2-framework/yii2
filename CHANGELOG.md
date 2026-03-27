@@ -97,3 +97,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(tests): split monolithic `HtmlTest` into six focused test classes (`HtmlTagTest`, `HtmlFormTest`, `HtmlInputTest`, `HtmlListTest`, `HtmlAttributeTest`, `HtmlActiveTest`) with dedicated providers and keyed datasets.
 - fix(grid): `CheckboxColumn` now submits an empty unselect value by default when all row checkboxes are cleared, aligns hidden-input `form`/`disabled` attributes with checkbox options, and allows opt-out via `unselect = null`.
 - build!: extract jQuery integration layer into the `yii2-framework/jquery` package; `JqueryAsset`, all validator and widget client scripts, and jQuery-specific assets are no longer shipped with core.
+- fix: add `@template` generics to `ClientScriptInterface<T of BaseObject>` and `ClientValidatorScriptInterface<T of Validator>` for PHPStan inference in implementations.

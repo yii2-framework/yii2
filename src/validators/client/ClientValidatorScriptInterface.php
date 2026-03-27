@@ -22,6 +22,8 @@ use yii\web\View;
  *
  * This allows decoupling validators from any particular client-side library.
  *
+ * @template T of Validator
+ *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
  * @since 2.2
  */
@@ -30,21 +32,23 @@ interface ClientValidatorScriptInterface
     /**
      * Returns the client-side validation options for the given validator.
      *
-     * @param Validator $validator the validator instance.
-     * @param Model $model the data model being validated.
-     * @param string $attribute the attribute name being validated.
-     * @return array the client-side validation options.
+     * @param T $validator The validator instance.
+     * @param Model $model The data model being validated.
+     * @param string $attribute The attribute name being validated.
+     *
+     * @return array The client-side validation options.
      */
     public function getClientOptions(Validator $validator, Model $model, string $attribute): array;
 
     /**
      * Returns the JavaScript code needed for performing client-side validation.
      *
-     * @param Validator $validator the validator instance.
-     * @param Model $model the data model being validated.
-     * @param string $attribute the attribute name being validated.
-     * @param View $view the view object that is going to be used to render views or view files.
-     * @return string|null the client-side validation script, or `null` if not supported.
+     * @param T $validator The validator instance.
+     * @param Model $model The data model being validated.
+     * @param string $attribute The attribute name being validated.
+     * @param View $view The view object that is going to be used to render views or view files.
+     *
+     * @return string|null The client-side validation script, or `null` if not supported.
      */
     public function register(Validator $validator, Model $model, string $attribute, View $view): ?string;
 }
