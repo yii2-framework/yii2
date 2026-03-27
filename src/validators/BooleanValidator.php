@@ -9,8 +9,6 @@
 namespace yii\validators;
 
 use Yii;
-use yii\helpers\Json;
-use yii\jquery\validators\BooleanValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 
 /**
@@ -25,25 +23,28 @@ use yii\validators\client\ClientValidatorScriptInterface;
 class BooleanValidator extends Validator
 {
     /**
-     * @var mixed the value representing true status. Defaults to '1'.
+     * @var mixed The value representing true status. Defaults to '1'.
      */
     public $trueValue = '1';
     /**
-     * @var mixed the value representing false status. Defaults to '0'.
+     * @var mixed The value representing false status. Defaults to '0'.
      */
     public $falseValue = '0';
     /**
-     * @var bool whether the comparison to [[trueValue]] and [[falseValue]] is strict.
+     * @var bool Whether the comparison to [[trueValue]] and [[falseValue]] is strict.
+     *
      * When this is true, the attribute value and type must both match those of [[trueValue]] or [[falseValue]].
      * Defaults to false, meaning only the value needs to be matched.
      */
     public $strict = false;
     /**
-     * @var array|ClientValidatorScriptInterface|null the client-side validation script implementation.
-     * When [[Application::$useJquery]] is `true`, defaults to [[BooleanValidatorJqueryClientScript]].
-     * Set to `null` to disable client-side validation for this validator.
+     * @var array|string|ClientValidatorScriptInterface|null The client-side validation script implementation.
+     *
+     * When `null` (default), no client script is registered unless a bootstrap package (for example,
+     * `yii2-framework/jquery`) configures one via the DI container. To fully disable client-side validation, set
+     * [[Validator::$enableClientValidation]] to `false` instead.
      */
-    public $clientScript = null;
+    public array|string|ClientValidatorScriptInterface|null $clientScript = null;
 
     /**
      * {@inheritdoc}
@@ -56,10 +57,6 @@ class BooleanValidator extends Validator
             'yii',
             '{attribute} must be either "{true}" or "{false}".',
         );
-
-        if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => BooleanValidatorJqueryClientScript::class];
-        }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {
             $this->clientScript = Yii::createObject($this->clientScript);

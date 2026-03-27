@@ -8,16 +8,16 @@
 
 namespace yii\validators;
 
+use Yii;
 use yii\base\InvalidConfigException;
-use yii\helpers\Json;
+use yii\validators\client\ClientValidatorScriptInterface;
 
 /**
  * FilterValidator converts the attribute value according to a filter.
  *
  * FilterValidator is actually not a validator but a data processor.
- * It invokes the specified filter callback to process the attribute value
- * and save the processed value back to the attribute. The filter must be
- * a valid PHP callback with the following signature:
+ * It invokes the specified filter callback to process the attribute value and save the processed value back to the
+ * attribute. The filter must be a valid PHP callback with the following signature:
  *
  * ```
  * function foo($value) {
@@ -27,8 +27,8 @@ use yii\helpers\Json;
  * ```
  *
  * Many PHP functions qualify this signature (e.g. `trim()`).
- * If the callback function requires non-null argument (important since PHP 8.1)
- * remember to set [[skipOnEmpty]] to `true` otherwise you may trigger an error.
+ * If the callback function requires non-null argument (important since PHP 8.1) remember to set [[skipOnEmpty]] to
+ * `true` otherwise you may trigger an error.
  *
  * To specify the filter, set [[filter]] property to be the callback.
  *
@@ -38,7 +38,8 @@ use yii\helpers\Json;
 class FilterValidator extends Validator
 {
     /**
-     * @var callable the filter. This can be a global function name, anonymous function, etc.
+     * @var callable The filter. This can be a global function name, anonymous function, etc.
+     *
      * The function signature must be as follows,
      *
      * ```
@@ -50,16 +51,24 @@ class FilterValidator extends Validator
      */
     public $filter;
     /**
-     * @var bool whether the filter should be skipped if an array input is given.
+     * @var bool Whether the filter should be skipped if an array input is given.
+     *
      * If true and an array input is given, the filter will not be applied.
      */
     public $skipOnArray = false;
     /**
-     * @var bool this property is overwritten to be false so that this validator will
-     * be applied when the value being validated is empty.
+     * @var bool This property is overwritten to be false so that this validator will be applied when the value being
+     * validated is empty.
      */
     public $skipOnEmpty = false;
-
+    /**
+     * @var array|string|ClientValidatorScriptInterface|null The client-side script implementation.
+     *
+     * When `null` (default), no client script is registered unless a bootstrap package (for example,
+     * `yii2-framework/jquery`) configures one via the DI container. To fully disable client-side validation, set
+     * [[Validator::$enableClientValidation]] to `false` instead.
+     */
+    public array|string|ClientValidatorScriptInterface|null $clientScript = null;
 
     /**
      * {@inheritdoc}
@@ -70,6 +79,10 @@ class FilterValidator extends Validator
         if ($this->filter === null) {
             throw new InvalidConfigException('The "filter" property must be set.');
         }
+
+        if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {
+            $this->clientScript = Yii::createObject($this->clientScript);
+        }
     }
 
     /**
@@ -78,6 +91,7 @@ class FilterValidator extends Validator
     public function validateAttribute($model, $attribute)
     {
         $value = $model->$attribute;
+
         if (!$this->skipOnArray || !is_array($value)) {
             $model->$attribute = call_user_func($this->filter, $value);
         }
@@ -92,10 +106,11 @@ class FilterValidator extends Validator
             return null;
         }
 
-        ValidationAsset::register($view);
-        $options = $this->getClientOptions($model, $attribute);
+        if ($this->clientScript instanceof ClientValidatorScriptInterface) {
+            return $this->clientScript->register($this, $model, $attribute, $view);
+        }
 
-        return 'value = yii.validation.trim($form, attribute, ' . Json::htmlEncode($options) . ', value);';
+        return null;
     }
 
     /**

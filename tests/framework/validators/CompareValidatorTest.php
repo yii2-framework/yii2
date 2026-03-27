@@ -11,7 +11,6 @@ declare(strict_types=1);
 namespace yiiunit\framework\validators;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
-use Yii;
 use yii\base\InvalidConfigException;
 use yii\validators\CompareValidator;
 use yiiunit\data\validators\models\FakedValidationModel;
@@ -284,85 +283,6 @@ final class CompareValidatorTest extends TestCase
         );
     }
 
-    public function testGetClientOptionsWithCompareValue(): void
-    {
-        $model = new FakedValidationModel();
-
-        $model->attr_test = 'test';
-
-        $validator = new CompareValidator(['compareValue' => 'expected']);
-
-        $options = $validator->getClientOptions($model, 'attr_test');
-
-        self::assertSame(
-            '==',
-            $options['operator'],
-            "Operator should default to '=='.",
-        );
-        self::assertSame(
-            'string',
-            $options['type'],
-            "Type should default to 'string'.",
-        );
-        self::assertSame(
-            'expected',
-            $options['compareValue'],
-            'CompareValue should be present in client options.',
-        );
-        self::assertArrayNotHasKey(
-            'compareAttribute',
-            $options,
-            'CompareAttribute should not be present.',
-        );
-        self::assertArrayHasKey(
-            'message',
-            $options,
-            'Message should be present in client options.',
-        );
-    }
-
-    public function testGetClientOptionsWithCompareAttribute(): void
-    {
-        $model = new FakedValidationModel();
-
-        $model->attr_test = 'test';
-        $model->attr_test_val = 'test';
-
-        $validator = new CompareValidator(['compareAttribute' => 'attr_test_val']);
-
-        $options = $validator->getClientOptions($model, 'attr_test');
-
-        self::assertArrayHasKey('compareAttribute', $options, 'CompareAttribute should be present.');
-        self::assertArrayHasKey('compareAttributeName', $options, 'CompareAttributeName should be present.');
-        self::assertArrayNotHasKey('compareValue', $options, 'CompareValue should not be present.');
-    }
-
-    public function testGetClientOptionsDefaultCompareAttribute(): void
-    {
-        $model = new FakedValidationModel();
-        $model->attr_test = 'test';
-        $model->attr_test_repeat = 'test';
-        $validator = new CompareValidator();
-        $options = $validator->getClientOptions($model, 'attr_test');
-
-        self::assertArrayHasKey('compareAttribute', $options, 'Default compareAttribute should be present.');
-        self::assertStringContainsString(
-            'attr_test_repeat',
-            $options['compareAttributeName'],
-            "Default compareAttributeName should contain 'attr_test_repeat'.",
-        );
-    }
-
-    public function testGetClientOptionsWithSkipOnEmpty(): void
-    {
-        $model = new FakedValidationModel();
-        $model->attr_test = 'test';
-        $validator = new CompareValidator(['compareValue' => 'test', 'skipOnEmpty' => true]);
-        $options = $validator->getClientOptions($model, 'attr_test');
-
-        self::assertSame(1, $options['skipOnEmpty'], 'SkipOnEmpty should be 1 when enabled.');
-    }
-
     public function testGetClientOptionsWithoutSkipOnEmpty(): void
     {
         $model = new FakedValidationModel();
@@ -374,46 +294,6 @@ final class CompareValidatorTest extends TestCase
             'skipOnEmpty',
             $options,
             'SkipOnEmpty should not be present when disabled.',
-        );
-    }
-
-    public function testClientValidateAttribute(): void
-    {
-        $model = new FakedValidationModel();
-        $validator = new CompareValidator(
-            [
-                'compareValue' => 'test_value',
-                'operator' => '==',
-                'type' => CompareValidator::TYPE_STRING,
-            ],
-        );
-
-        $model->attrA = 'test_value';
-
-        self::assertSame(
-            'yii.validation.compare(value, messages, {"operator":"==","type":"string","compareValue":' .
-            '"test_value","skipOnEmpty":1,"message":"attrA must be equal to \u0022test_value\u0022."}, $form);',
-            $validator->clientValidateAttribute($model, 'attrA', Yii::$app->getView()),
-            "'clientValidateAttribute()' should return correct validation script.",
-        );
-        self::assertSame(
-            [
-                'operator' => '==',
-                'type' => 'string',
-                'compareValue' => 'test_value',
-                'skipOnEmpty' => 1,
-                'message' => 'attrA must be equal to "test_value".',
-            ],
-            $validator->getClientOptions($model, 'attrA'),
-            "'getClientOptions()' should return correct options array.",
-        );
-
-        $validator->validate('someIncorrectValue', $errorMessage);
-
-        self::assertSame(
-            'the input value must be equal to "test_value".',
-            $errorMessage,
-            'Error message should match expected format.',
         );
     }
 
@@ -464,20 +344,6 @@ final class CompareValidatorTest extends TestCase
         );
     }
 
-    public function testGetClientOptionsMessageContainsCompareValue(): void
-    {
-        $model = new FakedValidationModel();
-        $model->attr_test = 'test';
-        $validator = new CompareValidator(['compareValue' => 'target']);
-        $options = $validator->getClientOptions($model, 'attr_test');
-
-        self::assertStringContainsString(
-            'target',
-            $options['message'],
-            'Client options message should contain the compare value.',
-        );
-    }
-
     public function testTypeNumberCastsToFloat(): void
     {
         $validator = new CompareValidator([
@@ -523,23 +389,6 @@ final class CompareValidatorTest extends TestCase
             'is invalid',
             $errors[0] ?? '',
             'Error should indicate the compare attribute is invalid.',
-        );
-    }
-
-    public function testGetClientOptionsMessageContainsAttributeLabel(): void
-    {
-        $model = new FakedValidationModel();
-
-        $model->attr_test = 'test';
-
-        $validator = new CompareValidator(['compareValue' => 'x']);
-
-        $options = $validator->getClientOptions($model, 'attr_test');
-
-        self::assertStringContainsString(
-            'attr_test',
-            $options['message'],
-            'Client options message should contain the attribute label.',
         );
     }
 
@@ -657,81 +506,4 @@ final class CompareValidatorTest extends TestCase
         );
     }
 
-    public function testClientValidateAttributeWithClosureCompareValue(): void
-    {
-        $model = new FakedValidationModel();
-        $closureConfig = [
-            'compareValue' => static fn(): string => 'closure_value',
-            'operator' => '==',
-            'type' => CompareValidator::TYPE_STRING,
-        ];
-
-        $validator1 = new CompareValidator($closureConfig);
-
-        self::assertSame(
-            'yii.validation.compare(value, messages, {"operator":"==","type":"string","compareValue":' .
-            '"closure_value","skipOnEmpty":1,"message":"attrA must be equal to \u0022closure_value\u0022."}, $form);',
-            $validator1->clientValidateAttribute($model, 'attrA', Yii::$app->getView()),
-            "'clientValidateAttribute()' should return correct validation script.",
-        );
-
-        $validator2 = new CompareValidator($closureConfig);
-
-        self::assertSame(
-            [
-                'operator' => '==',
-                'type' => 'string',
-                'compareValue' => 'closure_value',
-                'skipOnEmpty' => 1,
-                'message' => 'attrA must be equal to "closure_value".',
-            ],
-            $validator2->getClientOptions($model, 'attrA'),
-            "'getClientOptions()' should return correct options array.",
-        );
-
-        $validator3 = new CompareValidator($closureConfig);
-        $errorMessage = null;
-
-        $validator3->validate('someIncorrectValue', $errorMessage);
-
-        self::assertSame(
-            'the input value must be equal to "closure_value".',
-            $errorMessage,
-            'Error message should match expected format.',
-        );
-    }
-
-    public function testClientValidateAttributeWithNullCompareAttribute(): void
-    {
-        $model = new FakedValidationModel();
-        $validator = new CompareValidator(
-            [
-                'operator' => '==',
-                'type' => CompareValidator::TYPE_STRING,
-            ],
-        );
-
-        $model->attrA = 'test';
-        $model->attrA_repeat = 'test';
-
-        self::assertSame(
-            'yii.validation.compare(value, messages, {"operator":"==","type":"string","compareAttribute":' .
-            '"fakedvalidationmodel-attra_repeat","compareAttributeName":"FakedValidationModel[attrA_repeat]",' .
-            '"skipOnEmpty":1,"message":"attrA must be equal to \u0022attrA_repeat\u0022."}, $form);',
-            $validator->clientValidateAttribute($model, 'attrA', Yii::$app->getView()),
-            "'clientValidateAttribute()' should return correct validation script.",
-        );
-        self::assertSame(
-            [
-                'operator' => '==',
-                'type' => 'string',
-                'compareAttribute' => 'fakedvalidationmodel-attra_repeat',
-                'compareAttributeName' => 'FakedValidationModel[attrA_repeat]',
-                'skipOnEmpty' => 1,
-                'message' => 'attrA must be equal to "attrA_repeat".',
-            ],
-            $validator->getClientOptions($model, 'attrA'),
-            "'getClientOptions()' should return correct options array.",
-        );
-    }
 }

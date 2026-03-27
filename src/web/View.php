@@ -83,12 +83,12 @@ class View extends \yii\base\View
     public const POS_END = 3;
     /**
      * The location of registered JavaScript code block.
-     * This means the JavaScript code block will be enclosed within `jQuery(document).ready()`.
+     * This means the JavaScript code block will be enclosed within a `DOMContentLoaded` event listener.
      */
     public const POS_READY = 4;
     /**
      * The location of registered JavaScript code block.
-     * This means the JavaScript code block will be enclosed within `jQuery(window).load()`.
+     * This means the JavaScript code block will be enclosed within a `window` load event listener.
      */
     public const POS_LOAD = 5;
     /**
@@ -471,10 +471,8 @@ class View extends \yii\base\View
      * - [[POS_HEAD]]: in the head section
      * - [[POS_BEGIN]]: at the beginning of the body section
      * - [[POS_END]]: at the end of the body section
-     * - [[POS_LOAD]]: enclosed within jQuery(window).load().
-     *   Note that by using this position, the method will automatically register the jQuery js file.
-     * - [[POS_READY]]: enclosed within jQuery(document).ready(). This is the default value.
-     *   Note that by using this position, the method will automatically register the jQuery js file.
+     * - [[POS_LOAD]]: enclosed within a `window` load event listener.
+     * - [[POS_READY]]: enclosed within a `DOMContentLoaded` event listener. This is the default value.
      *
      * @param string|null $key the key that identifies the JS code block. If null, it will use
      * $js as the key. If two JS code blocks are registered with the same key, the latter
@@ -484,9 +482,6 @@ class View extends \yii\base\View
     {
         $key = $key ?: md5($js);
         $this->js[$position][$key] = $js;
-        if ($position === self::POS_READY || $position === self::POS_LOAD) {
-            JqueryAsset::register($this);
-        }
     }
 
     /**
@@ -598,10 +593,8 @@ class View extends \yii\base\View
      * - [[POS_HEAD]]: in the head section. This is the default value.
      * - [[POS_BEGIN]]: at the beginning of the body section.
      * - [[POS_END]]: at the end of the body section.
-     * - [[POS_LOAD]]: enclosed within jQuery(window).load().
-     *   Note that by using this position, the method will automatically register the jQuery js file.
-     * - [[POS_READY]]: enclosed within jQuery(document).ready().
-     *   Note that by using this position, the method will automatically register the jQuery js file.
+     * - [[POS_LOAD]]: enclosed within a `window` load event listener.
+     * - [[POS_READY]]: enclosed within a `DOMContentLoaded` event listener.
      *
      * @since 2.0.14
      */
@@ -695,11 +688,11 @@ class View extends \yii\base\View
                 $lines[] = Html::script(implode("\n", $this->js[self::POS_END]));
             }
             if (!empty($this->js[self::POS_READY])) {
-                $js = "jQuery(function ($) {\n" . implode("\n", $this->js[self::POS_READY]) . "\n});";
+                $js = "document.addEventListener('DOMContentLoaded', function () {\n" . implode("\n", $this->js[self::POS_READY]) . "\n});";
                 $lines[] = Html::script($js);
             }
             if (!empty($this->js[self::POS_LOAD])) {
-                $js = "jQuery(window).on('load', function () {\n" . implode("\n", $this->js[self::POS_LOAD]) . "\n});";
+                $js = "window.addEventListener('load', function () {\n" . implode("\n", $this->js[self::POS_LOAD]) . "\n});";
                 $lines[] = Html::script($js);
             }
         }

@@ -9,8 +9,6 @@
 namespace yii\validators;
 
 use Yii;
-use yii\helpers\Json;
-use yii\jquery\validators\TrimValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
 
 use function is_array;
@@ -24,11 +22,13 @@ class TrimValidator extends Validator
 {
     /**
      * @var string The list of characters to strip, with `..` can specify a range of characters.
+     *
      * For example, set '\/ ' to normalize path or namespace.
      */
     public $chars;
     /**
      * @var bool Whether the filter should be skipped if an array input is given.
+     *
      * If true and an array input is given, the filter will not be applied.
      */
     public $skipOnArray = false;
@@ -37,9 +37,13 @@ class TrimValidator extends Validator
      */
     public $skipOnEmpty = false;
     /**
-     * @var array|ClientValidatorScriptInterface|null the client-side validation script implementation.
+     * @var array|string|ClientValidatorScriptInterface|null The client-side validation script implementation.
+     *
+     * When `null` (default), no client script is registered unless a bootstrap package (for example,
+     * `yii2-framework/jquery`) configures one via the DI container. To fully disable client-side validation, set
+     * [[Validator::$enableClientValidation]] to `false` instead.
      */
-    public $clientScript = null;
+    public array|string|ClientValidatorScriptInterface|null $clientScript = null;
 
     /**
      * {@inheritdoc}
@@ -47,10 +51,6 @@ class TrimValidator extends Validator
     public function init()
     {
         parent::init();
-
-        if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => TrimValidatorJqueryClientScript::class];
-        }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {
             $this->clientScript = Yii::createObject($this->clientScript);

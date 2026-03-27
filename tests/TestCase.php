@@ -105,6 +105,23 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Skips the current test if the `yii2-framework/jquery` package is not installed.
+     *
+     * Tests that verify jQuery-specific client-script output require the separate
+     * `yii2-framework/jquery` package. When running core in isolation those tests
+     * are skipped and are expected to be covered by the jquery package's own test suite.
+     */
+    protected function skipIfJqueryNotAvailable(): void
+    {
+        if (!class_exists('yii\jquery\Bootstrap')) {
+            $this->markTestSkipped(
+                'Requires yii2-framework/jquery package. '
+                . 'These assertions are covered by the jquery package test suite.'
+            );
+        }
+    }
+
+    /**
      * Destroys application in Yii::$app by setting it to null.
      */
     protected function destroyApplication()

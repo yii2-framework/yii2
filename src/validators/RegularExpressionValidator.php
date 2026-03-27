@@ -10,11 +10,7 @@ namespace yii\validators;
 
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\helpers\Html;
-use yii\helpers\Json;
-use yii\jquery\validators\RegularExpressionValidatorJqueryClientScript;
 use yii\validators\client\ClientValidatorScriptInterface;
-use yii\web\JsExpression;
 
 use function is_array;
 
@@ -29,18 +25,22 @@ use function is_array;
 class RegularExpressionValidator extends Validator
 {
     /**
-     * @var string the regular expression to be matched with
+     * @var string The regular expression to be matched with.
      */
     public $pattern;
     /**
-     * @var bool whether to invert the validation logic. Defaults to false. If set to true,
-     * the regular expression defined via [[pattern]] should NOT match the attribute value.
+     * @var bool Whether to invert the validation logic. Defaults to false. If set to true, the regular expression
+     * defined via [[pattern]] should NOT match the attribute value.
      */
     public $not = false;
     /**
-     * @var array|ClientValidatorScriptInterface|null the client-side validation script implementation.
+     * @var array|string|ClientValidatorScriptInterface|null The client-side validation script implementation.
+     *
+     * When `null` (default), no client script is registered unless a bootstrap package (for example,
+     * `yii2-framework/jquery`) configures one via the DI container. To fully disable client-side validation, set
+     * [[Validator::$enableClientValidation]] to `false` instead.
      */
-    public $clientScript = null;
+    public array|string|ClientValidatorScriptInterface|null $clientScript = null;
 
     /**
      * {@inheritdoc}
@@ -57,10 +57,6 @@ class RegularExpressionValidator extends Validator
             'yii',
             '{attribute} is invalid.',
         );
-
-        if ($this->clientScript === null && (Yii::$app->useJquery ?? false)) {
-            $this->clientScript = ['class' => RegularExpressionValidatorJqueryClientScript::class];
-        }
 
         if ($this->clientScript !== null && !$this->clientScript instanceof ClientValidatorScriptInterface) {
             $this->clientScript = Yii::createObject($this->clientScript);
