@@ -21,6 +21,8 @@ use yii\web\View;
  *
  * This allows decoupling widgets from any particular client-side library.
  *
+ * @template T of BaseObject
+ *
  * @author Wilmer Arambula <terabytesoftw@gmail.com>
  * @since 2.2
  */
@@ -29,18 +31,19 @@ interface ClientScriptInterface
     /**
      * Returns the client-side options for the given widget.
      *
-     * @param BaseObject $widget the widget instance.
-     * @param array $params additional parameters.
-     * @return array the client-side options.
+     * @param T $widget The widget instance.
+     * @param array $params Additional parameters.
+     *
+     * @return array The client-side options.
      */
     public function getClientOptions(BaseObject $widget, array $params = []): array;
 
     /**
      * Registers the JavaScript code needed for the widget.
      *
-     * @param BaseObject $widget the widget instance.
-     * @param View $view the view object.
-     * @param array $params additional parameters.
+     * @param T $widget The widget instance.
+     * @param View $view The view object.
+     * @param array $params Additional parameters.
      */
     public function register(BaseObject $widget, View $view, array $params = []): void;
 }
