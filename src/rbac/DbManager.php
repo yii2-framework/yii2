@@ -1046,6 +1046,7 @@ class DbManager extends BaseManager
                     ->column($this->db);
 
                 if ($names !== []) {
+                    // permissions only appear as children; roles only as parents.
                     $key = $type === Item::TYPE_PERMISSION ? 'child' : 'parent';
 
                     $this->db->createCommand()
