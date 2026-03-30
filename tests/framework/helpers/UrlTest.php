@@ -815,6 +815,15 @@ class UrlTest extends TestCase
         );
     }
 
+    public function testAddQueryParamsNestedNullRemovalRemovesParentKey(): void
+    {
+        self::assertSame(
+            '/path',
+            Url::addQueryParams('/path?arr[a]=1&arr[b]=2', ['arr' => ['a' => null, 'b' => null]]),
+            "Should remove parent 'key' when all nested 'params' are set to 'null'.",
+        );
+    }
+
     public function testAddQueryParamsSpecialCharacters(): void
     {
         self::assertSame(

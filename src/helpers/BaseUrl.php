@@ -441,6 +441,11 @@ class BaseUrl
      * Existing query parameters in the URL are preserved unless overridden. Setting a parameter value to `null` removes
      * it from the URL. URL fragments (`#hash`) are preserved.
      *
+     * Note: this method uses PHP's `parse_str()` to parse existing query parameters, which converts dots (`.`) and
+     * spaces in parameter names to underscores (`_`), and keeps only the last value for duplicate scalar keys.
+     *
+     * This is consistent with how PHP's `$_GET` superglobal and Yii's `Request::getQueryParams()` handle query strings.
+     *
      * Usage example:
      *
      * ```php
