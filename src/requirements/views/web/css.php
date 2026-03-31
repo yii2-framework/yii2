@@ -25,8 +25,8 @@ table{background-color:transparent}
 th{text-align:left}
 .req-table{width:100%;max-width:100%;margin-bottom:20px;border:1px solid #ddd;border-collapse:collapse}
 .req-table>tbody>tr>th,.req-table>tbody>tr>td{padding:8px;line-height:1.42857143;vertical-align:top;border:1px solid #ddd}
-.req-table>tr>th{vertical-align:bottom;border-bottom:2px solid #ddd}
-.req-table>tr:first-child>th,.req-table>tr:first-child>td{border-top:0}
+.req-table>tbody>tr>th{vertical-align:bottom;border-bottom:2px solid #ddd}
+.req-table>tbody>tr:first-child>th,.req-table>tbody>tr:first-child>td{border-top:0}
 .req-table>tbody+tbody{border-top:2px solid #ddd}
 .req-table tr>td.active,.req-table tr>th.active,.req-table tr.active>td,.req-table tr.active>th{background-color:#f5f5f5;border-color:#e8e8e8}
 .req-table tr>td.success,.req-table tr>th.success,.req-table tr.success>td,.req-table tr.success>th{background-color:#dff0d8;border-color:#d6e9c6}
