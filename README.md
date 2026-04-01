@@ -23,7 +23,7 @@
 </p>
 
 <p align="center">
-    <strong>The Yii2 Framework</strong><br>
+    <strong>Yii2 Framework</strong><br>
     <em>A high-performance, component-based PHP framework for modern web application development</em>
 </p>
 
