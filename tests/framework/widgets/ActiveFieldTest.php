@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace yiiunit\framework\widgets;
 
-use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use Exception;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Depends;
@@ -36,8 +35,6 @@ use function sprintf;
  */
 class ActiveFieldTest extends TestCase
 {
-    use ArraySubsetAsserts;
-
     /**
      * @var ActiveFieldExtend
      */
@@ -638,22 +635,32 @@ EOD;
         $this->activeField->textInput();
         $actualValue = $this->activeField->getClientOptions();
 
-        $this->assertArraySubset([
+        $expected = [
             'id' => 'custom-input-id',
             'name' => $this->attributeName,
             'container' => '.field-custom-input-id',
             'input' => '#custom-input-id',
-        ], $actualValue);
+        ];
+
+        foreach ($expected as $key => $value) {
+            $this->assertArrayHasKey($key, $actualValue);
+            $this->assertSame($value, $actualValue[$key]);
+        }
 
         $this->activeField->textInput(['id' => 'custom-textinput-id']);
         $actualValue = $this->activeField->getClientOptions();
 
-        $this->assertArraySubset([
+        $expected = [
             'id' => 'custom-textinput-id',
             'name' => $this->attributeName,
             'container' => '.field-custom-textinput-id',
             'input' => '#custom-textinput-id',
-        ], $actualValue);
+        ];
+
+        foreach ($expected as $key => $value) {
+            $this->assertArrayHasKey($key, $actualValue);
+            $this->assertSame($value, $actualValue[$key]);
+        }
     }
 
     public function testAriaAttributes(): void
