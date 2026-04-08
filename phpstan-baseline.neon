@@ -5251,12 +5251,6 @@ parameters:
 			path: tests/base/db/BaseCommand.php
 
 		-
-			message: '#^Offset 0 does not exist on array\{\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 8
-			path: tests/base/db/BaseCommand.php
-
-		-
 			message: '#^Only booleans are allowed in an if condition, yii\\db\\TableSchema\|null given\.$#'
 			identifier: if.condNotBoolean
 			count: 2
@@ -5674,12 +5668,6 @@ parameters:
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
 			identifier: staticMethod.dynamicCall
 			count: 5
-			path: tests/framework/BaseYiiTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\TestCase\:\:exactly\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
 			path: tests/framework/BaseYiiTest.php
 
 		-
@@ -6295,12 +6283,6 @@ parameters:
 			path: tests/framework/behaviors/CacheableWidgetBehaviorTest.php
 
 		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\TestCase\:\:once\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 3
-			path: tests/framework/behaviors/CacheableWidgetBehaviorTest.php
-
-		-
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
 			identifier: staticMethod.dynamicCall
 			count: 23
@@ -6832,24 +6814,6 @@ parameters:
 			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertStringContainsString\(\)\.$#'
 			identifier: staticMethod.dynamicCall
 			count: 10
-			path: tests/framework/console/controllers/ServeControllerTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\TestCase\:\:any\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 2
-			path: tests/framework/console/controllers/ServeControllerTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\TestCase\:\:never\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/framework/console/controllers/ServeControllerTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\TestCase\:\:once\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 3
 			path: tests/framework/console/controllers/ServeControllerTest.php
 
 		-

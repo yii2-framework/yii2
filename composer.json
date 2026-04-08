@@ -10,20 +10,19 @@
     ],
     "license": "BSD-3-Clause",
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.3",
         "ext-mbstring": "*",
         "cebe/markdown": "^1.2.0",
         "ezyang/htmlpurifier": "^4.17",
         "yiisoft/yii2-composer": "~2.0.4"
     },
     "require-dev": {
-        "dms/phpunit-arraysubset-asserts": "^0.5",
         "infection/infection": "^0.32",
         "maglnet/composer-require-checker": "^4.1",
         "php-forge/coding-standard": "^0.1",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan-strict-rules": "^2.0.3",
-        "phpunit/phpunit": "^10.5",
+        "phpunit/phpunit": "^11.5",
         "xepozz/internal-mocker": "^1.4",
         "yii2-extensions/phpstan": "^0.4"
     },
